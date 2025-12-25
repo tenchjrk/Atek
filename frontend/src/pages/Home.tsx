@@ -1,7 +1,7 @@
 import { Typography, Box, Card, CardContent } from "@mui/material";
 // We import Grid2 specifically to resolve the type mismatch
 import Grid from '@mui/material/Grid';
-import { AccountBox, Store } from "@mui/icons-material";
+import { Business, Store } from "@mui/icons-material";
 import { Link } from "react-router-dom";
 
 export default function Home() {
@@ -34,7 +34,7 @@ export default function Home() {
           >
             <CardContent>
               <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                <AccountBox
+                <Business
                   sx={{ fontSize: 40, mr: 2, color: "primary.main" }}
                 />
                 <Typography variant='h5' component='div' sx={{ color: 'text.primary' }}>

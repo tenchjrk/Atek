@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import {
   Menu as MenuIcon,
-  AccountBox as AccountIcon,
+  Business as AccountIcon,
   Store as VendorIcon,
   Home as HomeIcon,
 } from "@mui/icons-material";
