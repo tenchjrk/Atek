@@ -1,22 +1,20 @@
 import axios from "axios";
+import type { Account, Vendor } from "../types";
 
 const API_BASE_URL = "http://localhost:5245/api";
-
-export interface Account {
-  id: number;
-  name: string;
-}
 
 const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
-export const accountApi = {
-  getAll: () => api.get<Account[]>("/accounts"),
-  getById: (id: number) => api.get<Account>(`/accounts/${id}`),
-  create: (account: Omit<Account, "id">) =>
-    api.post<Account>("/accounts", account),
-  update: (id: number, account: Account) =>
-    api.put<Account>(`/accounts/${id}`, account),
-  delete: (id: number) => api.delete(`/accounts/${id}`),
-};
+// Generic CRUD operations
+const createCrudApi = <T extends { id: number }>(endpoint: string) => ({
+  getAll: () => api.get<T[]>(`/${endpoint}`),
+  getById: (id: number) => api.get<T>(`/${endpoint}/${id}`),
+  create: (item: Omit<T, "id">) => api.post<T>(`/${endpoint}`, item),
+  update: (id: number, item: T) => api.put<T>(`/${endpoint}/${id}`, item),
+  delete: (id: number) => api.delete(`/${endpoint}/${id}`),
+});
+
+export const accountApi = createCrudApi<Account>("accounts");
+export const vendorApi = createCrudApi<Vendor>("vendors");
