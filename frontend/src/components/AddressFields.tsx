@@ -1,4 +1,4 @@
-import { TextField, Typography, Box, Stack } from '@mui/material';
+import { TextField, Typography, Box, Stack } from "@mui/material";
 
 interface AddressFieldsProps {
   addressLine1: string;
@@ -33,51 +33,63 @@ export default function AddressFields({
 }: AddressFieldsProps) {
   return (
     <Box>
-      <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
-        Address Information (Optional)
+      <Typography variant='subtitle2' color='text.secondary' sx={{ mb: 2 }}>
+        Address Information
       </Typography>
       <Stack spacing={2}>
         <TextField
           fullWidth
-          label="Address Line 1"
+          label='Address Line 1'
           value={addressLine1}
           onChange={(e) => onAddressLine1Change(e.target.value)}
           disabled={disabled}
         />
         <TextField
           fullWidth
-          label="Address Line 2"
+          label='Address Line 2'
           value={addressLine2}
           onChange={(e) => onAddressLine2Change(e.target.value)}
           disabled={disabled}
         />
-        <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            flexDirection: { xs: "column", sm: "row" },
+          }}
+        >
           <TextField
             fullWidth
-            label="City"
+            label='City'
             value={city}
             onChange={(e) => onCityChange(e.target.value)}
             disabled={disabled}
           />
           <TextField
             fullWidth
-            label="State/Province"
+            label='State/Province'
             value={state}
             onChange={(e) => onStateChange(e.target.value)}
             disabled={disabled}
           />
         </Box>
-        <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            flexDirection: { xs: "column", sm: "row" },
+          }}
+        >
           <TextField
             fullWidth
-            label="Postal Code"
+            label='Postal Code'
             value={postalCode}
             onChange={(e) => onPostalCodeChange(e.target.value)}
             disabled={disabled}
           />
           <TextField
             fullWidth
-            label="Country"
+            label='Country'
             value={country}
             onChange={(e) => onCountryChange(e.target.value)}
             disabled={disabled}
