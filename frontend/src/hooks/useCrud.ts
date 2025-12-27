@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
-import type { AxiosResponse } from 'axios';
+import { useState, useEffect, useCallback } from "react";
+import type { AxiosResponse } from "axios";
 
 interface CrudApi<T> {
   getAll: () => Promise<AxiosResponse<T[]>>;
   getById: (id: number) => Promise<AxiosResponse<T>>;
-  create: (item: Omit<T, 'id'>) => Promise<AxiosResponse<T>>;
+  create: (item: Omit<T, "id">) => Promise<AxiosResponse<T>>;
   update: (id: number, item: T) => Promise<AxiosResponse<T>>;
   delete: (id: number) => Promise<AxiosResponse<void>>;
 }
@@ -18,11 +18,13 @@ export function useCrud<T extends { id: number }>(api: CrudApi<T>) {
     try {
       setLoading(true);
       const response = await api.getAll();
-      setItems(response.data);
+      // Sort by id descending (newest first)
+      const sortedItems = response.data.sort((a, b) => b.id - a.id);
+      setItems(sortedItems);
       setError(null);
     } catch (err) {
-      setError('Error loading items');
-      console.error('Error loading items:', err);
+      setError("Error loading items");
+      console.error("Error loading items:", err);
     } finally {
       setLoading(false);
     }
@@ -32,14 +34,14 @@ export function useCrud<T extends { id: number }>(api: CrudApi<T>) {
     fetchItems();
   }, [fetchItems]);
 
-  const createItem = async (item: Omit<T, 'id'>) => {
+  const createItem = async (item: Omit<T, "id">) => {
     try {
       await api.create(item);
       await fetchItems();
       return true;
     } catch (err) {
-      console.error('Error creating item:', err);
-      setError('Error creating item');
+      console.error("Error creating item:", err);
+      setError("Error creating item");
       return false;
     }
   };
@@ -50,8 +52,8 @@ export function useCrud<T extends { id: number }>(api: CrudApi<T>) {
       await fetchItems();
       return true;
     } catch (err) {
-      console.error('Error updating item:', err);
-      setError('Error updating item');
+      console.error("Error updating item:", err);
+      setError("Error updating item");
       return false;
     }
   };
@@ -62,8 +64,8 @@ export function useCrud<T extends { id: number }>(api: CrudApi<T>) {
       await fetchItems();
       return true;
     } catch (err) {
-      console.error('Error deleting item:', err);
-      setError('Error deleting item');
+      console.error("Error deleting item:", err);
+      setError("Error deleting item");
       return false;
     }
   };
