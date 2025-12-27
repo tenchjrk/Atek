@@ -7,8 +7,10 @@ import {
   TextField,
   Button,
   Stack,
+  Divider,
 } from '@mui/material';
 import AccountSelector from './AccountSelector';
+import AddressFields from './AddressFields';
 import type { Account } from '../types';
 
 interface AccountEditDialogProps {
@@ -16,7 +18,17 @@ interface AccountEditDialogProps {
   account: Account | null;
   accounts: Account[];
   onClose: () => void;
-  onSave: (id: number, name: string, parentAccountId: number | null) => Promise<boolean>;
+  onSave: (accountData: {
+    id: number;
+    name: string;
+    parentAccountId: number | null;
+    addressLine1: string;
+    addressLine2: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+  }) => Promise<boolean>;
 }
 
 export default function AccountEditDialog({
@@ -28,18 +40,36 @@ export default function AccountEditDialog({
 }: AccountEditDialogProps) {
   const [name, setName] = useState('');
   const [parentAccountId, setParentAccountId] = useState<number | null>(null);
+  const [addressLine1, setAddressLine1] = useState('');
+  const [addressLine2, setAddressLine2] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [postalCode, setPostalCode] = useState('');
+  const [country, setCountry] = useState('');
   const [saving, setSaving] = useState(false);
 
   const handleOpen = () => {
     if (account) {
       setName(account.name);
       setParentAccountId(account.parentAccountId ?? null);
+      setAddressLine1(account.addressLine1 ?? '');
+      setAddressLine2(account.addressLine2 ?? '');
+      setCity(account.city ?? '');
+      setState(account.state ?? '');
+      setPostalCode(account.postalCode ?? '');
+      setCountry(account.country ?? '');
     }
   };
 
   const handleClose = () => {
     setName('');
     setParentAccountId(null);
+    setAddressLine1('');
+    setAddressLine2('');
+    setCity('');
+    setState('');
+    setPostalCode('');
+    setCountry('');
     setSaving(false);
     onClose();
   };
@@ -47,7 +77,17 @@ export default function AccountEditDialog({
   const handleSave = async () => {
     if (!account) return;
     setSaving(true);
-    const success = await onSave(account.id, name, parentAccountId);
+    const success = await onSave({
+      id: account.id,
+      name,
+      parentAccountId,
+      addressLine1,
+      addressLine2,
+      city,
+      state,
+      postalCode,
+      country,
+    });
     setSaving(false);
     if (success) {
       handleClose();
@@ -58,7 +98,7 @@ export default function AccountEditDialog({
     <Dialog
       open={open}
       onClose={handleClose}
-      maxWidth="sm"
+      maxWidth="md"
       fullWidth
       TransitionProps={{
         onEnter: handleOpen,
@@ -66,7 +106,7 @@ export default function AccountEditDialog({
     >
       <DialogTitle>Edit Account</DialogTitle>
       <DialogContent>
-        <Stack spacing={2} sx={{ mt: 2 }}>
+        <Stack spacing={3} sx={{ mt: 2 }}>
           <TextField
             autoFocus
             label="Account Name"
@@ -83,6 +123,24 @@ export default function AccountEditDialog({
             value={parentAccountId}
             onChange={setParentAccountId}
             currentAccountId={account?.id}
+            disabled={saving}
+          />
+
+          <Divider />
+
+          <AddressFields
+            addressLine1={addressLine1}
+            addressLine2={addressLine2}
+            city={city}
+            state={state}
+            postalCode={postalCode}
+            country={country}
+            onAddressLine1Change={setAddressLine1}
+            onAddressLine2Change={setAddressLine2}
+            onCityChange={setCity}
+            onStateChange={setState}
+            onPostalCodeChange={setPostalCode}
+            onCountryChange={setCountry}
             disabled={saving}
           />
         </Stack>
