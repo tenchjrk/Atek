@@ -8,11 +8,8 @@ import {
   Box,
   CircularProgress,
   Alert,
-} from '@mui/material';
-import {
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-} from '@mui/icons-material';
+} from "@mui/material";
+import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
 
 interface EntityListProps<T extends { id: number; name: string }> {
   title: string;
@@ -22,6 +19,7 @@ interface EntityListProps<T extends { id: number; name: string }> {
   onEdit: (item: T) => void;
   onDelete: (id: number) => void;
   emptyMessage?: string;
+  renderSecondary?: (item: T) => string | React.ReactNode;
 }
 
 export default function EntityList<T extends { id: number; name: string }>({
@@ -31,11 +29,12 @@ export default function EntityList<T extends { id: number; name: string }>({
   error,
   onEdit,
   onDelete,
-  emptyMessage = 'No items yet. Create your first item above.',
+  emptyMessage = "No items yet. Create your first item above.",
+  renderSecondary,
 }: EntityListProps<T>) {
   if (loading) {
     return (
-      <Paper elevation={3} sx={{ p: 3, textAlign: 'center' }}>
+      <Paper elevation={3} sx={{ p: 3, textAlign: "center" }}>
         <CircularProgress />
       </Paper>
     );
@@ -43,7 +42,7 @@ export default function EntityList<T extends { id: number; name: string }>({
 
   if (error) {
     return (
-      <Alert severity="error" sx={{ mb: 3 }}>
+      <Alert severity='error' sx={{ mb: 3 }}>
         {error}
       </Alert>
     );
@@ -51,15 +50,15 @@ export default function EntityList<T extends { id: number; name: string }>({
 
   return (
     <Paper elevation={3}>
-      <Box sx={{ p: 2, bgcolor: 'primary.main', color: 'white' }}>
-        <Typography variant="h6">
+      <Box sx={{ p: 2, bgcolor: "primary.main", color: "white" }}>
+        <Typography variant='h6'>
           {title} ({items.length})
         </Typography>
       </Box>
 
       {items.length === 0 ? (
-        <Box sx={{ p: 3, textAlign: 'center' }}>
-          <Typography color="text.secondary">{emptyMessage}</Typography>
+        <Box sx={{ p: 3, textAlign: "center" }}>
+          <Typography color='text.secondary'>{emptyMessage}</Typography>
         </Box>
       ) : (
         <List>
@@ -70,18 +69,18 @@ export default function EntityList<T extends { id: number; name: string }>({
               secondaryAction={
                 <Box>
                   <IconButton
-                    edge="end"
-                    aria-label="edit"
+                    edge='end'
+                    aria-label='edit'
                     onClick={() => onEdit(item)}
                     sx={{ mr: 1 }}
                   >
                     <EditIcon />
                   </IconButton>
                   <IconButton
-                    edge="end"
-                    aria-label="delete"
+                    edge='end'
+                    aria-label='delete'
                     onClick={() => onDelete(item.id)}
-                    color="error"
+                    color='error'
                   >
                     <DeleteIcon />
                   </IconButton>
@@ -90,7 +89,9 @@ export default function EntityList<T extends { id: number; name: string }>({
             >
               <ListItemText
                 primary={item.name}
-                secondary={`ID: ${item.id}`}
+                secondary={
+                  renderSecondary ? renderSecondary(item) : `ID: ${item.id}`
+                }
               />
             </ListItem>
           ))}

@@ -1,20 +1,20 @@
 import { useState } from 'react';
-import { Box } from '@mui/material';
+import { Box, Chip } from '@mui/material';
 import { accountApi } from '../services/api';
 import { useCrud } from '../hooks/useCrud';
 import type { Account } from '../types';
 import PageHeader from '../components/PageHeader';
-import CreateForm from '../components/CreateForm';
+import AccountCreateForm from '../components/AccountCreateForm';
 import EntityList from '../components/EntityList';
-import EditDialog from '../components/EditDialog';
+import AccountEditDialog from '../components/AccountEditDialog';
 
 export default function Accounts() {
   const { items, loading, error, createItem, updateItem, deleteItem } = useCrud<Account>(accountApi);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
 
-  const handleCreate = async (name: string) => {
-    return await createItem({ name });
+  const handleCreate = async (name: string, parentAccountId: number | null) => {
+    return await createItem({ name, parentAccountId });
   };
 
   const handleEdit = (account: Account) => {
@@ -22,8 +22,8 @@ export default function Accounts() {
     setEditDialogOpen(true);
   };
 
-  const handleUpdate = async (id: number, name: string) => {
-    return await updateItem(id, { id, name });
+  const handleUpdate = async (id: number, name: string, parentAccountId: number | null) => {
+    return await updateItem(id, { id, name, parentAccountId });
   };
 
   const handleCloseDialog = () => {
@@ -31,17 +31,30 @@ export default function Accounts() {
     setEditingAccount(null);
   };
 
+  const renderAccountSecondary = (account: Account) => (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+      <span>ID: {account.id}</span>
+      {account.parentAccount && (
+        <Chip 
+          label={`Child of: ${account.parentAccount.name}`} 
+          size="small" 
+          color="primary" 
+          variant="outlined"
+        />
+      )}
+    </Box>
+  );
+
   return (
     <Box>
       <PageHeader 
         title="Account Management" 
-        subtitle="Manage your business customer accounts"
+        subtitle="Manage your business customer accounts and hierarchies"
       />
 
-      <CreateForm
+      <AccountCreateForm
+        accounts={items}
         onSubmit={handleCreate}
-        placeholder="Account Name"
-        buttonText="Add Account"
       />
 
       <EntityList
@@ -52,14 +65,15 @@ export default function Accounts() {
         onEdit={handleEdit}
         onDelete={deleteItem}
         emptyMessage="No accounts yet. Create your first account above."
+        renderSecondary={renderAccountSecondary}
       />
 
-      <EditDialog
+      <AccountEditDialog
         open={editDialogOpen}
-        item={editingAccount}
+        account={editingAccount}
+        accounts={items}
         onClose={handleCloseDialog}
         onSave={handleUpdate}
-        title="Edit Account"
       />
     </Box>
   );
