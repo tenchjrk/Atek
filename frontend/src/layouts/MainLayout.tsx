@@ -41,7 +41,7 @@ export default function MainLayout() {
     <Box>
       <Toolbar>
         <Typography variant='h6' noWrap component='div'>
-          Atek
+          Atek Data Solutions
         </Typography>
       </Toolbar>
       <List>
@@ -82,7 +82,7 @@ export default function MainLayout() {
             <MenuIcon />
           </IconButton>
           <Typography variant='h6' noWrap component='div' sx={{ flexGrow: 1 }}>
-            Atek SaaS Platform
+            Contract Management Platform
           </Typography>
         </Toolbar>
       </AppBar>

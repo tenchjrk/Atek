@@ -11,7 +11,7 @@ export default function Home() {
         Welcome to Atek
       </Typography>
       <Typography variant='h6' color='text.secondary' paragraph>
-        Your SaaS platform for managing accounts and vendors
+        Your online platform for managing contracts.
       </Typography>
 
       {/* In Grid2, "container" is still used, but "item" is removed */}

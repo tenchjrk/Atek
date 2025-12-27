@@ -8,8 +8,13 @@ import {
   Box,
   CircularProgress,
   Alert,
-} from "@mui/material";
-import { Delete as DeleteIcon, Edit as EditIcon } from "@mui/icons-material";
+  useMediaQuery,
+  useTheme,
+} from '@mui/material';
+import {
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+} from '@mui/icons-material';
 
 interface EntityListProps<T extends { id: number; name: string }> {
   title: string;
@@ -29,12 +34,15 @@ export default function EntityList<T extends { id: number; name: string }>({
   error,
   onEdit,
   onDelete,
-  emptyMessage = "No items yet. Create your first item above.",
+  emptyMessage = 'No items yet. Create your first item above.',
   renderSecondary,
 }: EntityListProps<T>) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   if (loading) {
     return (
-      <Paper elevation={3} sx={{ p: 3, textAlign: "center" }}>
+      <Paper elevation={3} sx={{ p: 3, textAlign: 'center' }}>
         <CircularProgress />
       </Paper>
     );
@@ -42,7 +50,7 @@ export default function EntityList<T extends { id: number; name: string }>({
 
   if (error) {
     return (
-      <Alert severity='error' sx={{ mb: 3 }}>
+      <Alert severity="error" sx={{ mb: 3 }}>
         {error}
       </Alert>
     );
@@ -50,15 +58,15 @@ export default function EntityList<T extends { id: number; name: string }>({
 
   return (
     <Paper elevation={3}>
-      <Box sx={{ p: 2, bgcolor: "primary.main", color: "white" }}>
-        <Typography variant='h6'>
+      <Box sx={{ p: 2, bgcolor: 'primary.main', color: 'white' }}>
+        <Typography variant="h6">
           {title} ({items.length})
         </Typography>
       </Box>
 
       {items.length === 0 ? (
-        <Box sx={{ p: 3, textAlign: "center" }}>
-          <Typography color='text.secondary'>{emptyMessage}</Typography>
+        <Box sx={{ p: 3, textAlign: 'center' }}>
+          <Typography color="text.secondary">{emptyMessage}</Typography>
         </Box>
       ) : (
         <List>
@@ -66,33 +74,47 @@ export default function EntityList<T extends { id: number; name: string }>({
             <ListItem
               key={item.id}
               divider={index < items.length - 1}
-              secondaryAction={
-                <Box>
-                  <IconButton
-                    edge='end'
-                    aria-label='edit'
-                    onClick={() => onEdit(item)}
-                    sx={{ mr: 1 }}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    edge='end'
-                    aria-label='delete'
-                    onClick={() => onDelete(item.id)}
-                    color='error'
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Box>
-              }
+              sx={{
+                flexDirection: { xs: 'column', sm: 'row' },
+                alignItems: { xs: 'flex-start', sm: 'center' },
+                gap: { xs: 1, sm: 0 },
+                py: { xs: 2, sm: 1 },
+              }}
             >
               <ListItemText
                 primary={item.name}
-                secondary={
-                  renderSecondary ? renderSecondary(item) : `ID: ${item.id}`
-                }
+                secondary={renderSecondary ? renderSecondary(item) : `ID: ${item.id}`}
+                sx={{
+                  flex: 1,
+                  pr: { xs: 0, sm: 2 },
+                  wordBreak: 'break-word',
+                  minWidth: 0,
+                }}
               />
+              <Box 
+                sx={{
+                  display: 'flex',
+                  gap: 0.5,
+                  alignSelf: { xs: 'flex-end', sm: 'center' },
+                  flexShrink: 0,
+                }}
+              >
+                <IconButton
+                  aria-label="edit"
+                  onClick={() => onEdit(item)}
+                  size={isMobile ? 'small' : 'medium'}
+                >
+                  <EditIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  aria-label="delete"
+                  onClick={() => onDelete(item.id)}
+                  color="error"
+                  size={isMobile ? 'small' : 'medium'}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Box>
             </ListItem>
           ))}
         </List>
