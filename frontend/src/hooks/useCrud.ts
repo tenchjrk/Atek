@@ -41,7 +41,6 @@ export function useCrud<T extends { id: number }>(api: CrudApi<T>) {
       return true;
     } catch (err) {
       console.error('Error creating item:', err);
-      setError('Error creating item');
       return false;
     }
   };
@@ -53,7 +52,6 @@ export function useCrud<T extends { id: number }>(api: CrudApi<T>) {
       return true;
     } catch (err) {
       console.error('Error updating item:', err);
-      setError('Error updating item');
       return false;
     }
   };
@@ -71,7 +69,8 @@ export function useCrud<T extends { id: number }>(api: CrudApi<T>) {
         errorMessage = err.response.data.message;
       }
       
-      setError(errorMessage);
+      // Don't set the general error state for delete errors
+      // Return the error instead so it can be handled by the component
       return { success: false, error: errorMessage };
     }
   };

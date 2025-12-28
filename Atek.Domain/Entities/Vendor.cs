@@ -17,7 +17,7 @@ public class Vendor
     public DateTime CreatedDate { get; set; }
     public DateTime LastModifiedDate { get; set; }
     
-    // Self-referencing foreign key for parent vendor
+    // Self-referencing foreign key
     public int? ParentVendorId { get; set; }
     
     // Navigation property to parent
@@ -25,4 +25,10 @@ public class Vendor
     
     // Navigation property to children
     public ICollection<Vendor> ChildVendors { get; set; } = new List<Vendor>();
+    
+    // Foreign key to VendorType
+    public int? VendorTypeId { get; set; }
+    
+    // Navigation property to VendorType
+    public VendorType? VendorType { get; set; }
 }

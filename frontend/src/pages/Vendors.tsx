@@ -1,26 +1,27 @@
-import { useState } from "react";
-import { Box, Chip, Stack, Button } from "@mui/material";
-import { Add as AddIcon } from "@mui/icons-material";
-import { vendorApi } from "../services/api";
-import { useCrud } from "../hooks/useCrud";
-import { useVendorFilters } from "../hooks/useVendorFilters";
-import type { Vendor } from "../types";
-import PageHeader from "../components/PageHeader";
-import EntityList from "../components/EntityList";
-import VendorEditDialog from "../components/VendorEditDialog";
-import VendorCreateDialog from "../components/VendorCreateDialog";
-import VendorFilters from "../components/VendorFilters";
-import ConfirmDialog from "../components/ConfirmDialog";
-import { formatDateShort } from "../utils/dateFormatter";
+import { useState, useEffect } from 'react';
+import { Box, Chip, Stack, Button, Alert } from '@mui/material';
+import { Add as AddIcon } from '@mui/icons-material';
+import { vendorApi, vendorTypeApi } from '../services/api';
+import { useCrud } from '../hooks/useCrud';
+import { useVendorFilters } from '../hooks/useVendorFilters';
+import type { Vendor, VendorType } from '../types';
+import PageHeader from '../components/PageHeader';
+import EntityList from '../components/EntityList';
+import VendorEditDialog from '../components/VendorEditDialog';
+import VendorCreateDialog from '../components/VendorCreateDialog';
+import VendorFilters from '../components/VendorFilters';
+import ConfirmDialog from '../components/ConfirmDialog';
+import { formatDateShort } from '../utils/dateFormatter';
 
 export default function Vendors() {
-  const { items, loading, error, createItem, updateItem, deleteItem } =
-    useCrud<Vendor>(vendorApi);
+  const { items, loading, error, createItem, updateItem, deleteItem } = useCrud<Vendor>(vendorApi);
+  const [vendorTypes, setVendorTypes] = useState<VendorType[]>([]);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
   const [deletingVendorId, setDeletingVendorId] = useState<number | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const {
     searchTerm,
@@ -38,9 +39,23 @@ export default function Vendors() {
     clearFilters,
   } = useVendorFilters(items);
 
+  // Fetch vendor types
+  useEffect(() => {
+    const fetchVendorTypes = async () => {
+      try {
+        const response = await vendorTypeApi.getAll();
+        setVendorTypes(response.data);
+      } catch (err) {
+        console.error('Error loading vendor types:', err);
+      }
+    };
+    fetchVendorTypes();
+  }, []);
+
   const handleCreate = async (vendorData: {
     name: string;
     parentVendorId: number | null;
+    vendorTypeId: number | null;
     addressLine1: string;
     addressLine2: string;
     city: string;
@@ -48,7 +63,7 @@ export default function Vendors() {
     postalCode: string;
     country: string;
   }) => {
-    const success = await createItem(vendorData as Omit<Vendor, "id">);
+    const success = await createItem(vendorData as Omit<Vendor, 'id'>);
     return success;
   };
 
@@ -61,6 +76,7 @@ export default function Vendors() {
     id: number;
     name: string;
     parentVendorId: number | null;
+    vendorTypeId: number | null;
     addressLine1: string;
     addressLine2: string;
     city: string;
@@ -73,20 +89,27 @@ export default function Vendors() {
 
   const handleDeleteClick = (id: number) => {
     setDeletingVendorId(id);
+    setDeleteError(null);
     setDeleteDialogOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
     if (deletingVendorId !== null) {
-      await deleteItem(deletingVendorId);
-      setDeleteDialogOpen(false);
-      setDeletingVendorId(null);
+      const result = await deleteItem(deletingVendorId);
+      if (result.success) {
+        setDeleteDialogOpen(false);
+        setDeletingVendorId(null);
+        setDeleteError(null);
+      } else {
+        setDeleteError(result.error);
+      }
     }
   };
 
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
     setDeletingVendorId(null);
+    setDeleteError(null);
   };
 
   const handleCloseEditDialog = () => {
@@ -95,43 +118,46 @@ export default function Vendors() {
   };
 
   const getDeletingVendorName = () => {
-    const vendor = items.find((v) => v.id === deletingVendorId);
-    return vendor?.name || "this vendor";
+    const vendor = items.find(v => v.id === deletingVendorId);
+    return vendor?.name || 'this vendor';
   };
 
   const renderVendorSecondary = (vendor: Vendor) => {
     const addressLine1 = vendor.addressLine1;
     const addressLine2 = vendor.addressLine2;
-    const cityStateZip = [vendor.city, vendor.state, vendor.postalCode]
-      .filter(Boolean)
-      .join(", ");
+    const cityStateZip = [
+      vendor.city,
+      vendor.state,
+      vendor.postalCode,
+    ].filter(Boolean).join(', ');
     const country = vendor.country;
 
     const hasAddress = addressLine1 || addressLine2 || cityStateZip || country;
 
     return (
-      <Stack spacing={0.5} sx={{ mt: 0.5 }}>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            flexWrap: "wrap",
-          }}
-        >
-          <span style={{ fontSize: "0.875rem" }}>ID: {vendor.id}</span>
+      <Stack spacing={0.5} sx={{ mt: 0.5 }} component="span">
+        <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.875rem' }}>ID: {vendor.id}</span>
+          {vendor.vendorType && (
+            <Chip 
+              label={vendor.vendorType.type} 
+              size="small" 
+              color="secondary" 
+              variant="outlined"
+            />
+          )}
           {vendor.parentVendor && (
-            <Chip
-              label={`Child of: ${vendor.parentVendor.name}`}
-              size='small'
-              color='primary'
-              variant='outlined'
+            <Chip 
+              label={`Child of: ${vendor.parentVendor.name}`} 
+              size="small" 
+              color="primary" 
+              variant="outlined"
             />
           )}
         </Box>
         {hasAddress && (
-          <Box sx={{ fontSize: "0.875rem", color: "text.secondary" }}>
-            📍
+          <Box component="span" sx={{ fontSize: '0.875rem', color: 'text.secondary', display: 'block' }}>
+            📍 
             {addressLine1 && <span> {addressLine1}</span>}
             {addressLine2 && <span>, {addressLine2}</span>}
             {(addressLine1 || addressLine2) && cityStateZip && <span>,</span>}
@@ -139,9 +165,8 @@ export default function Vendors() {
             {country && <span>, {country}</span>}
           </Box>
         )}
-        <Box sx={{ fontSize: "0.75rem", color: "text.secondary" }}>
-          Created: {formatDateShort(vendor.createdDate)} • Modified:{" "}
-          {formatDateShort(vendor.lastModifiedDate)}
+        <Box component="span" sx={{ fontSize: '0.75rem', color: 'text.secondary', display: 'block' }}>
+          Created: {formatDateShort(vendor.createdDate)} • Modified: {formatDateShort(vendor.lastModifiedDate)}
         </Box>
       </Stack>
     );
@@ -149,20 +174,13 @@ export default function Vendors() {
 
   return (
     <Box>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          mb: 3,
-        }}
-      >
-        <PageHeader
-          title='Vendor Management'
-          subtitle='Manage your supplier and vendor relationships'
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+        <PageHeader 
+          title="Vendor Management" 
+          subtitle="Manage your supplier and vendor relationships"
         />
         <Button
-          variant='contained'
+          variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setCreateDialogOpen(true)}
           sx={{ mt: 1 }}
@@ -187,7 +205,7 @@ export default function Vendors() {
       />
 
       <EntityList
-        title='Vendors'
+        title="Vendors"
         items={filteredVendors}
         loading={loading}
         error={error}
@@ -195,8 +213,8 @@ export default function Vendors() {
         onDelete={handleDeleteClick}
         emptyMessage={
           activeFilterCount > 0 || searchTerm
-            ? "No vendors match your search or filters."
-            : "No vendors yet. Create your first vendor above."
+            ? 'No vendors match your search or filters.'
+            : 'No vendors yet. Create your first vendor above.'
         }
         renderSecondary={renderVendorSecondary}
       />
@@ -204,6 +222,7 @@ export default function Vendors() {
       <VendorCreateDialog
         open={createDialogOpen}
         vendors={items}
+        vendorTypes={vendorTypes}
         onClose={() => setCreateDialogOpen(false)}
         onSave={handleCreate}
       />
@@ -212,19 +231,30 @@ export default function Vendors() {
         open={editDialogOpen}
         vendor={editingVendor}
         vendors={items}
+        vendorTypes={vendorTypes}
         onClose={handleCloseEditDialog}
         onSave={handleUpdate}
       />
 
       <ConfirmDialog
         open={deleteDialogOpen}
-        title='Delete Vendor'
-        message={`Are you sure you want to delete "${getDeletingVendorName()}"? This action cannot be undone.`}
-        confirmText='Delete'
-        cancelText='Cancel'
-        confirmColor='error'
-        onConfirm={handleDeleteConfirm}
-        onCancel={handleDeleteCancel}
+        title="Delete Vendor"
+        message={
+          deleteError ? (
+            <Box>
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {deleteError}
+              </Alert>
+            </Box>
+          ) : (
+            `Are you sure you want to delete "${getDeletingVendorName()}"? This action cannot be undone.`
+          )
+        }
+        confirmText={deleteError ? "OK" : "Delete"}
+        cancelText={deleteError ? undefined : "Cancel"}
+        confirmColor={deleteError ? "primary" : "error"}
+        onConfirm={deleteError ? handleDeleteCancel : handleDeleteConfirm}
+        onCancel={deleteError ? undefined : handleDeleteCancel}
       />
     </Box>
   );

@@ -3,6 +3,11 @@ export interface AccountType {
   type: string;
 }
 
+export interface VendorType {
+  id: number;
+  type: string;
+}
+
 export interface Account {
   id: number;
   name: string;
@@ -35,4 +40,6 @@ export interface Vendor {
   parentVendorId?: number | null;
   parentVendor?: Vendor | null;
   childVendors?: Vendor[];
+  vendorTypeId?: number | null;
+  vendorType?: VendorType | null;
 }

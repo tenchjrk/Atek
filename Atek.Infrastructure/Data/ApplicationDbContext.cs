@@ -13,6 +13,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Account> Accounts { get; set; }
     public DbSet<Vendor> Vendors { get; set; }
     public DbSet<AccountType> AccountTypes { get; set; }
+    public DbSet<VendorType> VendorTypes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -37,6 +38,13 @@ public class ApplicationDbContext : DbContext
             .HasOne(a => a.AccountType)
             .WithMany(at => at.Accounts)
             .HasForeignKey(a => a.AccountTypeId)
-            .OnDelete(DeleteBehavior.Restrict); // Changed to Restrict instead of SetNull
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Configure Vendor to VendorType relationship
+        modelBuilder.Entity<Vendor>()
+            .HasOne(v => v.VendorType)
+            .WithMany(vt => vt.Vendors)
+            .HasForeignKey(v => v.VendorTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

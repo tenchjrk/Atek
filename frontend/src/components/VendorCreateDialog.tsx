@@ -12,16 +12,19 @@ import {
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 import VendorSelector from './VendorSelector';
+import VendorTypeSelector from './VendorTypeSelector';
 import AddressFields from './AddressFields';
-import type { Vendor } from '../types';
+import type { Vendor, VendorType } from '../types';
 
 interface VendorCreateDialogProps {
   open: boolean;
   vendors: Vendor[];
+  vendorTypes: VendorType[];
   onClose: () => void;
   onSave: (vendorData: {
     name: string;
     parentVendorId: number | null;
+    vendorTypeId: number | null;
     addressLine1: string;
     addressLine2: string;
     city: string;
@@ -34,11 +37,13 @@ interface VendorCreateDialogProps {
 export default function VendorCreateDialog({
   open,
   vendors,
+  vendorTypes,
   onClose,
   onSave,
 }: VendorCreateDialogProps) {
   const [name, setName] = useState('');
   const [parentVendorId, setParentVendorId] = useState<number | null>(null);
+  const [vendorTypeId, setVendorTypeId] = useState<number | null>(null);
   const [addressLine1, setAddressLine1] = useState('');
   const [addressLine2, setAddressLine2] = useState('');
   const [city, setCity] = useState('');
@@ -50,6 +55,7 @@ export default function VendorCreateDialog({
   const handleClose = () => {
     setName('');
     setParentVendorId(null);
+    setVendorTypeId(null);
     setAddressLine1('');
     setAddressLine2('');
     setCity('');
@@ -65,6 +71,7 @@ export default function VendorCreateDialog({
     const success = await onSave({
       name,
       parentVendorId,
+      vendorTypeId,
       addressLine1,
       addressLine2,
       city,
@@ -110,6 +117,13 @@ export default function VendorCreateDialog({
             onChange={(e) => setName(e.target.value)}
             disabled={saving}
             required
+          />
+
+          <VendorTypeSelector
+            vendorTypes={vendorTypes}
+            value={vendorTypeId}
+            onChange={setVendorTypeId}
+            disabled={saving}
           />
 
           <VendorSelector
