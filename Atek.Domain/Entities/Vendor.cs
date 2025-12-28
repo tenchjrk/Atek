@@ -1,0 +1,28 @@
+namespace Atek.Domain.Entities;
+
+public class Vendor
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    
+    // Address fields
+    public string? AddressLine1 { get; set; }
+    public string? AddressLine2 { get; set; }
+    public string? City { get; set; }
+    public string? State { get; set; }
+    public string? PostalCode { get; set; }
+    public string? Country { get; set; }
+    
+    // Audit fields
+    public DateTime CreatedDate { get; set; }
+    public DateTime LastModifiedDate { get; set; }
+    
+    // Self-referencing foreign key for parent vendor
+    public int? ParentVendorId { get; set; }
+    
+    // Navigation property to parent
+    public Vendor? ParentVendor { get; set; }
+    
+    // Navigation property to children
+    public ICollection<Vendor> ChildVendors { get; set; } = new List<Vendor>();
+}

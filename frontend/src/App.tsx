@@ -1,18 +1,18 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import MainLayout from './layouts/MainLayout';
-import Home from './pages/Home';
-import Accounts from './pages/Accounts';
-import Vendors from './pages/Vendors';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
+import MainLayout from "./layouts/MainLayout";
+import Home from "./pages/Home";
+import Accounts from "./pages/Accounts";
+import Vendors from "./pages/Vendors";
 
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#1976d2',
+      main: "#2c4256",
     },
     secondary: {
-      main: '#dc004e',
+      main: "#dc004e",
     },
   },
 });
@@ -23,10 +23,10 @@ function App() {
       <CssBaseline />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<MainLayout />}>
+          <Route path='/' element={<MainLayout />}>
             <Route index element={<Home />} />
-            <Route path="accounts" element={<Accounts />} />
-            <Route path="vendors" element={<Vendors />} />
+            <Route path='accounts' element={<Accounts />} />
+            <Route path='vendors' element={<Vendors />} />
           </Route>
         </Routes>
       </BrowserRouter>

@@ -11,16 +11,24 @@ public class ApplicationDbContext : DbContext
     }
 
     public DbSet<Account> Accounts { get; set; }
+    public DbSet<Vendor> Vendors { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // Configure self-referencing relationship
+        // Configure Account self-referencing relationship
         modelBuilder.Entity<Account>()
             .HasOne(a => a.ParentAccount)
             .WithMany(a => a.ChildAccounts)
             .HasForeignKey(a => a.ParentAccountId)
-            .OnDelete(DeleteBehavior.Restrict); // Prevent cascading deletes
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Configure Vendor self-referencing relationship
+        modelBuilder.Entity<Vendor>()
+            .HasOne(v => v.ParentVendor)
+            .WithMany(v => v.ChildVendors)
+            .HasForeignKey(v => v.ParentVendorId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
