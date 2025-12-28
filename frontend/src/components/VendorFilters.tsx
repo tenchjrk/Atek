@@ -1,5 +1,7 @@
-import { TextField, Box, Stack, Chip, IconButton } from '@mui/material';
+import { TextField, Box, Stack, Chip, IconButton, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material';
 import { Clear as ClearIcon } from '@mui/icons-material';
+import type { VendorType } from '../types';
 
 interface VendorFiltersProps {
   searchTerm: string;
@@ -12,6 +14,9 @@ interface VendorFiltersProps {
   onPostalCodeFilterChange: (value: string) => void;
   countryFilter: string;
   onCountryFilterChange: (value: string) => void;
+  vendorTypeFilter: number | null;
+  onVendorTypeFilterChange: (value: number | null) => void;
+  vendorTypes: VendorType[];
   onClearFilters: () => void;
   activeFilterCount: number;
 }
@@ -27,12 +32,21 @@ export default function VendorFilters({
   onPostalCodeFilterChange,
   countryFilter,
   onCountryFilterChange,
+  vendorTypeFilter,
+  onVendorTypeFilterChange,
+  vendorTypes,
   onClearFilters,
   activeFilterCount,
 }: VendorFiltersProps) {
+  const handleVendorTypeChange = (event: SelectChangeEvent<number | string>) => {
+    const value = event.target.value;
+    onVendorTypeFilterChange(value === '' ? null : Number(value));
+  };
+
   return (
     <Box sx={{ mb: 3 }}>
       <Stack spacing={2}>
+        {/* Search bar */}
         <TextField
           fullWidth
           placeholder="Search by ID or vendor name..."
@@ -42,7 +56,26 @@ export default function VendorFilters({
           size="medium"
         />
 
+        {/* Filter fields */}
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <FormControl fullWidth size="small">
+            <InputLabel>Filter by Vendor Type</InputLabel>
+            <Select
+              value={vendorTypeFilter ?? ''}
+              label="Filter by Vendor Type"
+              onChange={handleVendorTypeChange}
+            >
+              <MenuItem value="">
+                <em>All Types</em>
+              </MenuItem>
+              {vendorTypes.map((type) => (
+                <MenuItem key={type.id} value={type.id}>
+                  {type.type}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
           <TextField
             fullWidth
             label="Filter by City"
@@ -73,6 +106,7 @@ export default function VendorFilters({
           />
         </Stack>
 
+        {/* Active filters display */}
         {activeFilterCount > 0 && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
             <Chip

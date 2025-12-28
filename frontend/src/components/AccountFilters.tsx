@@ -1,5 +1,7 @@
-import { TextField, Box, Stack, Chip, IconButton } from '@mui/material';
+import { TextField, Box, Stack, Chip, IconButton, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material';
 import { Clear as ClearIcon } from '@mui/icons-material';
+import type { AccountType } from '../types';
 
 interface AccountFiltersProps {
   searchTerm: string;
@@ -12,6 +14,9 @@ interface AccountFiltersProps {
   onPostalCodeFilterChange: (value: string) => void;
   countryFilter: string;
   onCountryFilterChange: (value: string) => void;
+  accountTypeFilter: number | null;
+  onAccountTypeFilterChange: (value: number | null) => void;
+  accountTypes: AccountType[];
   onClearFilters: () => void;
   activeFilterCount: number;
 }
@@ -27,9 +32,17 @@ export default function AccountFilters({
   onPostalCodeFilterChange,
   countryFilter,
   onCountryFilterChange,
+  accountTypeFilter,
+  onAccountTypeFilterChange,
+  accountTypes,
   onClearFilters,
   activeFilterCount,
 }: AccountFiltersProps) {
+  const handleAccountTypeChange = (event: SelectChangeEvent<number | string>) => {
+    const value = event.target.value;
+    onAccountTypeFilterChange(value === '' ? null : Number(value));
+  };
+
   return (
     <Box sx={{ mb: 3 }}>
       <Stack spacing={2}>
@@ -45,6 +58,24 @@ export default function AccountFilters({
 
         {/* Filter fields */}
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+          <FormControl fullWidth size="small">
+            <InputLabel>Filter by Account Type</InputLabel>
+            <Select
+              value={accountTypeFilter ?? ''}
+              label="Filter by Account Type"
+              onChange={handleAccountTypeChange}
+            >
+              <MenuItem value="">
+                <em>All Types</em>
+              </MenuItem>
+              {accountTypes.map((type) => (
+                <MenuItem key={type.id} value={type.id}>
+                  {type.type}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
           <TextField
             fullWidth
             label="Filter by City"

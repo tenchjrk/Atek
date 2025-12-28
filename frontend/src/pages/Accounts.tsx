@@ -34,6 +34,8 @@ export default function Accounts() {
     setPostalCodeFilter,
     countryFilter,
     setCountryFilter,
+    accountTypeFilter,
+    setAccountTypeFilter,
     filteredAccounts,
     activeFilterCount,
     clearFilters,
@@ -51,6 +53,8 @@ export default function Accounts() {
     };
     fetchAccountTypes();
   }, []);
+
+  // ... rest of the handlers stay the same ...
 
   const handleCreate = async (accountData: {
     name: string;
@@ -210,6 +214,9 @@ export default function Accounts() {
         onPostalCodeFilterChange={setPostalCodeFilter}
         countryFilter={countryFilter}
         onCountryFilterChange={setCountryFilter}
+        accountTypeFilter={accountTypeFilter}
+        onAccountTypeFilterChange={setAccountTypeFilter}
+        accountTypes={accountTypes}
         onClearFilters={clearFilters}
         activeFilterCount={activeFilterCount}
       />

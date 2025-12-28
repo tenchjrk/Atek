@@ -34,6 +34,8 @@ export default function Vendors() {
     setPostalCodeFilter,
     countryFilter,
     setCountryFilter,
+    vendorTypeFilter,
+    setVendorTypeFilter,
     filteredVendors,
     activeFilterCount,
     clearFilters,
@@ -210,6 +212,9 @@ export default function Vendors() {
         onPostalCodeFilterChange={setPostalCodeFilter}
         countryFilter={countryFilter}
         onCountryFilterChange={setCountryFilter}
+        vendorTypeFilter={vendorTypeFilter}
+        onVendorTypeFilterChange={setVendorTypeFilter}
+        vendorTypes={vendorTypes}
         onClearFilters={clearFilters}
         activeFilterCount={activeFilterCount}
       />

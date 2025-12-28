@@ -7,6 +7,7 @@ export function useAccountFilters(accounts: Account[]) {
   const [stateFilter, setStateFilter] = useState('');
   const [postalCodeFilter, setPostalCodeFilter] = useState('');
   const [countryFilter, setCountryFilter] = useState('');
+  const [accountTypeFilter, setAccountTypeFilter] = useState<number | null>(null);
 
   const filteredAccounts = useMemo(() => {
     return accounts.filter((account) => {
@@ -32,16 +33,20 @@ export function useAccountFilters(accounts: Account[]) {
       const matchesCountry = countryFilter === '' ||
         (account.country?.toLowerCase().includes(countryFilter.toLowerCase()) ?? false);
 
-      return matchesSearch && matchesCity && matchesState && matchesPostalCode && matchesCountry;
+      // Account type filter
+      const matchesAccountType = accountTypeFilter === null ||
+        account.accountTypeId === accountTypeFilter;
+
+      return matchesSearch && matchesCity && matchesState && matchesPostalCode && matchesCountry && matchesAccountType;
     });
-  }, [accounts, searchTerm, cityFilter, stateFilter, postalCodeFilter, countryFilter]);
+  }, [accounts, searchTerm, cityFilter, stateFilter, postalCodeFilter, countryFilter, accountTypeFilter]);
 
   const activeFilterCount = [
     cityFilter,
     stateFilter,
     postalCodeFilter,
     countryFilter,
-  ].filter(Boolean).length;
+  ].filter(Boolean).length + (accountTypeFilter !== null ? 1 : 0);
 
   const clearFilters = () => {
     setSearchTerm('');
@@ -49,6 +54,7 @@ export function useAccountFilters(accounts: Account[]) {
     setStateFilter('');
     setPostalCodeFilter('');
     setCountryFilter('');
+    setAccountTypeFilter(null);
   };
 
   return {
@@ -62,6 +68,8 @@ export function useAccountFilters(accounts: Account[]) {
     setPostalCodeFilter,
     countryFilter,
     setCountryFilter,
+    accountTypeFilter,
+    setAccountTypeFilter,
     filteredAccounts,
     activeFilterCount,
     clearFilters,

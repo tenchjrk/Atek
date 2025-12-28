@@ -7,6 +7,7 @@ export function useVendorFilters(vendors: Vendor[]) {
   const [stateFilter, setStateFilter] = useState('');
   const [postalCodeFilter, setPostalCodeFilter] = useState('');
   const [countryFilter, setCountryFilter] = useState('');
+  const [vendorTypeFilter, setVendorTypeFilter] = useState<number | null>(null);
 
   const filteredVendors = useMemo(() => {
     return vendors.filter((vendor) => {
@@ -27,16 +28,19 @@ export function useVendorFilters(vendors: Vendor[]) {
       const matchesCountry = countryFilter === '' ||
         (vendor.country?.toLowerCase().includes(countryFilter.toLowerCase()) ?? false);
 
-      return matchesSearch && matchesCity && matchesState && matchesPostalCode && matchesCountry;
+      const matchesVendorType = vendorTypeFilter === null ||
+        vendor.vendorTypeId === vendorTypeFilter;
+
+      return matchesSearch && matchesCity && matchesState && matchesPostalCode && matchesCountry && matchesVendorType;
     });
-  }, [vendors, searchTerm, cityFilter, stateFilter, postalCodeFilter, countryFilter]);
+  }, [vendors, searchTerm, cityFilter, stateFilter, postalCodeFilter, countryFilter, vendorTypeFilter]);
 
   const activeFilterCount = [
     cityFilter,
     stateFilter,
     postalCodeFilter,
     countryFilter,
-  ].filter(Boolean).length;
+  ].filter(Boolean).length + (vendorTypeFilter !== null ? 1 : 0);
 
   const clearFilters = () => {
     setSearchTerm('');
@@ -44,6 +48,7 @@ export function useVendorFilters(vendors: Vendor[]) {
     setStateFilter('');
     setPostalCodeFilter('');
     setCountryFilter('');
+    setVendorTypeFilter(null);
   };
 
   return {
@@ -57,6 +62,8 @@ export function useVendorFilters(vendors: Vendor[]) {
     setPostalCodeFilter,
     countryFilter,
     setCountryFilter,
+    vendorTypeFilter,
+    setVendorTypeFilter,
     filteredVendors,
     activeFilterCount,
     clearFilters,

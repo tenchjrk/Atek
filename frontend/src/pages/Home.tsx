@@ -1,29 +1,26 @@
 import { Typography, Box, Card, CardContent } from "@mui/material";
-// We import Grid2 specifically to resolve the type mismatch
 import Grid from '@mui/material/Grid';
-import { Business, Store } from "@mui/icons-material";
+import { Business, Store, Category, LocalOffer } from "@mui/icons-material";
 import { Link } from "react-router-dom";
 
 export default function Home() {
   return (
     <Box>
       <Typography variant='h3' component='h1' gutterBottom>
-        Welcome to Atek
+        Welcome to Atek Data Solutions
       </Typography>
       <Typography variant='h6' color='text.secondary' paragraph>
-        Your online platform for managing contracts.
+        Your Contract Management Platform for managing accounts, vendors, and business relationships
       </Typography>
 
-      {/* In Grid2, "container" is still used, but "item" is removed */}
       <Grid container spacing={3} sx={{ mt: 3 }}>
         
-        {/* We use size={{ xs: 12, md: 6 }} instead of separate props */}
         <Grid size={{ xs: 12, md: 6 }}>
           <Card
             component={Link}
             to='/accounts'
             sx={{
-              display: 'block', // Ensures the link occupies the full card area
+              display: 'block',
               textDecoration: "none",
               transition: "transform 0.2s",
               "&:hover": {
@@ -42,7 +39,7 @@ export default function Home() {
                 </Typography>
               </Box>
               <Typography variant='body2' color='text.secondary'>
-                Manage your customer accounts and track their information
+                Manage your business customer accounts and track their information
               </Typography>
             </CardContent>
           </Card>
@@ -70,11 +67,68 @@ export default function Home() {
                 </Typography>
               </Box>
               <Typography variant='body2' color='text.secondary'>
-                Manage your vendor relationships and partnerships
+                Manage your supplier and vendor relationships and partnerships
               </Typography>
             </CardContent>
           </Card>
         </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Card
+            component={Link}
+            to='/account-types'
+            sx={{
+              display: 'block',
+              textDecoration: "none",
+              transition: "transform 0.2s",
+              "&:hover": {
+                transform: "translateY(-4px)",
+                boxShadow: 4,
+              },
+            }}
+          >
+            <CardContent>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                <Category sx={{ fontSize: 40, mr: 2, color: "primary.main" }} />
+                <Typography variant='h5' component='div' sx={{ color: 'text.primary' }}>
+                  Account Types
+                </Typography>
+              </Box>
+              <Typography variant='body2' color='text.secondary'>
+                Manage account type classifications and categories
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Card
+            component={Link}
+            to='/vendor-types'
+            sx={{
+              display: 'block',
+              textDecoration: "none",
+              transition: "transform 0.2s",
+              "&:hover": {
+                transform: "translateY(-4px)",
+                boxShadow: 4,
+              },
+            }}
+          >
+            <CardContent>
+              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                <LocalOffer sx={{ fontSize: 40, mr: 2, color: "primary.main" }} />
+                <Typography variant='h5' component='div' sx={{ color: 'text.primary' }}>
+                  Vendor Types
+                </Typography>
+              </Box>
+              <Typography variant='body2' color='text.secondary'>
+                Manage vendor type classifications and categories
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
       </Grid>
     </Box>
   );
