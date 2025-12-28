@@ -54,6 +54,8 @@ export default function Accounts() {
 
   const handleCreate = async (accountData: {
     name: string;
+    dunsNumber: string;
+    ein: string;
     parentAccountId: number | null;
     accountTypeId: number | null;
     addressLine1: string;
@@ -75,6 +77,8 @@ export default function Accounts() {
   const handleUpdate = async (accountData: {
     id: number;
     name: string;
+    dunsNumber: string;
+    ein: string;
     parentAccountId: number | null;
     accountTypeId: number | null;
     addressLine1: string;
@@ -138,6 +142,12 @@ export default function Accounts() {
       <Stack spacing={0.5} sx={{ mt: 0.5 }} component="span">
         <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
           <span style={{ fontSize: '0.875rem' }}>ID: {account.id}</span>
+          {account.dunsNumber && (
+            <span style={{ fontSize: '0.875rem' }}>• DUNS: {account.dunsNumber}</span>
+          )}
+          {account.ein && (
+            <span style={{ fontSize: '0.875rem' }}>• EIN: {account.ein}</span>
+          )}
           {account.accountType && (
             <Chip 
               label={account.accountType.type} 

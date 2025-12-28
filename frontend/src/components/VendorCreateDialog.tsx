@@ -23,6 +23,8 @@ interface VendorCreateDialogProps {
   onClose: () => void;
   onSave: (vendorData: {
     name: string;
+    dunsNumber: string;
+    ein: string;
     parentVendorId: number | null;
     vendorTypeId: number | null;
     addressLine1: string;
@@ -42,6 +44,8 @@ export default function VendorCreateDialog({
   onSave,
 }: VendorCreateDialogProps) {
   const [name, setName] = useState('');
+  const [dunsNumber, setDunsNumber] = useState('');
+  const [ein, setEin] = useState('');
   const [parentVendorId, setParentVendorId] = useState<number | null>(null);
   const [vendorTypeId, setVendorTypeId] = useState<number | null>(null);
   const [addressLine1, setAddressLine1] = useState('');
@@ -54,6 +58,8 @@ export default function VendorCreateDialog({
 
   const handleClose = () => {
     setName('');
+    setDunsNumber('');
+    setEin('');
     setParentVendorId(null);
     setVendorTypeId(null);
     setAddressLine1('');
@@ -70,6 +76,8 @@ export default function VendorCreateDialog({
     setSaving(true);
     const success = await onSave({
       name,
+      dunsNumber,
+      ein,
       parentVendorId,
       vendorTypeId,
       addressLine1,
@@ -119,6 +127,32 @@ export default function VendorCreateDialog({
             required
           />
 
+          <TextField
+            label="DUNS Number"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={dunsNumber}
+            onChange={(e) => setDunsNumber(e.target.value)}
+            disabled={saving}
+            required
+            helperText="9-digit business identification number"
+          />
+
+          <TextField
+            label="EIN"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={ein}
+            onChange={(e) => setEin(e.target.value)}
+            disabled={saving}
+            required
+            helperText="Employer Identification Number"
+          />
+
+          <Divider />
+
           <VendorTypeSelector
             vendorTypes={vendorTypes}
             value={vendorTypeId}
@@ -156,7 +190,7 @@ export default function VendorCreateDialog({
         <Button onClick={handleClose} disabled={saving}>
           Cancel
         </Button>
-        <Button onClick={handleSave} variant="contained" disabled={saving || !name}>
+        <Button onClick={handleSave} variant="contained" disabled={saving || !name || !dunsNumber || !ein}>
           Create Vendor
         </Button>
       </DialogActions>

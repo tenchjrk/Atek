@@ -5,6 +5,10 @@ public class Account
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     
+    // Legal entity identifiers
+    public string DunsNumber { get; set; } = string.Empty;
+    public string Ein { get; set; } = string.Empty;
+    
     // Address fields
     public string? AddressLine1 { get; set; }
     public string? AddressLine2 { get; set; }

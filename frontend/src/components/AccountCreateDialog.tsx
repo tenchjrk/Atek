@@ -23,6 +23,8 @@ interface AccountCreateDialogProps {
   onClose: () => void;
   onSave: (accountData: {
     name: string;
+    dunsNumber: string;
+    ein: string;
     parentAccountId: number | null;
     accountTypeId: number | null;
     addressLine1: string;
@@ -42,6 +44,8 @@ export default function AccountCreateDialog({
   onSave,
 }: AccountCreateDialogProps) {
   const [name, setName] = useState('');
+  const [dunsNumber, setDunsNumber] = useState('');
+  const [ein, setEin] = useState('');
   const [parentAccountId, setParentAccountId] = useState<number | null>(null);
   const [accountTypeId, setAccountTypeId] = useState<number | null>(null);
   const [addressLine1, setAddressLine1] = useState('');
@@ -54,6 +58,8 @@ export default function AccountCreateDialog({
 
   const handleClose = () => {
     setName('');
+    setDunsNumber('');
+    setEin('');
     setParentAccountId(null);
     setAccountTypeId(null);
     setAddressLine1('');
@@ -70,6 +76,8 @@ export default function AccountCreateDialog({
     setSaving(true);
     const success = await onSave({
       name,
+      dunsNumber,
+      ein,
       parentAccountId,
       accountTypeId,
       addressLine1,
@@ -119,6 +127,32 @@ export default function AccountCreateDialog({
             required
           />
 
+          <TextField
+            label="DUNS Number"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={dunsNumber}
+            onChange={(e) => setDunsNumber(e.target.value)}
+            disabled={saving}
+            required
+            helperText="9-digit business identification number"
+          />
+
+          <TextField
+            label="EIN"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={ein}
+            onChange={(e) => setEin(e.target.value)}
+            disabled={saving}
+            required
+            helperText="Employer Identification Number"
+          />
+
+          <Divider />
+
           <AccountTypeSelector
             accountTypes={accountTypes}
             value={accountTypeId}
@@ -156,7 +190,7 @@ export default function AccountCreateDialog({
         <Button onClick={handleClose} disabled={saving}>
           Cancel
         </Button>
-        <Button onClick={handleSave} variant="contained" disabled={saving || !name}>
+        <Button onClick={handleSave} variant="contained" disabled={saving || !name || !dunsNumber || !ein}>
           Create Account
         </Button>
       </DialogActions>

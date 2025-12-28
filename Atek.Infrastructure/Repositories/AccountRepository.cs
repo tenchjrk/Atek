@@ -56,6 +56,8 @@ public class AccountRepository : IAccountRepository
         if (existing != null)
         {
             existing.Name = account.Name;
+            existing.DunsNumber = account.DunsNumber;
+            existing.Ein = account.Ein;
             existing.ParentAccountId = account.ParentAccountId;
             existing.AccountTypeId = account.AccountTypeId;
             existing.AddressLine1 = account.AddressLine1;
@@ -86,7 +88,6 @@ public class AccountRepository : IAccountRepository
             
         if (account != null)
         {
-            // Check if any child accounts exist
             if (account.ChildAccounts.Any())
             {
                 throw new InvalidOperationException(

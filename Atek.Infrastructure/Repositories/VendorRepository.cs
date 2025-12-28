@@ -56,6 +56,8 @@ public class VendorRepository : IVendorRepository
         if (existing != null)
         {
             existing.Name = vendor.Name;
+            existing.DunsNumber = vendor.DunsNumber;
+            existing.Ein = vendor.Ein;
             existing.ParentVendorId = vendor.ParentVendorId;
             existing.VendorTypeId = vendor.VendorTypeId;
             existing.AddressLine1 = vendor.AddressLine1;
@@ -86,7 +88,6 @@ public class VendorRepository : IVendorRepository
             
         if (vendor != null)
         {
-            // Check if any child vendors exist
             if (vendor.ChildVendors.Any())
             {
                 throw new InvalidOperationException(

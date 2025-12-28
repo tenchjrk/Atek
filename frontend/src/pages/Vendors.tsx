@@ -54,6 +54,8 @@ export default function Vendors() {
 
   const handleCreate = async (vendorData: {
     name: string;
+    dunsNumber: string;
+    ein: string;
     parentVendorId: number | null;
     vendorTypeId: number | null;
     addressLine1: string;
@@ -75,6 +77,8 @@ export default function Vendors() {
   const handleUpdate = async (vendorData: {
     id: number;
     name: string;
+    dunsNumber: string;
+    ein: string;
     parentVendorId: number | null;
     vendorTypeId: number | null;
     addressLine1: string;
@@ -138,6 +142,12 @@ export default function Vendors() {
       <Stack spacing={0.5} sx={{ mt: 0.5 }} component="span">
         <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
           <span style={{ fontSize: '0.875rem' }}>ID: {vendor.id}</span>
+          {vendor.dunsNumber && (
+            <span style={{ fontSize: '0.875rem' }}>• DUNS: {vendor.dunsNumber}</span>
+          )}
+          {vendor.ein && (
+            <span style={{ fontSize: '0.875rem' }}>• EIN: {vendor.ein}</span>
+          )}
           {vendor.vendorType && (
             <Chip 
               label={vendor.vendorType.type} 

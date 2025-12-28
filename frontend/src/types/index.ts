@@ -11,6 +11,8 @@ export interface VendorType {
 export interface Account {
   id: number;
   name: string;
+  dunsNumber: string;
+  ein: string;
   addressLine1?: string | null;
   addressLine2?: string | null;
   city?: string | null;
@@ -29,6 +31,8 @@ export interface Account {
 export interface Vendor {
   id: number;
   name: string;
+  dunsNumber: string;
+  ein: string;
   addressLine1?: string | null;
   addressLine2?: string | null;
   city?: string | null;

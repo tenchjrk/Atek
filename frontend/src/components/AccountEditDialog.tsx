@@ -25,6 +25,8 @@ interface AccountEditDialogProps {
   onSave: (accountData: {
     id: number;
     name: string;
+    dunsNumber: string;
+    ein: string;
     parentAccountId: number | null;
     accountTypeId: number | null;
     addressLine1: string;
@@ -45,6 +47,8 @@ export default function AccountEditDialog({
   onSave,
 }: AccountEditDialogProps) {
   const [name, setName] = useState('');
+  const [dunsNumber, setDunsNumber] = useState('');
+  const [ein, setEin] = useState('');
   const [parentAccountId, setParentAccountId] = useState<number | null>(null);
   const [accountTypeId, setAccountTypeId] = useState<number | null>(null);
   const [addressLine1, setAddressLine1] = useState('');
@@ -58,6 +62,8 @@ export default function AccountEditDialog({
   const handleOpen = () => {
     if (account) {
       setName(account.name);
+      setDunsNumber(account.dunsNumber);
+      setEin(account.ein);
       setParentAccountId(account.parentAccountId ?? null);
       setAccountTypeId(account.accountTypeId ?? null);
       setAddressLine1(account.addressLine1 ?? '');
@@ -71,6 +77,8 @@ export default function AccountEditDialog({
 
   const handleClose = () => {
     setName('');
+    setDunsNumber('');
+    setEin('');
     setParentAccountId(null);
     setAccountTypeId(null);
     setAddressLine1('');
@@ -89,6 +97,8 @@ export default function AccountEditDialog({
     const success = await onSave({
       id: account.id,
       name,
+      dunsNumber,
+      ein,
       parentAccountId,
       accountTypeId,
       addressLine1,
@@ -139,6 +149,32 @@ export default function AccountEditDialog({
             onChange={(e) => setName(e.target.value)}
             disabled={saving}
           />
+
+          <TextField
+            label="DUNS Number"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={dunsNumber}
+            onChange={(e) => setDunsNumber(e.target.value)}
+            disabled={saving}
+            required
+            helperText="9-digit business identification number"
+          />
+
+          <TextField
+            label="EIN"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={ein}
+            onChange={(e) => setEin(e.target.value)}
+            disabled={saving}
+            required
+            helperText="Employer Identification Number"
+          />
+
+          <Divider />
 
           <AccountTypeSelector
             accountTypes={accountTypes}
