@@ -8,7 +8,9 @@ import {
   Button,
   Stack,
   Divider,
+  IconButton,
 } from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
 import AccountSelector from './AccountSelector';
 import AddressFields from './AddressFields';
 import type { Account } from '../types';
@@ -104,7 +106,19 @@ export default function AccountEditDialog({
         onEnter: handleOpen,
       }}
     >
-      <DialogTitle>Edit Account</DialogTitle>
+      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        Edit Account
+        <IconButton
+          aria-label="close"
+          onClick={handleClose}
+          disabled={saving}
+          sx={{
+            color: (theme) => theme.palette.grey[500],
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <DialogContent>
         <Stack spacing={3} sx={{ mt: 2 }}>
           <TextField
