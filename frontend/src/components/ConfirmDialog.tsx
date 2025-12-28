@@ -6,15 +6,16 @@ import {
   DialogContentText,
   Button,
 } from '@mui/material';
+import type { ReactNode } from 'react';
 
 interface ConfirmDialogProps {
   open: boolean;
   title: string;
-  message: string;
+  message: string | ReactNode;
   confirmText?: string;
   cancelText?: string;
   onConfirm: () => void;
-  onCancel: () => void;
+  onCancel?: () => void;
   confirmColor?: 'primary' | 'error' | 'warning';
 }
 
@@ -37,12 +38,16 @@ export default function ConfirmDialog({
     >
       <DialogTitle id="confirm-dialog-title">{title}</DialogTitle>
       <DialogContent>
-        <DialogContentText id="confirm-dialog-description">
-          {message}
-        </DialogContentText>
+        {typeof message === 'string' ? (
+          <DialogContentText id="confirm-dialog-description">
+            {message}
+          </DialogContentText>
+        ) : (
+          <div id="confirm-dialog-description">{message}</div>
+        )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onCancel}>{cancelText}</Button>
+        {onCancel && <Button onClick={onCancel}>{cancelText}</Button>}
         <Button onClick={onConfirm} color={confirmColor} variant="contained" autoFocus>
           {confirmText}
         </Button>

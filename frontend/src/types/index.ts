@@ -1,3 +1,8 @@
+export interface AccountType {
+  id: number;
+  type: string;
+}
+
 export interface Account {
   id: number;
   name: string;
@@ -12,6 +17,8 @@ export interface Account {
   parentAccountId?: number | null;
   parentAccount?: Account | null;
   childAccounts?: Account[];
+  accountTypeId?: number | null;
+  accountType?: AccountType | null;
 }
 
 export interface Vendor {

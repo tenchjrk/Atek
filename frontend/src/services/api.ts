@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Account, Vendor } from '../types';
+import type { Account, Vendor, AccountType } from '../types';
 
 const API_BASE_URL = 'http://localhost:5245/api';
 
@@ -18,3 +18,4 @@ const createCrudApi = <T extends { id: number }>(endpoint: string) => ({
 
 export const accountApi = createCrudApi<Account>('accounts');
 export const vendorApi = createCrudApi<Vendor>('vendors');
+export const accountTypeApi = createCrudApi<AccountType>('accountTypes');

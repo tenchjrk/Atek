@@ -48,7 +48,14 @@ public class AccountsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(int id)
     {
-        await _repository.DeleteAsync(id);
-        return NoContent();
+        try
+        {
+            await _repository.DeleteAsync(id);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }

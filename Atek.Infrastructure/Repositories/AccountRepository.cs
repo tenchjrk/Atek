@@ -18,6 +18,7 @@ public class AccountRepository : IAccountRepository
     {
         return await _context.Accounts
             .Include(a => a.ParentAccount)
+            .Include(a => a.AccountType)
             .AsNoTracking()
             .ToListAsync();
     }
@@ -27,22 +28,22 @@ public class AccountRepository : IAccountRepository
         return await _context.Accounts
             .Include(a => a.ParentAccount)
             .Include(a => a.ChildAccounts)
+            .Include(a => a.AccountType)
             .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == id);
     }
 
     public async Task<Account> CreateAsync(Account account)
     {
-        // Set audit fields on create
         account.CreatedDate = DateTime.UtcNow;
         account.LastModifiedDate = DateTime.UtcNow;
         
         _context.Accounts.Add(account);
         await _context.SaveChangesAsync();
         
-        // Reload with parent info
         var created = await _context.Accounts
             .Include(a => a.ParentAccount)
+            .Include(a => a.AccountType)
             .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == account.Id);
         
@@ -51,26 +52,26 @@ public class AccountRepository : IAccountRepository
 
     public async Task<Account> UpdateAsync(Account account)
     {
-        // Attach and update properties
         var existing = await _context.Accounts.FindAsync(account.Id);
         if (existing != null)
         {
             existing.Name = account.Name;
             existing.ParentAccountId = account.ParentAccountId;
+            existing.AccountTypeId = account.AccountTypeId;
             existing.AddressLine1 = account.AddressLine1;
             existing.AddressLine2 = account.AddressLine2;
             existing.City = account.City;
             existing.State = account.State;
             existing.PostalCode = account.PostalCode;
             existing.Country = account.Country;
-            existing.LastModifiedDate = DateTime.UtcNow; // Update modified date
+            existing.LastModifiedDate = DateTime.UtcNow;
             
             await _context.SaveChangesAsync();
         }
         
-        // Reload with parent info
         var updated = await _context.Accounts
             .Include(a => a.ParentAccount)
+            .Include(a => a.AccountType)
             .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == account.Id);
         
@@ -79,9 +80,20 @@ public class AccountRepository : IAccountRepository
 
     public async Task DeleteAsync(int id)
     {
-        var account = await _context.Accounts.FindAsync(id);
+        var account = await _context.Accounts
+            .Include(a => a.ChildAccounts)
+            .FirstOrDefaultAsync(a => a.Id == id);
+            
         if (account != null)
         {
+            // Check if any child accounts exist
+            if (account.ChildAccounts.Any())
+            {
+                throw new InvalidOperationException(
+                    $"Cannot delete account '{account.Name}' because it has {account.ChildAccounts.Count} child account(s). " +
+                    "Please reassign or delete the child accounts first.");
+            }
+            
             _context.Accounts.Remove(account);
             await _context.SaveChangesAsync();
         }

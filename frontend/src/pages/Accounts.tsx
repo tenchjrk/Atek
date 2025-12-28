@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { Box, Chip, Stack, Button } from '@mui/material';
+import { useState, useEffect } from 'react';
+import { Box, Chip, Stack, Button, Alert } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
-import { accountApi } from '../services/api';
+import { accountApi, accountTypeApi } from '../services/api';
 import { useCrud } from '../hooks/useCrud';
 import { useAccountFilters } from '../hooks/useAccountFilters';
-import type { Account } from '../types';
+import type { Account, AccountType } from '../types';
 import PageHeader from '../components/PageHeader';
 import EntityList from '../components/EntityList';
 import AccountEditDialog from '../components/AccountEditDialog';
@@ -15,11 +15,13 @@ import { formatDateShort } from '../utils/dateFormatter';
 
 export default function Accounts() {
   const { items, loading, error, createItem, updateItem, deleteItem } = useCrud<Account>(accountApi);
+  const [accountTypes, setAccountTypes] = useState<AccountType[]>([]);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [deletingAccountId, setDeletingAccountId] = useState<number | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const {
     searchTerm,
@@ -37,9 +39,23 @@ export default function Accounts() {
     clearFilters,
   } = useAccountFilters(items);
 
+  // Fetch account types
+  useEffect(() => {
+    const fetchAccountTypes = async () => {
+      try {
+        const response = await accountTypeApi.getAll();
+        setAccountTypes(response.data);
+      } catch (err) {
+        console.error('Error loading account types:', err);
+      }
+    };
+    fetchAccountTypes();
+  }, []);
+
   const handleCreate = async (accountData: {
     name: string;
     parentAccountId: number | null;
+    accountTypeId: number | null;
     addressLine1: string;
     addressLine2: string;
     city: string;
@@ -60,6 +76,7 @@ export default function Accounts() {
     id: number;
     name: string;
     parentAccountId: number | null;
+    accountTypeId: number | null;
     addressLine1: string;
     addressLine2: string;
     city: string;
@@ -72,20 +89,27 @@ export default function Accounts() {
 
   const handleDeleteClick = (id: number) => {
     setDeletingAccountId(id);
+    setDeleteError(null);
     setDeleteDialogOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
     if (deletingAccountId !== null) {
-      await deleteItem(deletingAccountId);
-      setDeleteDialogOpen(false);
-      setDeletingAccountId(null);
+      const result = await deleteItem(deletingAccountId);
+      if (result.success) {
+        setDeleteDialogOpen(false);
+        setDeletingAccountId(null);
+        setDeleteError(null);
+      } else {
+        setDeleteError(result.error);
+      }
     }
   };
 
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
     setDeletingAccountId(null);
+    setDeleteError(null);
   };
 
   const handleCloseEditDialog = () => {
@@ -99,7 +123,6 @@ export default function Accounts() {
   };
 
   const renderAccountSecondary = (account: Account) => {
-    // Build full address string
     const addressLine1 = account.addressLine1;
     const addressLine2 = account.addressLine2;
     const cityStateZip = [
@@ -112,9 +135,17 @@ export default function Accounts() {
     const hasAddress = addressLine1 || addressLine2 || cityStateZip || country;
 
     return (
-      <Stack spacing={0.5} sx={{ mt: 0.5 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+      <Stack spacing={0.5} sx={{ mt: 0.5 }} component="span">
+        <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
           <span style={{ fontSize: '0.875rem' }}>ID: {account.id}</span>
+          {account.accountType && (
+            <Chip 
+              label={account.accountType.type} 
+              size="small" 
+              color="secondary" 
+              variant="outlined"
+            />
+          )}
           {account.parentAccount && (
             <Chip 
               label={`Child of: ${account.parentAccount.name}`} 
@@ -125,7 +156,7 @@ export default function Accounts() {
           )}
         </Box>
         {hasAddress && (
-          <Box sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
+          <Box component="span" sx={{ fontSize: '0.875rem', color: 'text.secondary', display: 'block' }}>
             📍 
             {addressLine1 && <span> {addressLine1}</span>}
             {addressLine2 && <span>, {addressLine2}</span>}
@@ -134,7 +165,7 @@ export default function Accounts() {
             {country && <span>, {country}</span>}
           </Box>
         )}
-        <Box sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>
+        <Box component="span" sx={{ fontSize: '0.75rem', color: 'text.secondary', display: 'block' }}>
           Created: {formatDateShort(account.createdDate)} • Modified: {formatDateShort(account.lastModifiedDate)}
         </Box>
       </Stack>
@@ -191,6 +222,7 @@ export default function Accounts() {
       <AccountCreateDialog
         open={createDialogOpen}
         accounts={items}
+        accountTypes={accountTypes}
         onClose={() => setCreateDialogOpen(false)}
         onSave={handleCreate}
       />
@@ -199,6 +231,7 @@ export default function Accounts() {
         open={editDialogOpen}
         account={editingAccount}
         accounts={items}
+        accountTypes={accountTypes}
         onClose={handleCloseEditDialog}
         onSave={handleUpdate}
       />
@@ -206,12 +239,22 @@ export default function Accounts() {
       <ConfirmDialog
         open={deleteDialogOpen}
         title="Delete Account"
-        message={`Are you sure you want to delete "${getDeletingAccountName()}"? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
-        confirmColor="error"
-        onConfirm={handleDeleteConfirm}
-        onCancel={handleDeleteCancel}
+        message={
+          deleteError ? (
+            <Box>
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {deleteError}
+              </Alert>
+            </Box>
+          ) : (
+            `Are you sure you want to delete "${getDeletingAccountName()}"? This action cannot be undone.`
+          )
+        }
+        confirmText={deleteError ? "OK" : "Delete"}
+        cancelText={deleteError ? undefined : "Cancel"}
+        confirmColor={deleteError ? "primary" : "error"}
+        onConfirm={deleteError ? handleDeleteCancel : handleDeleteConfirm}
+        onCancel={deleteError ? undefined : handleDeleteCancel}
       />
     </Box>
   );

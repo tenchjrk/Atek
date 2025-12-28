@@ -12,16 +12,19 @@ import {
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 import AccountSelector from './AccountSelector';
+import AccountTypeSelector from './AccountTypeSelector';
 import AddressFields from './AddressFields';
-import type { Account } from '../types';
+import type { Account, AccountType } from '../types';
 
 interface AccountCreateDialogProps {
   open: boolean;
   accounts: Account[];
+  accountTypes: AccountType[];
   onClose: () => void;
   onSave: (accountData: {
     name: string;
     parentAccountId: number | null;
+    accountTypeId: number | null;
     addressLine1: string;
     addressLine2: string;
     city: string;
@@ -34,11 +37,13 @@ interface AccountCreateDialogProps {
 export default function AccountCreateDialog({
   open,
   accounts,
+  accountTypes,
   onClose,
   onSave,
 }: AccountCreateDialogProps) {
   const [name, setName] = useState('');
   const [parentAccountId, setParentAccountId] = useState<number | null>(null);
+  const [accountTypeId, setAccountTypeId] = useState<number | null>(null);
   const [addressLine1, setAddressLine1] = useState('');
   const [addressLine2, setAddressLine2] = useState('');
   const [city, setCity] = useState('');
@@ -50,6 +55,7 @@ export default function AccountCreateDialog({
   const handleClose = () => {
     setName('');
     setParentAccountId(null);
+    setAccountTypeId(null);
     setAddressLine1('');
     setAddressLine2('');
     setCity('');
@@ -65,6 +71,7 @@ export default function AccountCreateDialog({
     const success = await onSave({
       name,
       parentAccountId,
+      accountTypeId,
       addressLine1,
       addressLine2,
       city,
@@ -110,6 +117,13 @@ export default function AccountCreateDialog({
             onChange={(e) => setName(e.target.value)}
             disabled={saving}
             required
+          />
+
+          <AccountTypeSelector
+            accountTypes={accountTypes}
+            value={accountTypeId}
+            onChange={setAccountTypeId}
+            disabled={saving}
           />
 
           <AccountSelector

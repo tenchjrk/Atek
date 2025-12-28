@@ -12,6 +12,7 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<Account> Accounts { get; set; }
     public DbSet<Vendor> Vendors { get; set; }
+    public DbSet<AccountType> AccountTypes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -30,5 +31,12 @@ public class ApplicationDbContext : DbContext
             .WithMany(v => v.ChildVendors)
             .HasForeignKey(v => v.ParentVendorId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Configure Account to AccountType relationship
+        modelBuilder.Entity<Account>()
+            .HasOne(a => a.AccountType)
+            .WithMany(at => at.Accounts)
+            .HasForeignKey(a => a.AccountTypeId)
+            .OnDelete(DeleteBehavior.Restrict); // Changed to Restrict instead of SetNull
     }
 }

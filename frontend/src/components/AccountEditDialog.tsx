@@ -12,18 +12,21 @@ import {
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 import AccountSelector from './AccountSelector';
+import AccountTypeSelector from './AccountTypeSelector';
 import AddressFields from './AddressFields';
-import type { Account } from '../types';
+import type { Account, AccountType } from '../types';
 
 interface AccountEditDialogProps {
   open: boolean;
   account: Account | null;
   accounts: Account[];
+  accountTypes: AccountType[];
   onClose: () => void;
   onSave: (accountData: {
     id: number;
     name: string;
     parentAccountId: number | null;
+    accountTypeId: number | null;
     addressLine1: string;
     addressLine2: string;
     city: string;
@@ -37,11 +40,13 @@ export default function AccountEditDialog({
   open,
   account,
   accounts,
+  accountTypes,
   onClose,
   onSave,
 }: AccountEditDialogProps) {
   const [name, setName] = useState('');
   const [parentAccountId, setParentAccountId] = useState<number | null>(null);
+  const [accountTypeId, setAccountTypeId] = useState<number | null>(null);
   const [addressLine1, setAddressLine1] = useState('');
   const [addressLine2, setAddressLine2] = useState('');
   const [city, setCity] = useState('');
@@ -54,6 +59,7 @@ export default function AccountEditDialog({
     if (account) {
       setName(account.name);
       setParentAccountId(account.parentAccountId ?? null);
+      setAccountTypeId(account.accountTypeId ?? null);
       setAddressLine1(account.addressLine1 ?? '');
       setAddressLine2(account.addressLine2 ?? '');
       setCity(account.city ?? '');
@@ -66,6 +72,7 @@ export default function AccountEditDialog({
   const handleClose = () => {
     setName('');
     setParentAccountId(null);
+    setAccountTypeId(null);
     setAddressLine1('');
     setAddressLine2('');
     setCity('');
@@ -83,6 +90,7 @@ export default function AccountEditDialog({
       id: account.id,
       name,
       parentAccountId,
+      accountTypeId,
       addressLine1,
       addressLine2,
       city,
@@ -129,6 +137,13 @@ export default function AccountEditDialog({
             variant="outlined"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            disabled={saving}
+          />
+
+          <AccountTypeSelector
+            accountTypes={accountTypes}
+            value={accountTypeId}
+            onChange={setAccountTypeId}
             disabled={saving}
           />
 

@@ -16,7 +16,7 @@ import {
   Edit as EditIcon,
 } from '@mui/icons-material';
 
-interface EntityListProps<T extends { id: number; name: string }> {
+interface EntityListProps<T extends { id: number }> {
   title: string;
   items: T[];
   loading: boolean;
@@ -25,9 +25,10 @@ interface EntityListProps<T extends { id: number; name: string }> {
   onDelete: (id: number) => void;
   emptyMessage?: string;
   renderSecondary?: (item: T) => string | React.ReactNode;
+  renderPrimary?: (item: T) => string;
 }
 
-export default function EntityList<T extends { id: number; name: string }>({
+export default function EntityList<T extends { id: number }>({
   title,
   items,
   loading,
@@ -36,9 +37,19 @@ export default function EntityList<T extends { id: number; name: string }>({
   onDelete,
   emptyMessage = 'No items yet. Create your first item above.',
   renderSecondary,
+  renderPrimary,
 }: EntityListProps<T>) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  const getDisplayName = (item: T): string => {
+    if (renderPrimary) {
+      return renderPrimary(item);
+    }
+    // Type assertion to check for common name properties
+    const itemWithName = item as T & { name?: string; type?: string };
+    return itemWithName.name || itemWithName.type || `Item ${item.id}`;
+  };
 
   if (loading) {
     return (
@@ -82,7 +93,7 @@ export default function EntityList<T extends { id: number; name: string }>({
               }}
             >
               <ListItemText
-                primary={item.name}
+                primary={getDisplayName(item)}
                 secondary={renderSecondary ? renderSecondary(item) : `ID: ${item.id}`}
                 sx={{
                   flex: 1,

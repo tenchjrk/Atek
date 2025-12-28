@@ -25,4 +25,10 @@ public class Account
     
     // Navigation property to children
     public ICollection<Account> ChildAccounts { get; set; } = new List<Account>();
+    
+    // Foreign key to AccountType
+    public int? AccountTypeId { get; set; }
+    
+    // Navigation property to AccountType
+    public AccountType? AccountType { get; set; }
 }

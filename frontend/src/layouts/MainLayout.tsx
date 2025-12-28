@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation } from "react-router-dom";
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import {
   AppBar,
   Box,
@@ -12,14 +12,15 @@ import {
   ListItemIcon,
   ListItemText,
   IconButton,
-} from "@mui/material";
+} from '@mui/material';
 import {
   Menu as MenuIcon,
   Business as AccountIcon,
   Store as VendorIcon,
   Home as HomeIcon,
-} from "@mui/icons-material";
-import { useState } from "react";
+  Category as CategoryIcon,
+} from '@mui/icons-material';
+import { useState } from 'react';
 
 const drawerWidth = 240;
 
@@ -32,16 +33,17 @@ export default function MainLayout() {
   };
 
   const menuItems = [
-    { text: "Home", icon: <HomeIcon />, path: "/" },
-    { text: "Accounts", icon: <AccountIcon />, path: "/accounts" },
-    { text: "Vendors", icon: <VendorIcon />, path: "/vendors" },
+    { text: 'Home', icon: <HomeIcon />, path: '/' },
+    { text: 'Accounts', icon: <AccountIcon />, path: '/accounts' },
+    { text: 'Vendors', icon: <VendorIcon />, path: '/vendors' },
+    { text: 'Account Types', icon: <CategoryIcon />, path: '/account-types' },
   ];
 
   const drawer = (
     <Box>
       <Toolbar>
-        <Typography variant='h6' noWrap component='div'>
-          Atek Data Solutions
+        <Typography variant="h6" noWrap component="div">
+          Atek
         </Typography>
       </Toolbar>
       <List>
@@ -62,10 +64,9 @@ export default function MainLayout() {
   );
 
   return (
-    <Box sx={{ display: "flex" }}>
-      {/* App Bar */}
+    <Box sx={{ display: 'flex' }}>
       <AppBar
-        position='fixed'
+        position="fixed"
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
@@ -73,51 +74,48 @@ export default function MainLayout() {
       >
         <Toolbar>
           <IconButton
-            color='inherit'
-            aria-label='open drawer'
-            edge='start'
+            color="inherit"
+            aria-label="open drawer"
+            edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: "none" } }}
+            sx={{ mr: 2, display: { sm: 'none' } }}
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant='h6' noWrap component='div' sx={{ flexGrow: 1 }}>
-            Contract Management Platform
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+            Atek SaaS Platform
           </Typography>
         </Toolbar>
       </AppBar>
 
-      {/* Drawer - Mobile */}
       <Drawer
-        variant='temporary'
+        variant="temporary"
         open={mobileOpen}
         onClose={handleDrawerToggle}
         ModalProps={{
-          keepMounted: true, // Better mobile performance
+          keepMounted: true,
         }}
         sx={{
-          display: { xs: "block", sm: "none" },
-          "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
+          display: { xs: 'block', sm: 'none' },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
         }}
       >
         {drawer}
       </Drawer>
 
-      {/* Drawer - Desktop */}
       <Drawer
-        variant='permanent'
+        variant="permanent"
         sx={{
-          display: { xs: "none", sm: "block" },
-          "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
+          display: { xs: 'none', sm: 'block' },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
         }}
         open
       >
         {drawer}
       </Drawer>
 
-      {/* Main Content */}
       <Box
-        component='main'
+        component="main"
         sx={{
           flexGrow: 1,
           p: 3,
@@ -125,9 +123,9 @@ export default function MainLayout() {
           ml: { sm: `${drawerWidth}px` },
         }}
       >
-        <Toolbar /> {/* Spacer for fixed AppBar */}
-        <Container maxWidth='lg'>
-          <Outlet /> {/* This renders the child routes */}
+        <Toolbar />
+        <Container maxWidth="lg">
+          <Outlet />
         </Container>
       </Box>
     </Box>
