@@ -15,6 +15,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<AccountType> AccountTypes => Set<AccountType>();
     public DbSet<VendorType> VendorTypes => Set<VendorType>();
     public DbSet<AccountAddress> AccountAddresses => Set<AccountAddress>();
+    public DbSet<VendorSegment> VendorSegments => Set<VendorSegment>();
+    public DbSet<VendorRegion> VendorRegions => Set<VendorRegion>();
+    public DbSet<VendorTerritory> VendorTerritories => Set<VendorTerritory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -39,6 +42,27 @@ public class ApplicationDbContext : DbContext
             .HasOne(aa => aa.Account)
             .WithMany()
             .HasForeignKey(aa => aa.AccountId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // VendorSegment to Vendor relationship
+        modelBuilder.Entity<VendorSegment>()
+            .HasOne(vs => vs.Vendor)
+            .WithMany()
+            .HasForeignKey(vs => vs.VendorId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // VendorRegion to VendorSegment relationship
+        modelBuilder.Entity<VendorRegion>()
+            .HasOne(vr => vr.VendorSegment)
+            .WithMany()
+            .HasForeignKey(vr => vr.VendorSegmentId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // VendorTerritory to VendorRegion relationship
+        modelBuilder.Entity<VendorTerritory>()
+            .HasOne(vt => vt.VendorRegion)
+            .WithMany()
+            .HasForeignKey(vt => vt.VendorRegionId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

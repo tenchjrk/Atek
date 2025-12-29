@@ -64,3 +64,30 @@ export interface AccountAddress {
   lastModifiedDate: string;
   account?: Account | null;
 }
+
+export interface VendorSegment {
+  id: number;
+  vendorId: number;
+  name: string;
+  createdDate: string;
+  lastModifiedDate: string;
+  vendor?: Vendor | null;
+}
+
+export interface VendorRegion {
+  id: number;
+  vendorSegmentId: number;
+  name: string;
+  createdDate: string;
+  lastModifiedDate: string;
+  vendorSegment?: VendorSegment | null;
+}
+
+export interface VendorTerritory {
+  id: number;
+  vendorRegionId: number;
+  name: string;
+  createdDate: string;
+  lastModifiedDate: string;
+  vendorRegion?: VendorRegion | null;
+}

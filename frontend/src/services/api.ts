@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Account, Vendor, AccountType, VendorType, AccountAddress } from '../types';
+import type { Account, Vendor, AccountType, VendorType, AccountAddress, VendorSegment, VendorRegion, VendorTerritory } from '../types';
 
 const API_BASE_URL = 'http://localhost:5245/api';
 
@@ -20,7 +20,23 @@ export const accountApi = createCrudApi<Account>('accounts');
 export const vendorApi = createCrudApi<Vendor>('vendors');
 export const accountTypeApi = createCrudApi<AccountType>('accountTypes');
 export const vendorTypeApi = createCrudApi<VendorType>('vendorTypes');
+
 export const accountAddressApi = {
   ...createCrudApi<AccountAddress>('accountAddresses'),
   getByAccountId: (accountId: number) => api.get<AccountAddress[]>(`/accountAddresses/account/${accountId}`),
+};
+
+export const vendorSegmentApi = {
+  ...createCrudApi<VendorSegment>('vendorSegments'),
+  getByVendorId: (vendorId: number) => api.get<VendorSegment[]>(`/vendorSegments/vendor/${vendorId}`),
+};
+
+export const vendorRegionApi = {
+  ...createCrudApi<VendorRegion>('vendorRegions'),
+  getBySegmentId: (segmentId: number) => api.get<VendorRegion[]>(`/vendorRegions/segment/${segmentId}`),
+};
+
+export const vendorTerritoryApi = {
+  ...createCrudApi<VendorTerritory>('vendorTerritories'),
+  getByRegionId: (regionId: number) => api.get<VendorTerritory[]>(`/vendorTerritories/region/${regionId}`),
 };

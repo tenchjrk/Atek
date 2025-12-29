@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Box, Chip, Stack, Button, Alert } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { vendorApi, vendorTypeApi } from '../services/api';
 import { useCrud } from '../hooks/useCrud';
 import { useVendorFilters } from '../hooks/useVendorFilters';
@@ -16,6 +17,7 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import { formatDateShort } from '../utils/dateFormatter';
 
 export default function Vendors() {
+  const navigate = useNavigate();
   const { items, loading, error, createItem, updateItem, deleteItem } = useCrud<Vendor>(vendorApi);
   const [vendorTypes, setVendorTypes] = useState<VendorType[]>([]);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -243,6 +245,15 @@ export default function Vendors() {
             : 'No vendors yet. Create your first vendor above.'
         }
         renderSecondary={renderVendorSecondary}
+        customActions={(vendor) => (
+          <Button
+            size='small'
+            variant='outlined'
+            onClick={() => navigate(`/vendors/${vendor.id}/segments`)}
+          >
+            Manage Segments
+          </Button>
+        )}
       />
 
       <VendorCreateDialog
