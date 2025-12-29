@@ -32,12 +32,7 @@ public class VendorTypeRepository : IVendorTypeRepository
     {
         _context.VendorTypes.Add(vendorType);
         await _context.SaveChangesAsync();
-        
-        var created = await _context.VendorTypes
-            .AsNoTracking()
-            .FirstOrDefaultAsync(vt => vt.Id == vendorType.Id);
-        
-        return created ?? vendorType;
+        return vendorType;
     }
 
     public async Task<VendorType> UpdateAsync(VendorType vendorType)
@@ -48,28 +43,24 @@ public class VendorTypeRepository : IVendorTypeRepository
             existing.Type = vendorType.Type;
             await _context.SaveChangesAsync();
         }
-        
-        var updated = await _context.VendorTypes
-            .AsNoTracking()
-            .FirstOrDefaultAsync(vt => vt.Id == vendorType.Id);
-        
-        return updated ?? vendorType;
+        return vendorType;
     }
 
     public async Task DeleteAsync(int id)
     {
-        var vendorType = await _context.VendorTypes
-            .Include(vt => vt.Vendors)
-            .FirstOrDefaultAsync(vt => vt.Id == id);
-            
+        var vendorType = await _context.VendorTypes.FindAsync(id);
         if (vendorType != null)
         {
-            // Check if any vendors are using this vendor type
-            if (vendorType.Vendors.Any())
+            // Check if any vendors use this type
+            var vendorsUsingType = await _context.Vendors
+                .Where(v => v.VendorTypeId == id)
+                .CountAsync();
+            
+            if (vendorsUsingType > 0)
             {
                 throw new InvalidOperationException(
-                    $"Cannot delete vendor type '{vendorType.Type}' because it is being used by {vendorType.Vendors.Count} vendor(s). " +
-                    "Please reassign or delete these vendors first.");
+                    $"Cannot delete vendor type '{vendorType.Type}' because it is being used by {vendorsUsingType} vendor(s). " +
+                    "Please reassign or remove these vendors first.");
             }
             
             _context.VendorTypes.Remove(vendorType);

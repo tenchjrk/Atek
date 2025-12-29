@@ -47,3 +47,20 @@ export interface Vendor {
   vendorTypeId?: number | null;
   vendorType?: VendorType | null;
 }
+
+export interface AccountAddress {
+  id: number;
+  accountId: number;
+  addressLine1: string;
+  addressLine2?: string | null;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  isShipping: boolean;
+  isBilling: boolean;
+  name?: string | null;
+  createdDate: string;
+  lastModifiedDate: string;
+  account?: Account | null;
+}

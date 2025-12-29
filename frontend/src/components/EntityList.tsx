@@ -1,135 +1,128 @@
 import {
-  Paper,
-  Typography,
+  Box,
   List,
   ListItem,
   ListItemText,
   IconButton,
-  Box,
+  Paper,
+  Typography,
   CircularProgress,
   Alert,
-  useMediaQuery,
-  useTheme,
 } from '@mui/material';
-import {
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-} from '@mui/icons-material';
+import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 
-interface EntityListProps<T extends { id: number }> {
+interface EntityListProps<T extends { id: number; name?: string | null }> {
   title: string;
   items: T[];
   loading: boolean;
   error: string | null;
   onEdit: (item: T) => void;
   onDelete: (id: number) => void;
-  emptyMessage?: string;
-  renderSecondary?: (item: T) => string | React.ReactNode;
-  renderPrimary?: (item: T) => string;
+  emptyMessage: string;
+  renderSecondary?: (item: T) => React.ReactNode;
+  getItemName?: (item: T) => string;
+  customActions?: (item: T) => React.ReactNode;
 }
 
-export default function EntityList<T extends { id: number }>({
+export default function EntityList<T extends { id: number; name?: string | null }>({
   title,
   items,
   loading,
   error,
   onEdit,
   onDelete,
-  emptyMessage = 'No items yet. Create your first item above.',
+  emptyMessage,
   renderSecondary,
-  renderPrimary,
+  getItemName,
+  customActions,
 }: EntityListProps<T>) {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
   const getDisplayName = (item: T): string => {
-    if (renderPrimary) {
-      return renderPrimary(item);
+    if (getItemName) {
+      return getItemName(item);
     }
-    // Type assertion to check for common name properties
-    const itemWithName = item as T & { name?: string; type?: string };
-    return itemWithName.name || itemWithName.type || `Item ${item.id}`;
+    return item.name || `Item ${item.id}`;
   };
 
   if (loading) {
     return (
-      <Paper elevation={3} sx={{ p: 3, textAlign: 'center' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
         <CircularProgress />
-      </Paper>
+      </Box>
     );
   }
 
   if (error) {
+    return <Alert severity="error">{error}</Alert>;
+  }
+
+  if (items.length === 0) {
     return (
-      <Alert severity="error" sx={{ mb: 3 }}>
-        {error}
-      </Alert>
+      <Paper sx={{ p: 3, textAlign: 'center' }}>
+        <Typography color="text.secondary">{emptyMessage}</Typography>
+      </Paper>
     );
   }
 
   return (
-    <Paper elevation={3}>
-      <Box sx={{ p: 2, bgcolor: 'primary.main', color: 'white' }}>
-        <Typography variant="h6">
-          {title} ({items.length})
+    <Paper>
+      <Box 
+        sx={{ 
+          p: 2, 
+          borderBottom: 1, 
+          borderColor: 'divider',
+          backgroundColor: 'primary.main',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <Typography variant="h6" sx={{ color: 'white' }}>{title}</Typography>
+        <Typography variant="body2" sx={{ color: 'white' }}>
+          {items.length} {items.length === 1 ? 'item' : 'items'}
         </Typography>
       </Box>
-
-      {items.length === 0 ? (
-        <Box sx={{ p: 3, textAlign: 'center' }}>
-          <Typography color="text.secondary">{emptyMessage}</Typography>
-        </Box>
-      ) : (
-        <List>
-          {items.map((item, index) => (
-            <ListItem
-              key={item.id}
-              divider={index < items.length - 1}
-              sx={{
-                flexDirection: { xs: 'column', sm: 'row' },
-                alignItems: { xs: 'flex-start', sm: 'center' },
-                gap: { xs: 1, sm: 0 },
-                py: { xs: 2, sm: 1 },
-              }}
-            >
-              <ListItemText
-                primary={getDisplayName(item)}
-                secondary={renderSecondary ? renderSecondary(item) : `ID: ${item.id}`}
-                sx={{
-                  flex: 1,
-                  pr: { xs: 0, sm: 2 },
-                  wordBreak: 'break-word',
-                  minWidth: 0,
-                }}
-              />
-              <Box 
-                sx={{
-                  display: 'flex',
-                  gap: 0.5,
-                  alignSelf: { xs: 'flex-end', sm: 'center' },
-                  flexShrink: 0,
+      <List>
+        {items.map((item) => (
+          <ListItem
+            key={item.id}
+            sx={{
+              flexDirection: { xs: 'column', sm: 'row' },
+              alignItems: { xs: 'flex-start', sm: 'center' },
+              gap: { xs: 1, sm: 0 },
+            }}
+          >
+            <ListItemText
+              primary={getDisplayName(item)}
+              secondary={renderSecondary ? renderSecondary(item) : undefined}
+              sx={{ flex: 1, mb: { xs: 1, sm: 0 } }}
+            />
+            <Box sx={{ display: 'flex', gap: 1, alignSelf: { xs: 'flex-end', sm: 'center' } }}>
+              {customActions && customActions(item)}
+              <IconButton 
+                aria-label="edit" 
+                onClick={() => onEdit(item)}
+                size="small"
+              >
+                <EditIcon />
+              </IconButton>
+              <IconButton 
+                aria-label="delete" 
+                onClick={() => onDelete(item.id)}
+                size="small"
+                sx={{ 
+                  color: 'error.main',
+                  '&:hover': {
+                    backgroundColor: 'error.light',
+                    color: 'error.dark',
+                  }
                 }}
               >
-                <IconButton
-                  aria-label="edit"
-                  onClick={() => onEdit(item)}
-                  size={isMobile ? 'small' : 'medium'}
-                >
-                  <EditIcon fontSize="small" />
-                </IconButton>
-                <IconButton
-                  aria-label="delete"
-                  onClick={() => onDelete(item.id)}
-                  color="error"
-                  size={isMobile ? 'small' : 'medium'}
-                >
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
-              </Box>
-            </ListItem>
-          ))}
-        </List>
-      )}
+                <DeleteIcon />
+              </IconButton>
+            </Box>
+          </ListItem>
+        ))}
+      </List>
     </Paper>
   );
 }

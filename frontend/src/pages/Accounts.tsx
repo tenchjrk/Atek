@@ -1,28 +1,31 @@
-import { useState, useEffect } from 'react';
-import { Box, Chip, Stack, Button, Alert } from '@mui/material';
-import { Add as AddIcon } from '@mui/icons-material';
-import { accountApi, accountTypeApi } from '../services/api';
-import { useCrud } from '../hooks/useCrud';
-import { useAccountFilters } from '../hooks/useAccountFilters';
-import { useSort } from '../hooks/useSort';
-import type { Account, AccountType } from '../types';
-import PageHeader from '../components/PageHeader';
-import EntityList from '../components/EntityList';
-import AccountEditDialog from '../components/AccountEditDialog';
-import AccountCreateDialog from '../components/AccountCreateDialog';
-import AccountFilters from '../components/AccountFilters';
-import SortControls from '../components/SortControls';
-import ConfirmDialog from '../components/ConfirmDialog';
-import { formatDateShort } from '../utils/dateFormatter';
+import { useState, useEffect } from "react";
+import { Box, Chip, Stack, Button, Alert } from "@mui/material";
+import { Add as AddIcon } from "@mui/icons-material";
+import { accountApi, accountTypeApi } from "../services/api";
+import { useCrud } from "../hooks/useCrud";
+import { useAccountFilters } from "../hooks/useAccountFilters";
+import { useSort } from "../hooks/useSort";
+import type { Account, AccountType } from "../types";
+import PageHeader from "../components/PageHeader";
+import EntityList from "../components/EntityList";
+import AccountEditDialog from "../components/AccountEditDialog";
+import AccountCreateDialog from "../components/AccountCreateDialog";
+import AccountFilters from "../components/AccountFilters";
+import SortControls from "../components/SortControls";
+import ConfirmDialog from "../components/ConfirmDialog";
+import { formatDateShort } from "../utils/dateFormatter";
 
 export default function Accounts() {
-  const { items, loading, error, createItem, updateItem, deleteItem } = useCrud<Account>(accountApi);
+  const { items, loading, error, createItem, updateItem, deleteItem } =
+    useCrud<Account>(accountApi);
   const [accountTypes, setAccountTypes] = useState<AccountType[]>([]);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
-  const [deletingAccountId, setDeletingAccountId] = useState<number | null>(null);
+  const [deletingAccountId, setDeletingAccountId] = useState<number | null>(
+    null
+  );
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const {
@@ -44,7 +47,8 @@ export default function Accounts() {
   } = useAccountFilters(items);
 
   // Apply sorting to filtered accounts
-  const { sortedItems, sortField, sortOrder, handleSortChange } = useSort(filteredAccounts);
+  const { sortedItems, sortField, sortOrder, handleSortChange } =
+    useSort(filteredAccounts);
 
   // Fetch account types
   useEffect(() => {
@@ -53,7 +57,7 @@ export default function Accounts() {
         const response = await accountTypeApi.getAll();
         setAccountTypes(response.data);
       } catch (err) {
-        console.error('Error loading account types:', err);
+        console.error("Error loading account types:", err);
       }
     };
     fetchAccountTypes();
@@ -72,7 +76,7 @@ export default function Accounts() {
     postalCode: string;
     country: string;
   }) => {
-    const success = await createItem(accountData as Omit<Account, 'id'>);
+    const success = await createItem(accountData as Omit<Account, "id">);
     return success;
   };
 
@@ -129,52 +133,67 @@ export default function Accounts() {
   };
 
   const getDeletingAccountName = () => {
-    const account = items.find(a => a.id === deletingAccountId);
-    return account?.name || 'this account';
+    const account = items.find((a) => a.id === deletingAccountId);
+    return account?.name || "this account";
   };
 
   const renderAccountSecondary = (account: Account) => {
     const addressLine1 = account.addressLine1;
     const addressLine2 = account.addressLine2;
-    const cityStateZip = [
-      account.city,
-      account.state,
-      account.postalCode,
-    ].filter(Boolean).join(', ');
+    const cityStateZip = [account.city, account.state, account.postalCode]
+      .filter(Boolean)
+      .join(", ");
     const country = account.country;
 
     const hasAddress = addressLine1 || addressLine2 || cityStateZip || country;
 
     return (
-      <Stack spacing={0.5} sx={{ mt: 0.5 }} component="span">
-        <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '0.875rem' }}>ID: {account.id}</span>
+      <Stack spacing={0.5} sx={{ mt: 0.5 }} component='span'>
+        <Box
+          component='span'
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            flexWrap: "wrap",
+          }}
+        >
+          <span style={{ fontSize: "0.875rem" }}>ID: {account.id}</span>
           {account.dunsNumber && (
-            <span style={{ fontSize: '0.875rem' }}>• DUNS: {account.dunsNumber}</span>
+            <span style={{ fontSize: "0.875rem" }}>
+              • DUNS: {account.dunsNumber}
+            </span>
           )}
           {account.ein && (
-            <span style={{ fontSize: '0.875rem' }}>• EIN: {account.ein}</span>
+            <span style={{ fontSize: "0.875rem" }}>• EIN: {account.ein}</span>
           )}
           {account.accountType && (
-            <Chip 
-              label={account.accountType.type} 
-              size="small" 
-              color="secondary" 
-              variant="outlined"
+            <Chip
+              label={account.accountType.type}
+              size='small'
+              color='secondary'
+              variant='outlined'
             />
           )}
           {account.parentAccount && (
-            <Chip 
-              label={`Child of: ${account.parentAccount.name}`} 
-              size="small" 
-              color="primary" 
-              variant="outlined"
+            <Chip
+              label={`Child of: ${account.parentAccount.name}`}
+              size='small'
+              color='primary'
+              variant='outlined'
             />
           )}
         </Box>
         {hasAddress && (
-          <Box component="span" sx={{ fontSize: '0.875rem', color: 'text.secondary', display: 'block' }}>
-            📍 
+          <Box
+            component='span'
+            sx={{
+              fontSize: "0.875rem",
+              color: "text.secondary",
+              display: "block",
+            }}
+          >
+            📍
             {addressLine1 && <span> {addressLine1}</span>}
             {addressLine2 && <span>, {addressLine2}</span>}
             {(addressLine1 || addressLine2) && cityStateZip && <span>,</span>}
@@ -182,8 +201,16 @@ export default function Accounts() {
             {country && <span>, {country}</span>}
           </Box>
         )}
-        <Box component="span" sx={{ fontSize: '0.75rem', color: 'text.secondary', display: 'block' }}>
-          Created: {formatDateShort(account.createdDate)} • Modified: {formatDateShort(account.lastModifiedDate)}
+        <Box
+          component='span'
+          sx={{
+            fontSize: "0.75rem",
+            color: "text.secondary",
+            display: "block",
+          }}
+        >
+          Created: {formatDateShort(account.createdDate)} • Modified:{" "}
+          {formatDateShort(account.lastModifiedDate)}
         </Box>
       </Stack>
     );
@@ -191,13 +218,20 @@ export default function Accounts() {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
-        <PageHeader 
-          title="Account Management" 
-          subtitle="Manage your business customer accounts and hierarchies"
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          mb: 3,
+        }}
+      >
+        <PageHeader
+          title='Account Management'
+          subtitle='Manage your business customer accounts and hierarchies'
         />
         <Button
-          variant="contained"
+          variant='contained'
           startIcon={<AddIcon />}
           onClick={() => setCreateDialogOpen(true)}
           sx={{ mt: 1 }}
@@ -231,7 +265,7 @@ export default function Accounts() {
       />
 
       <EntityList
-        title="Accounts"
+        title='Accounts'
         items={sortedItems}
         loading={loading}
         error={error}
@@ -239,10 +273,19 @@ export default function Accounts() {
         onDelete={handleDeleteClick}
         emptyMessage={
           activeFilterCount > 0 || searchTerm
-            ? 'No accounts match your search or filters.'
-            : 'No accounts yet. Create your first account above.'
+            ? "No accounts match your search or filters."
+            : "No accounts yet. Create your first account above."
         }
         renderSecondary={renderAccountSecondary}
+        customActions={(account) => (
+          <Button
+            size='small'
+            variant='outlined'
+            onClick={() => window.location.href = `/accounts/${account.id}/addresses`}
+          >
+            Manage Addresses
+          </Button>
+        )}
       />
 
       <AccountCreateDialog
@@ -264,11 +307,11 @@ export default function Accounts() {
 
       <ConfirmDialog
         open={deleteDialogOpen}
-        title="Delete Account"
+        title='Delete Account'
         message={
           deleteError ? (
             <Box>
-              <Alert severity="error" sx={{ mb: 2 }}>
+              <Alert severity='error' sx={{ mb: 2 }}>
                 {deleteError}
               </Alert>
             </Box>

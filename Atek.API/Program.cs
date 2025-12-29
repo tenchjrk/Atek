@@ -26,6 +26,7 @@ builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IVendorRepository, VendorRepository>();
 builder.Services.AddScoped<IAccountTypeRepository, AccountTypeRepository>();
 builder.Services.AddScoped<IVendorTypeRepository, VendorTypeRepository>();
+builder.Services.AddScoped<IAccountAddressRepository, AccountAddressRepository>();
 
 // CORS
 builder.Services.AddCors(options =>

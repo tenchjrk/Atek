@@ -32,12 +32,7 @@ public class AccountTypeRepository : IAccountTypeRepository
     {
         _context.AccountTypes.Add(accountType);
         await _context.SaveChangesAsync();
-        
-        var created = await _context.AccountTypes
-            .AsNoTracking()
-            .FirstOrDefaultAsync(at => at.Id == accountType.Id);
-        
-        return created ?? accountType;
+        return accountType;
     }
 
     public async Task<AccountType> UpdateAsync(AccountType accountType)
@@ -48,28 +43,24 @@ public class AccountTypeRepository : IAccountTypeRepository
             existing.Type = accountType.Type;
             await _context.SaveChangesAsync();
         }
-        
-        var updated = await _context.AccountTypes
-            .AsNoTracking()
-            .FirstOrDefaultAsync(at => at.Id == accountType.Id);
-        
-        return updated ?? accountType;
+        return accountType;
     }
 
     public async Task DeleteAsync(int id)
     {
-        var accountType = await _context.AccountTypes
-            .Include(at => at.Accounts)
-            .FirstOrDefaultAsync(at => at.Id == id);
-            
+        var accountType = await _context.AccountTypes.FindAsync(id);
         if (accountType != null)
         {
-            // Check if any accounts are using this account type
-            if (accountType.Accounts.Any())
+            // Check if any accounts use this type
+            var accountsUsingType = await _context.Accounts
+                .Where(a => a.AccountTypeId == id)
+                .CountAsync();
+            
+            if (accountsUsingType > 0)
             {
                 throw new InvalidOperationException(
-                    $"Cannot delete account type '{accountType.Type}' because it is being used by {accountType.Accounts.Count} account(s). " +
-                    "Please reassign or delete these accounts first.");
+                    $"Cannot delete account type '{accountType.Type}' because it is being used by {accountsUsingType} account(s). " +
+                    "Please reassign or remove these accounts first.");
             }
             
             _context.AccountTypes.Remove(accountType);
