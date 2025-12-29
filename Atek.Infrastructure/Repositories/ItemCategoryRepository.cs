@@ -61,6 +61,7 @@ public class ItemCategoryRepository : IItemCategoryRepository
         {
             existing.VendorSegmentId = itemCategory.VendorSegmentId;
             existing.Name = itemCategory.Name;
+            existing.ShortName = itemCategory.ShortName;
             existing.LastModifiedDate = DateTime.UtcNow;
             
             await _context.SaveChangesAsync();

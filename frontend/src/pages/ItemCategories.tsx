@@ -1,22 +1,28 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Button, IconButton } from '@mui/material';
-import { Add as AddIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
-import { itemCategoryApi, vendorSegmentApi } from '../services/api';
-import { useSimpleSearch } from '../hooks/useSimpleSearch';
-import { useSortSimple } from '../hooks/useSortSimple';
-import type { ItemCategory, VendorSegment } from '../types';
-import PageHeader from '../components/PageHeader';
-import EntityList from '../components/EntityList';
-import SimpleSearchBar from '../components/SimpleSearchBar';
-import SortControlsSimple from '../components/SortControlsSimple';
-import ItemCategoryCreateDialog from '../components/ItemCategoryCreateDialog';
-import ItemCategoryEditDialog from '../components/ItemCategoryEditDialog';
-import ConfirmDialog from '../components/ConfirmDialog';
-import { formatDateShort } from '../utils/dateFormatter';
+import { useState, useEffect, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Box, Button, IconButton } from "@mui/material";
+import {
+  Add as AddIcon,
+  ArrowBack as ArrowBackIcon,
+} from "@mui/icons-material";
+import { itemCategoryApi, vendorSegmentApi } from "../services/api";
+import { useSimpleSearch } from "../hooks/useSimpleSearch";
+import { useSortSimple } from "../hooks/useSortSimple";
+import type { ItemCategory, VendorSegment } from "../types";
+import PageHeader from "../components/PageHeader";
+import EntityList from "../components/EntityList";
+import SimpleSearchBar from "../components/SimpleSearchBar";
+import SortControlsSimple from "../components/SortControlsSimple";
+import ItemCategoryCreateDialog from "../components/ItemCategoryCreateDialog";
+import ItemCategoryEditDialog from "../components/ItemCategoryEditDialog";
+import ConfirmDialog from "../components/ConfirmDialog";
+import { formatDateShort } from "../utils/dateFormatter";
 
 export default function ItemCategories() {
-  const { vendorId, segmentId } = useParams<{ vendorId: string; segmentId: string }>();
+  const { vendorId, segmentId } = useParams<{
+    vendorId: string;
+    segmentId: string;
+  }>();
   const navigate = useNavigate();
   const [segment, setSegment] = useState<VendorSegment | null>(null);
   const [categories, setCategories] = useState<ItemCategory[]>([]);
@@ -25,31 +31,37 @@ export default function ItemCategories() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<ItemCategory | null>(null);
-  const [deletingCategoryId, setDeletingCategoryId] = useState<number | null>(null);
+  const [editingCategory, setEditingCategory] = useState<ItemCategory | null>(
+    null
+  );
+  const [deletingCategoryId, setDeletingCategoryId] = useState<number | null>(
+    null
+  );
 
   // Apply search
-  const { searchTerm, setSearchTerm, filteredItems } = useSimpleSearch(categories);
+  const { searchTerm, setSearchTerm, filteredItems } =
+    useSimpleSearch(categories);
 
   // Apply sorting to filtered categories
-  const { sortedItems, sortField, sortOrder, handleSortChange } = useSortSimple(filteredItems);
+  const { sortedItems, sortField, sortOrder, handleSortChange } =
+    useSortSimple(filteredItems);
 
   const fetchData = useCallback(async () => {
     if (!segmentId) return;
-    
+
     try {
       setLoading(true);
       const [segmentResponse, categoriesResponse] = await Promise.all([
         vendorSegmentApi.getById(parseInt(segmentId)),
         itemCategoryApi.getBySegmentId(parseInt(segmentId)),
       ]);
-      
+
       setSegment(segmentResponse.data);
       setCategories(categoriesResponse.data);
       setError(null);
     } catch (err) {
-      setError('Error loading data');
-      console.error('Error loading data:', err);
+      setError("Error loading data");
+      console.error("Error loading data:", err);
     } finally {
       setLoading(false);
     }
@@ -59,13 +71,17 @@ export default function ItemCategories() {
     fetchData();
   }, [fetchData]);
 
-  const handleCreate = async (categoryData: { vendorSegmentId: number; name: string }) => {
+  const handleCreate = async (categoryData: {
+    vendorSegmentId: number;
+    name: string;
+    shortName: string;
+  }) => {
     try {
-      await itemCategoryApi.create(categoryData as Omit<ItemCategory, 'id'>);
+      await itemCategoryApi.create(categoryData as Omit<ItemCategory, "id">);
       await fetchData();
       return true;
     } catch (err) {
-      console.error('Error creating category:', err);
+      console.error("Error creating category:", err);
       return false;
     }
   };
@@ -75,13 +91,21 @@ export default function ItemCategories() {
     setEditDialogOpen(true);
   };
 
-  const handleUpdate = async (categoryData: { id: number; vendorSegmentId: number; name: string }) => {
+  const handleUpdate = async (categoryData: {
+    id: number;
+    vendorSegmentId: number;
+    name: string;
+    shortName: string;
+  }) => {
     try {
-      await itemCategoryApi.update(categoryData.id, categoryData as ItemCategory);
+      await itemCategoryApi.update(
+        categoryData.id,
+        categoryData as ItemCategory
+      );
       await fetchData();
       return true;
     } catch (err) {
-      console.error('Error updating category:', err);
+      console.error("Error updating category:", err);
       return false;
     }
   };
@@ -99,7 +123,7 @@ export default function ItemCategories() {
         setDeleteDialogOpen(false);
         setDeletingCategoryId(null);
       } catch (err) {
-        console.error('Error deleting category:', err);
+        console.error("Error deleting category:", err);
       }
     }
   };
@@ -110,14 +134,20 @@ export default function ItemCategories() {
   };
 
   const getDeletingCategoryName = () => {
-    const category = categories.find(c => c.id === deletingCategoryId);
-    return category?.name || 'this category';
+    const category = categories.find((c) => c.id === deletingCategoryId);
+    return category?.name || "this category";
   };
 
   const renderCategorySecondary = (category: ItemCategory) => {
     return (
-      <Box component="span" sx={{ fontSize: '0.75rem', color: 'text.secondary', display: 'block' }}>
-        ID: {category.id} • Created: {formatDateShort(category.createdDate)} • Modified: {formatDateShort(category.lastModifiedDate)}
+      <Box
+        component='span'
+        sx={{ fontSize: "0.75rem", color: "text.secondary", display: "block" }}
+      >
+        ID: {category.id}
+        {category.shortName && <span> • Short Name: {category.shortName}</span>}
+        {" • "}Created: {formatDateShort(category.createdDate)} • Modified:{" "}
+        {formatDateShort(category.lastModifiedDate)}
       </Box>
     );
   };
@@ -128,18 +158,21 @@ export default function ItemCategories() {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-        <IconButton onClick={() => navigate(`/vendors/${vendorId}/segments`)} size="large">
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
+        <IconButton
+          onClick={() => navigate(`/vendors/${vendorId}/segments`)}
+          size='large'
+        >
           <ArrowBackIcon />
         </IconButton>
         <Box sx={{ flexGrow: 1 }}>
           <PageHeader
-            title={`Item Categories in ${segment?.name || 'Segment'}`}
-            subtitle="Manage product and service categories for this segment"
+            title={`Item Categories in ${segment?.name || "Segment"}`}
+            subtitle='Manage product and service categories for this segment'
           />
         </Box>
         <Button
-          variant="contained"
+          variant='contained'
           startIcon={<AddIcon />}
           onClick={() => setCreateDialogOpen(true)}
           sx={{ mt: 1 }}
@@ -151,7 +184,7 @@ export default function ItemCategories() {
       <SimpleSearchBar
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        placeholder="Search categories by name..."
+        placeholder='Search categories by name...'
       />
 
       <SortControlsSimple
@@ -161,7 +194,7 @@ export default function ItemCategories() {
       />
 
       <EntityList
-        title="Item Categories"
+        title='Item Categories'
         items={sortedItems}
         loading={loading}
         error={error}
@@ -169,8 +202,8 @@ export default function ItemCategories() {
         onDelete={handleDeleteClick}
         emptyMessage={
           searchTerm
-            ? 'No categories match your search.'
-            : 'No item categories yet. Add categories to classify products and services in this segment.'
+            ? "No categories match your search."
+            : "No item categories yet. Add categories to classify products and services in this segment."
         }
         renderSecondary={renderCategorySecondary}
       />
@@ -178,7 +211,7 @@ export default function ItemCategories() {
       <ItemCategoryCreateDialog
         open={createDialogOpen}
         segmentId={parseInt(segmentId)}
-        segmentName={segment?.name || ''}
+        segmentName={segment?.name || ""}
         onClose={() => setCreateDialogOpen(false)}
         onSave={handleCreate}
       />
@@ -186,18 +219,18 @@ export default function ItemCategories() {
       <ItemCategoryEditDialog
         open={editDialogOpen}
         category={editingCategory}
-        segmentName={segment?.name || ''}
+        segmentName={segment?.name || ""}
         onClose={() => setEditDialogOpen(false)}
         onSave={handleUpdate}
       />
 
       <ConfirmDialog
         open={deleteDialogOpen}
-        title="Delete Item Category"
+        title='Delete Item Category'
         message={`Are you sure you want to delete "${getDeletingCategoryName()}"? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
-        confirmColor="error"
+        confirmText='Delete'
+        cancelText='Cancel'
+        confirmColor='error'
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
       />

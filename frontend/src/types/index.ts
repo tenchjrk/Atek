@@ -96,6 +96,7 @@ export interface ItemCategory {
   id: number;
   vendorSegmentId: number;
   name: string;
+  shortName?: string | null;
   createdDate: string;
   lastModifiedDate: string;
   vendorSegment?: VendorSegment | null;

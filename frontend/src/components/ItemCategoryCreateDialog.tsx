@@ -16,7 +16,7 @@ interface ItemCategoryCreateDialogProps {
   segmentId: number;
   segmentName: string;
   onClose: () => void;
-  onSave: (categoryData: { vendorSegmentId: number; name: string }) => Promise<boolean>;
+  onSave: (categoryData: { vendorSegmentId: number; name: string; shortName: string }) => Promise<boolean>;
 }
 
 export default function ItemCategoryCreateDialog({
@@ -27,17 +27,19 @@ export default function ItemCategoryCreateDialog({
   onSave,
 }: ItemCategoryCreateDialogProps) {
   const [name, setName] = useState('');
+  const [shortName, setShortName] = useState('');
   const [saving, setSaving] = useState(false);
 
   const handleClose = () => {
     setName('');
+    setShortName('');
     setSaving(false);
     onClose();
   };
 
   const handleSave = async () => {
     setSaving(true);
-    const success = await onSave({ vendorSegmentId: segmentId, name });
+    const success = await onSave({ vendorSegmentId: segmentId, name, shortName });
     setSaving(false);
     if (success) {
       handleClose();
@@ -70,6 +72,16 @@ export default function ItemCategoryCreateDialog({
             disabled={saving}
             required
             helperText="e.g., 'Surgical Equipment', 'Diagnostic Devices', 'Consumables'"
+          />
+          <TextField
+            label="Short Name (Optional)"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={shortName}
+            onChange={(e) => setShortName(e.target.value)}
+            disabled={saving}
+            helperText="e.g., 'Surg', 'Diag', 'Cons'"
           />
         </Stack>
       </DialogContent>

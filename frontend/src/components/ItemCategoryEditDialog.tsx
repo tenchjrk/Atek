@@ -17,7 +17,7 @@ interface ItemCategoryEditDialogProps {
   category: ItemCategory | null;
   segmentName: string;
   onClose: () => void;
-  onSave: (categoryData: { id: number; vendorSegmentId: number; name: string }) => Promise<boolean>;
+  onSave: (categoryData: { id: number; vendorSegmentId: number; name: string; shortName: string }) => Promise<boolean>;
 }
 
 export default function ItemCategoryEditDialog({
@@ -28,16 +28,19 @@ export default function ItemCategoryEditDialog({
   onSave,
 }: ItemCategoryEditDialogProps) {
   const [name, setName] = useState('');
+  const [shortName, setShortName] = useState('');
   const [saving, setSaving] = useState(false);
 
   const handleOpen = () => {
     if (category) {
       setName(category.name);
+      setShortName(category.shortName || '');
     }
   };
 
   const handleClose = () => {
     setName('');
+    setShortName('');
     setSaving(false);
     onClose();
   };
@@ -49,6 +52,7 @@ export default function ItemCategoryEditDialog({
       id: category.id,
       vendorSegmentId: category.vendorSegmentId,
       name,
+      shortName,
     });
     setSaving(false);
     if (success) {
@@ -89,6 +93,15 @@ export default function ItemCategoryEditDialog({
             onChange={(e) => setName(e.target.value)}
             disabled={saving}
             required
+          />
+          <TextField
+            label="Short Name (Optional)"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={shortName}
+            onChange={(e) => setShortName(e.target.value)}
+            disabled={saving}
           />
         </Stack>
       </DialogContent>
