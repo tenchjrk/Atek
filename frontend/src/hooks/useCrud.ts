@@ -19,8 +19,8 @@ export function useCrud<T extends { id: number }>(api: CrudApi<T>) {
     try {
       setLoading(true);
       const response = await api.getAll();
-      const sortedItems = response.data.sort((a, b) => b.id - a.id);
-      setItems(sortedItems);
+      // Don't sort here anymore - let the component handle sorting
+      setItems(response.data);
       setError(null);
     } catch (err) {
       setError('Error loading items');
@@ -69,8 +69,6 @@ export function useCrud<T extends { id: number }>(api: CrudApi<T>) {
         errorMessage = err.response.data.message;
       }
       
-      // Don't set the general error state for delete errors
-      // Return the error instead so it can be handled by the component
       return { success: false, error: errorMessage };
     }
   };

@@ -3,11 +3,13 @@ import { Box, Button, Alert } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import { accountTypeApi } from '../services/api';
 import { useCrud } from '../hooks/useCrud';
+import { useSortSimple } from '../hooks/useSortSimple';
 import type { AccountType } from '../types';
 import PageHeader from '../components/PageHeader';
 import EntityList from '../components/EntityList';
 import AccountTypeCreateDialog from '../components/AccountTypeCreateDialog';
 import AccountTypeEditDialog from '../components/AccountTypeEditDialog';
+import SortControlsSimple from '../components/SortControlsSimple';
 import ConfirmDialog from '../components/ConfirmDialog';
 
 export default function AccountTypes() {
@@ -18,6 +20,9 @@ export default function AccountTypes() {
   const [editingAccountType, setEditingAccountType] = useState<AccountType | null>(null);
   const [deletingAccountTypeId, setDeletingAccountTypeId] = useState<number | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // Apply sorting
+  const { sortedItems, sortField, sortOrder, handleSortChange } = useSortSimple(items);
 
   const handleCreate = async (type: string) => {
     return await createItem({ type });
@@ -83,9 +88,15 @@ export default function AccountTypes() {
         </Button>
       </Box>
 
+      <SortControlsSimple
+        sortField={sortField}
+        sortOrder={sortOrder}
+        onSortChange={handleSortChange}
+      />
+
       <EntityList
         title="Account Types"
-        items={items}
+        items={sortedItems}
         loading={loading}
         error={error}
         onEdit={handleEdit}

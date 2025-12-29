@@ -3,11 +3,13 @@ import { Box, Button, Alert } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import { vendorTypeApi } from '../services/api';
 import { useCrud } from '../hooks/useCrud';
+import { useSortSimple } from '../hooks/useSortSimple';
 import type { VendorType } from '../types';
 import PageHeader from '../components/PageHeader';
 import EntityList from '../components/EntityList';
 import VendorTypeCreateDialog from '../components/VendorTypeCreateDialog';
 import VendorTypeEditDialog from '../components/VendorTypeEditDialog';
+import SortControlsSimple from '../components/SortControlsSimple';
 import ConfirmDialog from '../components/ConfirmDialog';
 
 export default function VendorTypes() {
@@ -18,6 +20,9 @@ export default function VendorTypes() {
   const [editingVendorType, setEditingVendorType] = useState<VendorType | null>(null);
   const [deletingVendorTypeId, setDeletingVendorTypeId] = useState<number | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // Apply sorting
+  const { sortedItems, sortField, sortOrder, handleSortChange } = useSortSimple(items);
 
   const handleCreate = async (type: string) => {
     return await createItem({ type });
@@ -83,9 +88,15 @@ export default function VendorTypes() {
         </Button>
       </Box>
 
+      <SortControlsSimple
+        sortField={sortField}
+        sortOrder={sortOrder}
+        onSortChange={handleSortChange}
+      />
+
       <EntityList
         title="Vendor Types"
-        items={items}
+        items={sortedItems}
         loading={loading}
         error={error}
         onEdit={handleEdit}

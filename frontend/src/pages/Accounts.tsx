@@ -4,12 +4,14 @@ import { Add as AddIcon } from '@mui/icons-material';
 import { accountApi, accountTypeApi } from '../services/api';
 import { useCrud } from '../hooks/useCrud';
 import { useAccountFilters } from '../hooks/useAccountFilters';
+import { useSort } from '../hooks/useSort';
 import type { Account, AccountType } from '../types';
 import PageHeader from '../components/PageHeader';
 import EntityList from '../components/EntityList';
 import AccountEditDialog from '../components/AccountEditDialog';
 import AccountCreateDialog from '../components/AccountCreateDialog';
 import AccountFilters from '../components/AccountFilters';
+import SortControls from '../components/SortControls';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { formatDateShort } from '../utils/dateFormatter';
 
@@ -41,6 +43,9 @@ export default function Accounts() {
     clearFilters,
   } = useAccountFilters(items);
 
+  // Apply sorting to filtered accounts
+  const { sortedItems, sortField, sortOrder, handleSortChange } = useSort(filteredAccounts);
+
   // Fetch account types
   useEffect(() => {
     const fetchAccountTypes = async () => {
@@ -53,8 +58,6 @@ export default function Accounts() {
     };
     fetchAccountTypes();
   }, []);
-
-  // ... rest of the handlers stay the same ...
 
   const handleCreate = async (accountData: {
     name: string;
@@ -221,9 +224,15 @@ export default function Accounts() {
         activeFilterCount={activeFilterCount}
       />
 
+      <SortControls
+        sortField={sortField}
+        sortOrder={sortOrder}
+        onSortChange={handleSortChange}
+      />
+
       <EntityList
         title="Accounts"
-        items={filteredAccounts}
+        items={sortedItems}
         loading={loading}
         error={error}
         onEdit={handleEdit}

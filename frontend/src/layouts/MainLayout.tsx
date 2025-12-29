@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation } from "react-router-dom";
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import {
   AppBar,
   Box,
@@ -12,7 +12,7 @@ import {
   ListItemIcon,
   ListItemText,
   IconButton,
-} from "@mui/material";
+} from '@mui/material';
 import {
   Menu as MenuIcon,
   Business as AccountIcon,
@@ -20,8 +20,8 @@ import {
   Home as HomeIcon,
   Category as CategoryIcon,
   LocalOffer as TagIcon,
-} from "@mui/icons-material";
-import { useState } from "react";
+} from '@mui/icons-material';
+import { useState } from 'react';
 
 const drawerWidth = 240;
 
@@ -34,19 +34,36 @@ export default function MainLayout() {
   };
 
   const menuItems = [
-    { text: "Home", icon: <HomeIcon />, path: "/" },
-    { text: "Accounts", icon: <AccountIcon />, path: "/accounts" },
-    { text: "Vendors", icon: <VendorIcon />, path: "/vendors" },
-    { text: "Account Types", icon: <CategoryIcon />, path: "/account-types" },
-    { text: "Vendor Types", icon: <TagIcon />, path: "/vendor-types" },
+    { text: 'Home', icon: <HomeIcon />, path: '/' },
+    { text: 'Accounts', icon: <AccountIcon />, path: '/accounts' },
+    { text: 'Vendors', icon: <VendorIcon />, path: '/vendors' },
+    { text: 'Account Types', icon: <CategoryIcon />, path: '/account-types' },
+    { text: 'Vendor Types', icon: <TagIcon />, path: '/vendor-types' },
   ];
 
   const drawer = (
-    <Box>
-      <Toolbar>
-        <Typography variant='h6' noWrap component='div'>
-          Atek Data Solutions
-        </Typography>
+    <Box sx={{ backgroundColor: '#ebecf0', height: '100%' }}>
+      <Toolbar sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+        <Box
+          component={Link}
+          to="/"
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textDecoration: 'none',
+          }}
+        >
+          <img
+            src="/Atek.png"
+            alt="Atek Data Solutions"
+            style={{
+              height: '100px',
+              width: 'auto',
+              objectFit: 'contain',
+            }}
+          />
+        </Box>
       </Toolbar>
       <List>
         {menuItems.map((item) => (
@@ -66,9 +83,9 @@ export default function MainLayout() {
   );
 
   return (
-    <Box sx={{ display: "flex" }}>
+    <Box sx={{ display: 'flex' }}>
       <AppBar
-        position='fixed'
+        position="fixed"
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
@@ -76,40 +93,48 @@ export default function MainLayout() {
       >
         <Toolbar>
           <IconButton
-            color='inherit'
-            aria-label='open drawer'
-            edge='start'
+            color="inherit"
+            aria-label="open drawer"
+            edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: "none" } }}
+            sx={{ mr: 2, display: { sm: 'none' } }}
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant='h6' noWrap component='div' sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             Contract Management Platform
           </Typography>
         </Toolbar>
       </AppBar>
 
       <Drawer
-        variant='temporary'
+        variant="temporary"
         open={mobileOpen}
         onClose={handleDrawerToggle}
         ModalProps={{
           keepMounted: true,
         }}
         sx={{
-          display: { xs: "block", sm: "none" },
-          "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
+          display: { xs: 'block', sm: 'none' },
+          '& .MuiDrawer-paper': { 
+            boxSizing: 'border-box', 
+            width: drawerWidth,
+            backgroundColor: '#ebecf0',
+          },
         }}
       >
         {drawer}
       </Drawer>
 
       <Drawer
-        variant='permanent'
+        variant="permanent"
         sx={{
-          display: { xs: "none", sm: "block" },
-          "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
+          display: { xs: 'none', sm: 'block' },
+          '& .MuiDrawer-paper': { 
+            boxSizing: 'border-box', 
+            width: drawerWidth,
+            backgroundColor: '#ebecf0',
+          },
         }}
         open
       >
@@ -117,7 +142,7 @@ export default function MainLayout() {
       </Drawer>
 
       <Box
-        component='main'
+        component="main"
         sx={{
           flexGrow: 1,
           p: 3,
@@ -126,7 +151,7 @@ export default function MainLayout() {
         }}
       >
         <Toolbar />
-        <Container maxWidth='lg'>
+        <Container maxWidth="lg">
           <Outlet />
         </Container>
       </Box>
