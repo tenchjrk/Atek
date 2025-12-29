@@ -28,7 +28,7 @@ export default function SortControlsSimple({ sortField, sortOrder, onSortChange 
           onChange={handleFieldChange}
         >
           <MenuItem value="id">ID</MenuItem>
-          <MenuItem value="type">Type</MenuItem>
+          <MenuItem value="name">Name</MenuItem>
         </Select>
       </FormControl>
 
@@ -48,7 +48,7 @@ export default function SortControlsSimple({ sortField, sortOrder, onSortChange 
 
       <Box sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
         {sortField === 'id' && 'ID'}
-        {sortField === 'type' && 'Type'}
+        {sortField === 'name' && 'Name'}
         {' • '}
         {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
       </Box>

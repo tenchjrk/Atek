@@ -2,50 +2,50 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Button, IconButton } from '@mui/material';
 import { Add as AddIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
-import { vendorTerritoryApi, vendorRegionApi } from '../services/api';
+import { itemCategoryApi, vendorSegmentApi } from '../services/api';
 import { useSimpleSearch } from '../hooks/useSimpleSearch';
 import { useSortSimple } from '../hooks/useSortSimple';
-import type { VendorTerritory, VendorRegion } from '../types';
+import type { ItemCategory, VendorSegment } from '../types';
 import PageHeader from '../components/PageHeader';
 import EntityList from '../components/EntityList';
 import SimpleSearchBar from '../components/SimpleSearchBar';
 import SortControlsSimple from '../components/SortControlsSimple';
-import VendorTerritoryCreateDialog from '../components/VendorTerritoryCreateDialog';
-import VendorTerritoryEditDialog from '../components/VendorTerritoryEditDialog';
+import ItemCategoryCreateDialog from '../components/ItemCategoryCreateDialog';
+import ItemCategoryEditDialog from '../components/ItemCategoryEditDialog';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { formatDateShort } from '../utils/dateFormatter';
 
-export default function VendorTerritories() {
-  const { vendorId, segmentId, regionId } = useParams<{ vendorId: string; segmentId: string; regionId: string }>();
+export default function ItemCategories() {
+  const { vendorId, segmentId } = useParams<{ vendorId: string; segmentId: string }>();
   const navigate = useNavigate();
-  const [region, setRegion] = useState<VendorRegion | null>(null);
-  const [territories, setTerritories] = useState<VendorTerritory[]>([]);
+  const [segment, setSegment] = useState<VendorSegment | null>(null);
+  const [categories, setCategories] = useState<ItemCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [editingTerritory, setEditingTerritory] = useState<VendorTerritory | null>(null);
-  const [deletingTerritoryId, setDeletingTerritoryId] = useState<number | null>(null);
+  const [editingCategory, setEditingCategory] = useState<ItemCategory | null>(null);
+  const [deletingCategoryId, setDeletingCategoryId] = useState<number | null>(null);
 
   // Apply search
-  const { searchTerm, setSearchTerm, filteredItems } = useSimpleSearch(territories);
+  const { searchTerm, setSearchTerm, filteredItems } = useSimpleSearch(categories);
 
-  // Apply sorting to filtered territories
+  // Apply sorting to filtered categories
   const { sortedItems, sortField, sortOrder, handleSortChange } = useSortSimple(filteredItems);
 
   const fetchData = useCallback(async () => {
-    if (!regionId) return;
+    if (!segmentId) return;
     
     try {
       setLoading(true);
-      const [regionResponse, territoriesResponse] = await Promise.all([
-        vendorRegionApi.getById(parseInt(regionId)),
-        vendorTerritoryApi.getByRegionId(parseInt(regionId)),
+      const [segmentResponse, categoriesResponse] = await Promise.all([
+        vendorSegmentApi.getById(parseInt(segmentId)),
+        itemCategoryApi.getBySegmentId(parseInt(segmentId)),
       ]);
       
-      setRegion(regionResponse.data);
-      setTerritories(territoriesResponse.data);
+      setSegment(segmentResponse.data);
+      setCategories(categoriesResponse.data);
       setError(null);
     } catch (err) {
       setError('Error loading data');
@@ -53,89 +53,89 @@ export default function VendorTerritories() {
     } finally {
       setLoading(false);
     }
-  }, [regionId]);
+  }, [segmentId]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  const handleCreate = async (territoryData: { vendorRegionId: number; name: string }) => {
+  const handleCreate = async (categoryData: { vendorSegmentId: number; name: string }) => {
     try {
-      await vendorTerritoryApi.create(territoryData as Omit<VendorTerritory, 'id'>);
+      await itemCategoryApi.create(categoryData as Omit<ItemCategory, 'id'>);
       await fetchData();
       return true;
     } catch (err) {
-      console.error('Error creating territory:', err);
+      console.error('Error creating category:', err);
       return false;
     }
   };
 
-  const handleEdit = (territory: VendorTerritory) => {
-    setEditingTerritory(territory);
+  const handleEdit = (category: ItemCategory) => {
+    setEditingCategory(category);
     setEditDialogOpen(true);
   };
 
-  const handleUpdate = async (territoryData: { id: number; vendorRegionId: number; name: string }) => {
+  const handleUpdate = async (categoryData: { id: number; vendorSegmentId: number; name: string }) => {
     try {
-      await vendorTerritoryApi.update(territoryData.id, territoryData as VendorTerritory);
+      await itemCategoryApi.update(categoryData.id, categoryData as ItemCategory);
       await fetchData();
       return true;
     } catch (err) {
-      console.error('Error updating territory:', err);
+      console.error('Error updating category:', err);
       return false;
     }
   };
 
   const handleDeleteClick = (id: number) => {
-    setDeletingTerritoryId(id);
+    setDeletingCategoryId(id);
     setDeleteDialogOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
-    if (deletingTerritoryId !== null) {
+    if (deletingCategoryId !== null) {
       try {
-        await vendorTerritoryApi.delete(deletingTerritoryId);
+        await itemCategoryApi.delete(deletingCategoryId);
         await fetchData();
         setDeleteDialogOpen(false);
-        setDeletingTerritoryId(null);
+        setDeletingCategoryId(null);
       } catch (err) {
-        console.error('Error deleting territory:', err);
+        console.error('Error deleting category:', err);
       }
     }
   };
 
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
-    setDeletingTerritoryId(null);
+    setDeletingCategoryId(null);
   };
 
-  const getDeletingTerritoryName = () => {
-    const territory = territories.find(t => t.id === deletingTerritoryId);
-    return territory?.name || 'this territory';
+  const getDeletingCategoryName = () => {
+    const category = categories.find(c => c.id === deletingCategoryId);
+    return category?.name || 'this category';
   };
 
-  const renderTerritorySecondary = (territory: VendorTerritory) => {
+  const renderCategorySecondary = (category: ItemCategory) => {
     return (
       <Box component="span" sx={{ fontSize: '0.75rem', color: 'text.secondary', display: 'block' }}>
-        ID: {territory.id} • Created: {formatDateShort(territory.createdDate)} • Modified: {formatDateShort(territory.lastModifiedDate)}
+        ID: {category.id} • Created: {formatDateShort(category.createdDate)} • Modified: {formatDateShort(category.lastModifiedDate)}
       </Box>
     );
   };
 
-  if (!vendorId || !segmentId || !regionId) {
-    return <Box>Invalid vendor, segment, or region ID</Box>;
+  if (!vendorId || !segmentId) {
+    return <Box>Invalid vendor or segment ID</Box>;
   }
 
   return (
     <Box>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-        <IconButton onClick={() => navigate(`/vendors/${vendorId}/segments/${segmentId}/regions`)} size="large">
+        <IconButton onClick={() => navigate(`/vendors/${vendorId}/segments`)} size="large">
           <ArrowBackIcon />
         </IconButton>
         <Box sx={{ flexGrow: 1 }}>
           <PageHeader
-            title={`Territories in ${region?.name || 'Region'}`}
-            subtitle="Manage specific sales territories within this region"
+            title={`Item Categories in ${segment?.name || 'Segment'}`}
+            subtitle="Manage product and service categories for this segment"
           />
         </Box>
         <Button
@@ -144,14 +144,14 @@ export default function VendorTerritories() {
           onClick={() => setCreateDialogOpen(true)}
           sx={{ mt: 1 }}
         >
-          Add Territory
+          Add Category
         </Button>
       </Box>
 
       <SimpleSearchBar
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        placeholder="Search territories by name..."
+        placeholder="Search categories by name..."
       />
 
       <SortControlsSimple
@@ -161,7 +161,7 @@ export default function VendorTerritories() {
       />
 
       <EntityList
-        title="Territories"
+        title="Item Categories"
         items={sortedItems}
         loading={loading}
         error={error}
@@ -169,32 +169,32 @@ export default function VendorTerritories() {
         onDelete={handleDeleteClick}
         emptyMessage={
           searchTerm
-            ? 'No territories match your search.'
-            : 'No territories yet. Add territories to organize this region into specific sales areas.'
+            ? 'No categories match your search.'
+            : 'No item categories yet. Add categories to classify products and services in this segment.'
         }
-        renderSecondary={renderTerritorySecondary}
+        renderSecondary={renderCategorySecondary}
       />
 
-      <VendorTerritoryCreateDialog
+      <ItemCategoryCreateDialog
         open={createDialogOpen}
-        regionId={parseInt(regionId)}
-        regionName={region?.name || ''}
+        segmentId={parseInt(segmentId)}
+        segmentName={segment?.name || ''}
         onClose={() => setCreateDialogOpen(false)}
         onSave={handleCreate}
       />
 
-      <VendorTerritoryEditDialog
+      <ItemCategoryEditDialog
         open={editDialogOpen}
-        territory={editingTerritory}
-        regionName={region?.name || ''}
+        category={editingCategory}
+        segmentName={segment?.name || ''}
         onClose={() => setEditDialogOpen(false)}
         onSave={handleUpdate}
       />
 
       <ConfirmDialog
         open={deleteDialogOpen}
-        title="Delete Territory"
-        message={`Are you sure you want to delete "${getDeletingTerritoryName()}"? This action cannot be undone.`}
+        title="Delete Item Category"
+        message={`Are you sure you want to delete "${getDeletingCategoryName()}"? This action cannot be undone.`}
         confirmText="Delete"
         cancelText="Cancel"
         confirmColor="error"

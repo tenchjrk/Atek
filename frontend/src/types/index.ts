@@ -91,3 +91,12 @@ export interface VendorTerritory {
   lastModifiedDate: string;
   vendorRegion?: VendorRegion | null;
 }
+
+export interface ItemCategory {
+  id: number;
+  vendorSegmentId: number;
+  name: string;
+  createdDate: string;
+  lastModifiedDate: string;
+  vendorSegment?: VendorSegment | null;
+}

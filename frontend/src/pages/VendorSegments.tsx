@@ -1,18 +1,20 @@
-import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Box, Button, Alert, IconButton } from "@mui/material";
-import {
-  Add as AddIcon,
-  ArrowBack as ArrowBackIcon,
-} from "@mui/icons-material";
-import { vendorSegmentApi, vendorApi } from "../services/api";
-import type { VendorSegment, Vendor } from "../types";
-import PageHeader from "../components/PageHeader";
-import EntityList from "../components/EntityList";
-import VendorSegmentCreateDialog from "../components/VendorSegmentCreateDialog";
-import VendorSegmentEditDialog from "../components/VendorSegmentEditDialog";
-import ConfirmDialog from "../components/ConfirmDialog";
-import { formatDateShort } from "../utils/dateFormatter";
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Box, Button, Alert, IconButton } from '@mui/material';
+import { Add as AddIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { AxiosError } from 'axios';
+import { vendorSegmentApi, vendorApi } from '../services/api';
+import { useSimpleSearch } from '../hooks/useSimpleSearch';
+import { useSortSimple } from '../hooks/useSortSimple';
+import type { VendorSegment, Vendor } from '../types';
+import PageHeader from '../components/PageHeader';
+import EntityList from '../components/EntityList';
+import SimpleSearchBar from '../components/SimpleSearchBar';
+import SortControlsSimple from '../components/SortControlsSimple';
+import VendorSegmentCreateDialog from '../components/VendorSegmentCreateDialog';
+import VendorSegmentEditDialog from '../components/VendorSegmentEditDialog';
+import ConfirmDialog from '../components/ConfirmDialog';
+import { formatDateShort } from '../utils/dateFormatter';
 
 export default function VendorSegments() {
   const { vendorId } = useParams<{ vendorId: string }>();
@@ -24,30 +26,32 @@ export default function VendorSegments() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [editingSegment, setEditingSegment] = useState<VendorSegment | null>(
-    null
-  );
-  const [deletingSegmentId, setDeletingSegmentId] = useState<number | null>(
-    null
-  );
+  const [editingSegment, setEditingSegment] = useState<VendorSegment | null>(null);
+  const [deletingSegmentId, setDeletingSegmentId] = useState<number | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // Apply search
+  const { searchTerm, setSearchTerm, filteredItems } = useSimpleSearch(segments);
+
+  // Apply sorting to filtered segments
+  const { sortedItems, sortField, sortOrder, handleSortChange } = useSortSimple(filteredItems);
 
   const fetchData = useCallback(async () => {
     if (!vendorId) return;
-
+    
     try {
       setLoading(true);
       const [vendorResponse, segmentsResponse] = await Promise.all([
         vendorApi.getById(parseInt(vendorId)),
         vendorSegmentApi.getByVendorId(parseInt(vendorId)),
       ]);
-
+      
       setVendor(vendorResponse.data);
       setSegments(segmentsResponse.data);
       setError(null);
     } catch (err) {
-      setError("Error loading data");
-      console.error("Error loading data:", err);
+      setError('Error loading data');
+      console.error('Error loading data:', err);
     } finally {
       setLoading(false);
     }
@@ -57,16 +61,13 @@ export default function VendorSegments() {
     fetchData();
   }, [fetchData]);
 
-  const handleCreate = async (segmentData: {
-    vendorId: number;
-    name: string;
-  }) => {
+  const handleCreate = async (segmentData: { vendorId: number; name: string }) => {
     try {
-      await vendorSegmentApi.create(segmentData as Omit<VendorSegment, "id">);
+      await vendorSegmentApi.create(segmentData as Omit<VendorSegment, 'id'>);
       await fetchData();
       return true;
     } catch (err) {
-      console.error("Error creating segment:", err);
+      console.error('Error creating segment:', err);
       return false;
     }
   };
@@ -76,20 +77,13 @@ export default function VendorSegments() {
     setEditDialogOpen(true);
   };
 
-  const handleUpdate = async (segmentData: {
-    id: number;
-    vendorId: number;
-    name: string;
-  }) => {
+  const handleUpdate = async (segmentData: { id: number; vendorId: number; name: string }) => {
     try {
-      await vendorSegmentApi.update(
-        segmentData.id,
-        segmentData as VendorSegment
-      );
+      await vendorSegmentApi.update(segmentData.id, segmentData as VendorSegment);
       await fetchData();
       return true;
     } catch (err) {
-      console.error("Error updating segment:", err);
+      console.error('Error updating segment:', err);
       return false;
     }
   };
@@ -109,17 +103,10 @@ export default function VendorSegments() {
         setDeletingSegmentId(null);
         setDeleteError(null);
       } catch (err) {
-        const errorMessage =
-          err instanceof Error &&
-          "response" in err &&
-          typeof err.response === "object" &&
-          err.response !== null &&
-          "data" in err.response &&
-          typeof err.response.data === "object" &&
-          err.response.data !== null &&
-          "message" in err.response.data
-            ? String(err.response.data.message)
-            : "Error deleting segment";
+        let errorMessage = 'Error deleting segment';
+        if (err instanceof AxiosError && err.response?.data?.message) {
+          errorMessage = err.response.data.message;
+        }
         setDeleteError(errorMessage);
       }
     }
@@ -132,18 +119,14 @@ export default function VendorSegments() {
   };
 
   const getDeletingSegmentName = () => {
-    const segment = segments.find((s) => s.id === deletingSegmentId);
-    return segment?.name || "this segment";
+    const segment = segments.find(s => s.id === deletingSegmentId);
+    return segment?.name || 'this segment';
   };
 
   const renderSegmentSecondary = (segment: VendorSegment) => {
     return (
-      <Box
-        component='span'
-        sx={{ fontSize: "0.75rem", color: "text.secondary", display: "block" }}
-      >
-        ID: {segment.id} • Created: {formatDateShort(segment.createdDate)} •
-        Modified: {formatDateShort(segment.lastModifiedDate)}
+      <Box component="span" sx={{ fontSize: '0.75rem', color: 'text.secondary', display: 'block' }}>
+        ID: {segment.id} • Created: {formatDateShort(segment.createdDate)} • Modified: {formatDateShort(segment.lastModifiedDate)}
       </Box>
     );
   };
@@ -154,18 +137,18 @@ export default function VendorSegments() {
 
   return (
     <Box>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-        <IconButton onClick={() => navigate("/vendors")} size='large'>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+        <IconButton onClick={() => navigate('/vendors')} size="large">
           <ArrowBackIcon />
         </IconButton>
         <Box sx={{ flexGrow: 1 }}>
           <PageHeader
-            title={`Segments for ${vendor?.name || "Vendor"}`}
-            subtitle='Manage business line segments for this vendor'
+            title={`Segments for ${vendor?.name || 'Vendor'}`}
+            subtitle="Manage business line segments for this vendor"
           />
         </Box>
         <Button
-          variant='contained'
+          variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setCreateDialogOpen(true)}
           sx={{ mt: 1 }}
@@ -174,32 +157,55 @@ export default function VendorSegments() {
         </Button>
       </Box>
 
+      <SimpleSearchBar
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        placeholder="Search segments by name..."
+      />
+
+      <SortControlsSimple
+        sortField={sortField}
+        sortOrder={sortOrder}
+        onSortChange={handleSortChange}
+      />
+
       <EntityList
-        title='Segments'
-        items={segments}
+        title="Segments"
+        items={sortedItems}
         loading={loading}
         error={error}
         onEdit={handleEdit}
         onDelete={handleDeleteClick}
-        emptyMessage='No segments yet. Add segments to organize vendor business lines.'
+        emptyMessage={
+          searchTerm
+            ? 'No segments match your search.'
+            : 'No segments yet. Add segments to organize vendor business lines.'
+        }
         renderSecondary={renderSegmentSecondary}
         customActions={(segment) => (
-          <Button
-            size='small'
-            variant='outlined'
-            onClick={() =>
-              navigate(`/vendors/${vendorId}/segments/${segment.id}/regions`)
-            }
-          >
-            View Regions
-          </Button>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              size='small'
+              variant='outlined'
+              onClick={() => navigate(`/vendors/${vendorId}/segments/${segment.id}/categories`)}
+            >
+              Manage Categories
+            </Button>
+            <Button
+              size='small'
+              variant='outlined'
+              onClick={() => navigate(`/vendors/${vendorId}/segments/${segment.id}/regions`)}
+            >
+              View Regions
+            </Button>
+          </Box>
         )}
       />
 
       <VendorSegmentCreateDialog
         open={createDialogOpen}
         vendorId={parseInt(vendorId)}
-        vendorName={vendor?.name || ""}
+        vendorName={vendor?.name || ''}
         onClose={() => setCreateDialogOpen(false)}
         onSave={handleCreate}
       />
@@ -207,18 +213,18 @@ export default function VendorSegments() {
       <VendorSegmentEditDialog
         open={editDialogOpen}
         segment={editingSegment}
-        vendorName={vendor?.name || ""}
+        vendorName={vendor?.name || ''}
         onClose={() => setEditDialogOpen(false)}
         onSave={handleUpdate}
       />
 
       <ConfirmDialog
         open={deleteDialogOpen}
-        title='Delete Segment'
+        title="Delete Segment"
         message={
           deleteError ? (
             <Box>
-              <Alert severity='error' sx={{ mb: 2 }}>
+              <Alert severity="error" sx={{ mb: 2 }}>
                 {deleteError}
               </Alert>
             </Box>

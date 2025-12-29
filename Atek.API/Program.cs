@@ -30,6 +30,7 @@ builder.Services.AddScoped<IAccountAddressRepository, AccountAddressRepository>(
 builder.Services.AddScoped<IVendorSegmentRepository, VendorSegmentRepository>();
 builder.Services.AddScoped<IVendorRegionRepository, VendorRegionRepository>();
 builder.Services.AddScoped<IVendorTerritoryRepository, VendorTerritoryRepository>();
+builder.Services.AddScoped<IItemCategoryRepository, ItemCategoryRepository>();
 
 // CORS
 builder.Services.AddCors(options =>

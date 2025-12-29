@@ -18,6 +18,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<VendorSegment> VendorSegments => Set<VendorSegment>();
     public DbSet<VendorRegion> VendorRegions => Set<VendorRegion>();
     public DbSet<VendorTerritory> VendorTerritories => Set<VendorTerritory>();
+    public DbSet<ItemCategory> ItemCategories => Set<ItemCategory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -63,6 +64,13 @@ public class ApplicationDbContext : DbContext
             .HasOne(vt => vt.VendorRegion)
             .WithMany()
             .HasForeignKey(vt => vt.VendorRegionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // ItemCategory to VendorSegment relationship
+        modelBuilder.Entity<ItemCategory>()
+            .HasOne(ic => ic.VendorSegment)
+            .WithMany()
+            .HasForeignKey(ic => ic.VendorSegmentId)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

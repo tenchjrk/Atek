@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react';
 
-export type SimpleSortField = 'id' | 'type';
+export type SimpleSortField = 'id' | 'name';
 export type SortOrder = 'asc' | 'desc';
 
-export function useSortSimple<T extends { id: number; type: string }>(items: T[]) {
+export function useSortSimple<T extends { id: number; name: string }>(items: T[]) {
   const [sortField, setSortField] = useState<SimpleSortField>('id');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
@@ -15,8 +15,8 @@ export function useSortSimple<T extends { id: number; type: string }>(items: T[]
         case 'id':
           comparison = a.id - b.id;
           break;
-        case 'type':
-          comparison = a.type.localeCompare(b.type);
+        case 'name':
+          comparison = a.name.localeCompare(b.name);
           break;
       }
 
@@ -31,7 +31,7 @@ export function useSortSimple<T extends { id: number; type: string }>(items: T[]
       // Toggle order if same field
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
-      // New field, default to desc for id, asc for type
+      // New field, default to desc for id, asc for name
       setSortField(field);
       setSortOrder(field === 'id' ? 'desc' : 'asc');
     }

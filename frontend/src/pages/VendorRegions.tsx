@@ -4,9 +4,13 @@ import { Box, Button, Alert, IconButton } from '@mui/material';
 import { Add as AddIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
 import { AxiosError } from 'axios';
 import { vendorRegionApi, vendorSegmentApi } from '../services/api';
+import { useSimpleSearch } from '../hooks/useSimpleSearch';
+import { useSortSimple } from '../hooks/useSortSimple';
 import type { VendorRegion, VendorSegment } from '../types';
 import PageHeader from '../components/PageHeader';
 import EntityList from '../components/EntityList';
+import SimpleSearchBar from '../components/SimpleSearchBar';
+import SortControlsSimple from '../components/SortControlsSimple';
 import VendorRegionCreateDialog from '../components/VendorRegionCreateDialog';
 import VendorRegionEditDialog from '../components/VendorRegionEditDialog';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -25,6 +29,12 @@ export default function VendorRegions() {
   const [editingRegion, setEditingRegion] = useState<VendorRegion | null>(null);
   const [deletingRegionId, setDeletingRegionId] = useState<number | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // Apply search
+  const { searchTerm, setSearchTerm, filteredItems } = useSimpleSearch(regions);
+
+  // Apply sorting to filtered regions
+  const { sortedItems, sortField, sortOrder, handleSortChange } = useSortSimple(filteredItems);
 
   const fetchData = useCallback(async () => {
     if (!segmentId) return;
@@ -147,14 +157,30 @@ export default function VendorRegions() {
         </Button>
       </Box>
 
+      <SimpleSearchBar
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        placeholder="Search regions by name..."
+      />
+
+      <SortControlsSimple
+        sortField={sortField}
+        sortOrder={sortOrder}
+        onSortChange={handleSortChange}
+      />
+
       <EntityList
         title="Regions"
-        items={regions}
+        items={sortedItems}
         loading={loading}
         error={error}
         onEdit={handleEdit}
         onDelete={handleDeleteClick}
-        emptyMessage="No regions yet. Add regions to organize this segment geographically."
+        emptyMessage={
+          searchTerm
+            ? 'No regions match your search.'
+            : 'No regions yet. Add regions to organize this segment geographically.'
+        }
         renderSecondary={renderRegionSecondary}
         customActions={(region) => (
           <Button

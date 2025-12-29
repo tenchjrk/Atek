@@ -11,6 +11,7 @@ import AccountAddresses from './pages/AccountAddresses';
 import VendorSegments from './pages/VendorSegments';
 import VendorRegions from './pages/VendorRegions';
 import VendorTerritories from './pages/VendorTerritories';
+import ItemCategories from './pages/ItemCategories';
 
 const theme = createTheme({
   palette: {
@@ -37,6 +38,7 @@ function App() {
             <Route path="vendors/:vendorId/segments" element={<VendorSegments />} />
             <Route path="vendors/:vendorId/segments/:segmentId/regions" element={<VendorRegions />} />
             <Route path="vendors/:vendorId/segments/:segmentId/regions/:regionId/territories" element={<VendorTerritories />} />
+            <Route path="vendors/:vendorId/segments/:segmentId/categories" element={<ItemCategories />} />
             <Route path="account-types" element={<AccountTypes />} />
             <Route path="vendor-types" element={<VendorTypes />} />
           </Route>
