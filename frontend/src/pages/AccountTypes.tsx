@@ -1,28 +1,38 @@
-import { useState } from 'react';
-import { Box, Button, Alert } from '@mui/material';
-import { Add as AddIcon } from '@mui/icons-material';
-import { accountTypeApi } from '../services/api';
-import { useCrud } from '../hooks/useCrud';
-import { useSortSimple } from '../hooks/useSortSimple';
-import type { AccountType } from '../types';
-import PageHeader from '../components/PageHeader';
-import EntityList from '../components/EntityList';
-import AccountTypeCreateDialog from '../components/AccountTypeCreateDialog';
-import AccountTypeEditDialog from '../components/AccountTypeEditDialog';
-import SortControlsSimple from '../components/SortControlsSimple';
-import ConfirmDialog from '../components/ConfirmDialog';
+import { useState } from "react";
+import { Box, Button, Alert, IconButton } from "@mui/material";
+import {
+  Add as AddIcon,
+  ArrowBack as ArrowBackIcon,
+} from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
+import { accountTypeApi } from "../services/api";
+import { useCrud } from "../hooks/useCrud";
+import { useSortSimple } from "../hooks/useSortSimple";
+import type { AccountType } from "../types";
+import PageHeader from "../components/PageHeader";
+import EntityList from "../components/EntityList";
+import AccountTypeCreateDialog from "../components/AccountTypeCreateDialog";
+import AccountTypeEditDialog from "../components/AccountTypeEditDialog";
+import SortControlsSimple from "../components/SortControlsSimple";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 export default function AccountTypes() {
-  const { items, loading, error, createItem, updateItem, deleteItem } = useCrud<AccountType>(accountTypeApi);
+  const navigate = useNavigate();
+  const { items, loading, error, createItem, updateItem, deleteItem } =
+    useCrud<AccountType>(accountTypeApi);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [editingAccountType, setEditingAccountType] = useState<AccountType | null>(null);
-  const [deletingAccountTypeId, setDeletingAccountTypeId] = useState<number | null>(null);
+  const [editingAccountType, setEditingAccountType] =
+    useState<AccountType | null>(null);
+  const [deletingAccountTypeId, setDeletingAccountTypeId] = useState<
+    number | null
+  >(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Apply sorting
-  const { sortedItems, sortField, sortOrder, handleSortChange } = useSortSimple(items);
+  const { sortedItems, sortField, sortOrder, handleSortChange } =
+    useSortSimple(items);
 
   const handleCreate = async (type: string) => {
     return await createItem({ type });
@@ -63,8 +73,8 @@ export default function AccountTypes() {
   };
 
   const getDeletingAccountTypeName = () => {
-    const accountType = items.find(at => at.id === deletingAccountTypeId);
-    return accountType?.type || 'this account type';
+    const accountType = items.find((at) => at.id === deletingAccountTypeId);
+    return accountType?.type || "this account type";
   };
 
   const renderAccountTypeSecondary = (accountType: AccountType) => {
@@ -73,13 +83,18 @@ export default function AccountTypes() {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
-        <PageHeader 
-          title="Account Type Management" 
-          subtitle="Manage account type classifications"
-        />
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
+        <IconButton onClick={() => navigate("/accounts")} size='large'>
+          <ArrowBackIcon />
+        </IconButton>
+        <Box sx={{ flexGrow: 1 }}>
+          <PageHeader
+            title='Account Type Management'
+            subtitle='Manage account type classifications'
+          />
+        </Box>
         <Button
-          variant="contained"
+          variant='contained'
           startIcon={<AddIcon />}
           onClick={() => setCreateDialogOpen(true)}
           sx={{ mt: 1 }}
@@ -92,16 +107,18 @@ export default function AccountTypes() {
         sortField={sortField}
         sortOrder={sortOrder}
         onSortChange={handleSortChange}
+        showNameField={false}
+        showTypeField={true}
       />
 
       <EntityList
-        title="Account Types"
+        title='Account Types'
         items={sortedItems}
         loading={loading}
         error={error}
         onEdit={handleEdit}
         onDelete={handleDeleteClick}
-        emptyMessage="No account types yet. Create your first account type above."
+        emptyMessage='No account types yet. Create your first account type above.'
         renderSecondary={renderAccountTypeSecondary}
       />
 
@@ -120,11 +137,11 @@ export default function AccountTypes() {
 
       <ConfirmDialog
         open={deleteDialogOpen}
-        title="Delete Account Type"
+        title='Delete Account Type'
         message={
           deleteError ? (
             <Box>
-              <Alert severity="error" sx={{ mb: 2 }}>
+              <Alert severity='error' sx={{ mb: 2 }}>
                 {deleteError}
               </Alert>
             </Box>

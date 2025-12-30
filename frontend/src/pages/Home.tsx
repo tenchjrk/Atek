@@ -1,6 +1,6 @@
 import { Typography, Box, Card, CardContent } from "@mui/material";
 import Grid from '@mui/material/Grid';
-import { Business, Store, Category, LocalOffer } from "@mui/icons-material";
+import { Business, Store } from "@mui/icons-material";
 import { Link } from "react-router-dom";
 
 export default function Home() {
@@ -68,62 +68,6 @@ export default function Home() {
               </Box>
               <Typography variant='body2' color='text.secondary'>
                 Manage your supplier and vendor relationships and partnerships
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card
-            component={Link}
-            to='/account-types'
-            sx={{
-              display: 'block',
-              textDecoration: "none",
-              transition: "transform 0.2s",
-              "&:hover": {
-                transform: "translateY(-4px)",
-                boxShadow: 4,
-              },
-            }}
-          >
-            <CardContent>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                <Category sx={{ fontSize: 40, mr: 2, color: "primary.main" }} />
-                <Typography variant='h5' component='div' sx={{ color: 'text.primary' }}>
-                  Account Types
-                </Typography>
-              </Box>
-              <Typography variant='body2' color='text.secondary'>
-                Manage account type classifications and categories
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card
-            component={Link}
-            to='/vendor-types'
-            sx={{
-              display: 'block',
-              textDecoration: "none",
-              transition: "transform 0.2s",
-              "&:hover": {
-                transform: "translateY(-4px)",
-                boxShadow: 4,
-              },
-            }}
-          >
-            <CardContent>
-              <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                <LocalOffer sx={{ fontSize: 40, mr: 2, color: "primary.main" }} />
-                <Typography variant='h5' component='div' sx={{ color: 'text.primary' }}>
-                  Vendor Types
-                </Typography>
-              </Box>
-              <Typography variant='body2' color='text.secondary'>
-                Manage vendor type classifications and categories
               </Typography>
             </CardContent>
           </Card>

@@ -18,8 +18,6 @@ import {
   Business as AccountIcon,
   Store as VendorIcon,
   Home as HomeIcon,
-  Category as CategoryIcon,
-  LocalOffer as TagIcon,
 } from '@mui/icons-material';
 import { useState } from 'react';
 
@@ -37,8 +35,6 @@ export default function MainLayout() {
     { text: 'Home', icon: <HomeIcon />, path: '/' },
     { text: 'Accounts', icon: <AccountIcon />, path: '/accounts' },
     { text: 'Vendors', icon: <VendorIcon />, path: '/vendors' },
-    { text: 'Account Types', icon: <CategoryIcon />, path: '/account-types' },
-    { text: 'Vendor Types', icon: <TagIcon />, path: '/vendor-types' },
   ];
 
   const drawer = (

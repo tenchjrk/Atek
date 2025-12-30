@@ -7,15 +7,30 @@ interface SortControlsSimpleProps {
   sortField: SimpleSortField;
   sortOrder: SortOrder;
   onSortChange: (field: SimpleSortField) => void;
+  showNameField?: boolean;
+  showTypeField?: boolean;
 }
 
-export default function SortControlsSimple({ sortField, sortOrder, onSortChange }: SortControlsSimpleProps) {
+export default function SortControlsSimple({ 
+  sortField, 
+  sortOrder, 
+  onSortChange,
+  showNameField = true,
+  showTypeField = false,
+}: SortControlsSimpleProps) {
   const handleFieldChange = (event: SelectChangeEvent) => {
     onSortChange(event.target.value as SimpleSortField);
   };
 
   const handleOrderToggle = () => {
     onSortChange(sortField); // This will toggle the order
+  };
+
+  const getFieldLabel = () => {
+    if (sortField === 'id') return 'ID';
+    if (sortField === 'name') return 'Name';
+    if (sortField === 'type') return 'Type';
+    return '';
   };
 
   return (
@@ -28,7 +43,8 @@ export default function SortControlsSimple({ sortField, sortOrder, onSortChange 
           onChange={handleFieldChange}
         >
           <MenuItem value="id">ID</MenuItem>
-          <MenuItem value="name">Name</MenuItem>
+          {showNameField && <MenuItem value="name">Name</MenuItem>}
+          {showTypeField && <MenuItem value="type">Type</MenuItem>}
         </Select>
       </FormControl>
 
@@ -47,8 +63,7 @@ export default function SortControlsSimple({ sortField, sortOrder, onSortChange 
       </ToggleButtonGroup>
 
       <Box sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
-        {sortField === 'id' && 'ID'}
-        {sortField === 'name' && 'Name'}
+        {getFieldLabel()}
         {' • '}
         {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
       </Box>

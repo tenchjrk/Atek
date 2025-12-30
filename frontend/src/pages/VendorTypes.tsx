@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Box, Button, Alert } from '@mui/material';
-import { Add as AddIcon } from '@mui/icons-material';
+import { Box, Button, Alert, IconButton } from '@mui/material';
+import { Add as AddIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { vendorTypeApi } from '../services/api';
 import { useCrud } from '../hooks/useCrud';
 import { useSortSimple } from '../hooks/useSortSimple';
@@ -13,6 +14,7 @@ import SortControlsSimple from '../components/SortControlsSimple';
 import ConfirmDialog from '../components/ConfirmDialog';
 
 export default function VendorTypes() {
+  const navigate = useNavigate();
   const { items, loading, error, createItem, updateItem, deleteItem } = useCrud<VendorType>(vendorTypeApi);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -73,11 +75,16 @@ export default function VendorTypes() {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
-        <PageHeader 
-          title="Vendor Type Management" 
-          subtitle="Manage vendor type classifications"
-        />
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+        <IconButton onClick={() => navigate('/vendors')} size="large">
+          <ArrowBackIcon />
+        </IconButton>
+        <Box sx={{ flexGrow: 1 }}>
+          <PageHeader 
+            title="Vendor Type Management" 
+            subtitle="Manage vendor type classifications"
+          />
+        </Box>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
@@ -92,6 +99,8 @@ export default function VendorTypes() {
         sortField={sortField}
         sortOrder={sortOrder}
         onSortChange={handleSortChange}
+        showNameField={false}
+        showTypeField={true}
       />
 
       <EntityList

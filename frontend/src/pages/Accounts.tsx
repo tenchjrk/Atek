@@ -14,8 +14,10 @@ import AccountFilters from "../components/AccountFilters";
 import SortControls from "../components/SortControls";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { formatDateShort } from "../utils/dateFormatter";
+import { useNavigate } from "react-router-dom";
 
 export default function Accounts() {
+  const navigate = useNavigate();
   const { items, loading, error, createItem, updateItem, deleteItem } =
     useCrud<Account>(accountApi);
   const [accountTypes, setAccountTypes] = useState<AccountType[]>([]);
@@ -230,16 +232,24 @@ export default function Accounts() {
           title='Account Management'
           subtitle='Manage your business customer accounts and hierarchies'
         />
-        <Button
-          variant='contained'
-          startIcon={<AddIcon />}
-          onClick={() => setCreateDialogOpen(true)}
-          sx={{ mt: 1 }}
-        >
-          Add Account
-        </Button>
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <Button
+            variant='outlined'
+            onClick={() => navigate("/account-types")}
+            sx={{ mt: 1 }}
+          >
+            Manage Types
+          </Button>
+          <Button
+            variant='contained'
+            startIcon={<AddIcon />}
+            onClick={() => setCreateDialogOpen(true)}
+            sx={{ mt: 1 }}
+          >
+            Add Account
+          </Button>
+        </Box>
       </Box>
-
       <AccountFilters
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
@@ -257,13 +267,11 @@ export default function Accounts() {
         onClearFilters={clearFilters}
         activeFilterCount={activeFilterCount}
       />
-
       <SortControls
         sortField={sortField}
         sortOrder={sortOrder}
         onSortChange={handleSortChange}
       />
-
       <EntityList
         title='Accounts'
         items={sortedItems}
@@ -281,13 +289,14 @@ export default function Accounts() {
           <Button
             size='small'
             variant='outlined'
-            onClick={() => window.location.href = `/accounts/${account.id}/addresses`}
+            onClick={() =>
+              (window.location.href = `/accounts/${account.id}/addresses`)
+            }
           >
             Manage Addresses
           </Button>
         )}
       />
-
       <AccountCreateDialog
         open={createDialogOpen}
         accounts={items}
@@ -295,7 +304,6 @@ export default function Accounts() {
         onClose={() => setCreateDialogOpen(false)}
         onSave={handleCreate}
       />
-
       <AccountEditDialog
         open={editDialogOpen}
         account={editingAccount}
@@ -304,7 +312,6 @@ export default function Accounts() {
         onClose={handleCloseEditDialog}
         onSave={handleUpdate}
       />
-
       <ConfirmDialog
         open={deleteDialogOpen}
         title='Delete Account'

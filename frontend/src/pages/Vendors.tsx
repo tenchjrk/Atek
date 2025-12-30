@@ -1,24 +1,25 @@
-import { useState, useEffect } from 'react';
-import { Box, Chip, Stack, Button, Alert } from '@mui/material';
-import { Add as AddIcon } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
-import { vendorApi, vendorTypeApi } from '../services/api';
-import { useCrud } from '../hooks/useCrud';
-import { useVendorFilters } from '../hooks/useVendorFilters';
-import { useSort } from '../hooks/useSort';
-import type { Vendor, VendorType } from '../types';
-import PageHeader from '../components/PageHeader';
-import EntityList from '../components/EntityList';
-import VendorEditDialog from '../components/VendorEditDialog';
-import VendorCreateDialog from '../components/VendorCreateDialog';
-import VendorFilters from '../components/VendorFilters';
-import SortControls from '../components/SortControls';
-import ConfirmDialog from '../components/ConfirmDialog';
-import { formatDateShort } from '../utils/dateFormatter';
+import { useState, useEffect } from "react";
+import { Box, Chip, Stack, Button, Alert } from "@mui/material";
+import { Add as AddIcon } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
+import { vendorApi, vendorTypeApi } from "../services/api";
+import { useCrud } from "../hooks/useCrud";
+import { useVendorFilters } from "../hooks/useVendorFilters";
+import { useSort } from "../hooks/useSort";
+import type { Vendor, VendorType } from "../types";
+import PageHeader from "../components/PageHeader";
+import EntityList from "../components/EntityList";
+import VendorEditDialog from "../components/VendorEditDialog";
+import VendorCreateDialog from "../components/VendorCreateDialog";
+import VendorFilters from "../components/VendorFilters";
+import SortControls from "../components/SortControls";
+import ConfirmDialog from "../components/ConfirmDialog";
+import { formatDateShort } from "../utils/dateFormatter";
 
 export default function Vendors() {
   const navigate = useNavigate();
-  const { items, loading, error, createItem, updateItem, deleteItem } = useCrud<Vendor>(vendorApi);
+  const { items, loading, error, createItem, updateItem, deleteItem } =
+    useCrud<Vendor>(vendorApi);
   const [vendorTypes, setVendorTypes] = useState<VendorType[]>([]);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -46,7 +47,8 @@ export default function Vendors() {
   } = useVendorFilters(items);
 
   // Apply sorting to filtered vendors
-  const { sortedItems, sortField, sortOrder, handleSortChange } = useSort(filteredVendors);
+  const { sortedItems, sortField, sortOrder, handleSortChange } =
+    useSort(filteredVendors);
 
   // Fetch vendor types
   useEffect(() => {
@@ -55,7 +57,7 @@ export default function Vendors() {
         const response = await vendorTypeApi.getAll();
         setVendorTypes(response.data);
       } catch (err) {
-        console.error('Error loading vendor types:', err);
+        console.error("Error loading vendor types:", err);
       }
     };
     fetchVendorTypes();
@@ -74,7 +76,7 @@ export default function Vendors() {
     postalCode: string;
     country: string;
   }) => {
-    const success = await createItem(vendorData as Omit<Vendor, 'id'>);
+    const success = await createItem(vendorData as Omit<Vendor, "id">);
     return success;
   };
 
@@ -131,52 +133,67 @@ export default function Vendors() {
   };
 
   const getDeletingVendorName = () => {
-    const vendor = items.find(v => v.id === deletingVendorId);
-    return vendor?.name || 'this vendor';
+    const vendor = items.find((v) => v.id === deletingVendorId);
+    return vendor?.name || "this vendor";
   };
 
   const renderVendorSecondary = (vendor: Vendor) => {
     const addressLine1 = vendor.addressLine1;
     const addressLine2 = vendor.addressLine2;
-    const cityStateZip = [
-      vendor.city,
-      vendor.state,
-      vendor.postalCode,
-    ].filter(Boolean).join(', ');
+    const cityStateZip = [vendor.city, vendor.state, vendor.postalCode]
+      .filter(Boolean)
+      .join(", ");
     const country = vendor.country;
 
     const hasAddress = addressLine1 || addressLine2 || cityStateZip || country;
 
     return (
-      <Stack spacing={0.5} sx={{ mt: 0.5 }} component="span">
-        <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '0.875rem' }}>ID: {vendor.id}</span>
+      <Stack spacing={0.5} sx={{ mt: 0.5 }} component='span'>
+        <Box
+          component='span'
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            flexWrap: "wrap",
+          }}
+        >
+          <span style={{ fontSize: "0.875rem" }}>ID: {vendor.id}</span>
           {vendor.dunsNumber && (
-            <span style={{ fontSize: '0.875rem' }}>• DUNS: {vendor.dunsNumber}</span>
+            <span style={{ fontSize: "0.875rem" }}>
+              • DUNS: {vendor.dunsNumber}
+            </span>
           )}
           {vendor.ein && (
-            <span style={{ fontSize: '0.875rem' }}>• EIN: {vendor.ein}</span>
+            <span style={{ fontSize: "0.875rem" }}>• EIN: {vendor.ein}</span>
           )}
           {vendor.vendorType && (
-            <Chip 
-              label={vendor.vendorType.type} 
-              size="small" 
-              color="secondary" 
-              variant="outlined"
+            <Chip
+              label={vendor.vendorType.type}
+              size='small'
+              color='secondary'
+              variant='outlined'
             />
           )}
           {vendor.parentVendor && (
-            <Chip 
-              label={`Child of: ${vendor.parentVendor.name}`} 
-              size="small" 
-              color="primary" 
-              variant="outlined"
+            <Chip
+              label={`Child of: ${vendor.parentVendor.name}`}
+              size='small'
+              color='primary'
+              variant='outlined'
             />
           )}
         </Box>
         {hasAddress && (
-          <Box component="span" sx={{ fontSize: '0.875rem', color: 'text.secondary', display: 'block' }}>
-            📍 
+          <Box
+            component='span'
+            sx={{
+              fontSize: "0.875rem",
+              color: "text.secondary",
+              display: "block",
+            }}
+          >
+            📍
             {addressLine1 && <span> {addressLine1}</span>}
             {addressLine2 && <span>, {addressLine2}</span>}
             {(addressLine1 || addressLine2) && cityStateZip && <span>,</span>}
@@ -184,8 +201,16 @@ export default function Vendors() {
             {country && <span>, {country}</span>}
           </Box>
         )}
-        <Box component="span" sx={{ fontSize: '0.75rem', color: 'text.secondary', display: 'block' }}>
-          Created: {formatDateShort(vendor.createdDate)} • Modified: {formatDateShort(vendor.lastModifiedDate)}
+        <Box
+          component='span'
+          sx={{
+            fontSize: "0.75rem",
+            color: "text.secondary",
+            display: "block",
+          }}
+        >
+          Created: {formatDateShort(vendor.createdDate)} • Modified:{" "}
+          {formatDateShort(vendor.lastModifiedDate)}
         </Box>
       </Stack>
     );
@@ -193,19 +218,35 @@ export default function Vendors() {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
-        <PageHeader 
-          title="Vendor Management" 
-          subtitle="Manage your supplier and vendor relationships"
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          mb: 3,
+        }}
+      >
+        <PageHeader
+          title='Vendor Management'
+          subtitle='Manage your supplier and vendor relationships'
         />
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => setCreateDialogOpen(true)}
-          sx={{ mt: 1 }}
-        >
-          Add Vendor
-        </Button>
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <Button
+            variant='outlined'
+            onClick={() => navigate("/vendor-types")}
+            sx={{ mt: 1 }}
+          >
+            Manage Types
+          </Button>
+          <Button
+            variant='contained'
+            startIcon={<AddIcon />}
+            onClick={() => setCreateDialogOpen(true)}
+            sx={{ mt: 1 }}
+          >
+            Add Vendor
+          </Button>
+        </Box>
       </Box>
 
       <VendorFilters
@@ -233,7 +274,7 @@ export default function Vendors() {
       />
 
       <EntityList
-        title="Vendors"
+        title='Vendors'
         items={sortedItems}
         loading={loading}
         error={error}
@@ -241,8 +282,8 @@ export default function Vendors() {
         onDelete={handleDeleteClick}
         emptyMessage={
           activeFilterCount > 0 || searchTerm
-            ? 'No vendors match your search or filters.'
-            : 'No vendors yet. Create your first vendor above.'
+            ? "No vendors match your search or filters."
+            : "No vendors yet. Create your first vendor above."
         }
         renderSecondary={renderVendorSecondary}
         customActions={(vendor) => (
@@ -275,11 +316,11 @@ export default function Vendors() {
 
       <ConfirmDialog
         open={deleteDialogOpen}
-        title="Delete Vendor"
+        title='Delete Vendor'
         message={
           deleteError ? (
             <Box>
-              <Alert severity="error" sx={{ mb: 2 }}>
+              <Alert severity='error' sx={{ mb: 2 }}>
                 {deleteError}
               </Alert>
             </Box>
