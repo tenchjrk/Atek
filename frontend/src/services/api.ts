@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Account, Vendor, AccountType, VendorType, AccountAddress, VendorSegment, VendorRegion, VendorTerritory, ItemCategory } from '../types';
+import type { Account, Vendor, AccountType, VendorType, AccountAddress, VendorSegment, VendorRegion, VendorTerritory, ItemCategory, UnitOfMeasure, ItemType, Item } from '../types';
 
 const API_BASE_URL = 'http://localhost:5245/api';
 
@@ -44,4 +44,12 @@ export const vendorTerritoryApi = {
 export const itemCategoryApi = {
   ...createCrudApi<ItemCategory>('itemCategories'),
   getBySegmentId: (segmentId: number) => api.get<ItemCategory[]>(`/itemCategories/segment/${segmentId}`),
+};
+
+export const unitOfMeasureApi = createCrudApi<UnitOfMeasure>('unitOfMeasures');
+export const itemTypeApi = createCrudApi<ItemType>('itemTypes');
+
+export const itemApi = {
+  ...createCrudApi<Item>('items'),
+  getByCategoryId: (categoryId: number) => api.get<Item[]>(`/items/category/${categoryId}`),
 };

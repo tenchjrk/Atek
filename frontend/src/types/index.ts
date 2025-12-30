@@ -101,3 +101,37 @@ export interface ItemCategory {
   lastModifiedDate: string;
   vendorSegment?: VendorSegment | null;
 }
+
+export interface UnitOfMeasure {
+  id: number;
+  name: string;
+  shortName?: string | null;
+  createdDate: string;
+  lastModifiedDate: string;
+}
+
+export interface ItemType {
+  id: number;
+  name: string;
+  shortName?: string | null;
+  createdDate: string;
+  lastModifiedDate: string;
+}
+
+export interface Item {
+  id: number;
+  itemCategoryId: number;
+  name: string;
+  shortName?: string | null;
+  description?: string | null;
+  listPrice: number;
+  cost: number;
+  eachesPerUnitOfMeasure: number;
+  unitOfMeasureId: number;
+  itemTypeId: number;
+  createdDate: string;
+  lastModifiedDate: string;
+  itemCategory?: ItemCategory | null;
+  unitOfMeasure?: UnitOfMeasure | null;
+  itemType?: ItemType | null;
+}

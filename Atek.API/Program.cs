@@ -31,6 +31,9 @@ builder.Services.AddScoped<IVendorSegmentRepository, VendorSegmentRepository>();
 builder.Services.AddScoped<IVendorRegionRepository, VendorRegionRepository>();
 builder.Services.AddScoped<IVendorTerritoryRepository, VendorTerritoryRepository>();
 builder.Services.AddScoped<IItemCategoryRepository, ItemCategoryRepository>();
+builder.Services.AddScoped<IUnitOfMeasureRepository, UnitOfMeasureRepository>();
+builder.Services.AddScoped<IItemTypeRepository, ItemTypeRepository>();
+builder.Services.AddScoped<IItemRepository, ItemRepository>();
 
 // CORS
 builder.Services.AddCors(options =>

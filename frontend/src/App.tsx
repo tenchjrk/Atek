@@ -12,6 +12,10 @@ import VendorSegments from './pages/VendorSegments';
 import VendorRegions from './pages/VendorRegions';
 import VendorTerritories from './pages/VendorTerritories';
 import ItemCategories from './pages/ItemCategories';
+import Items from './pages/Items';
+import UnitOfMeasures from './pages/UnitOfMeasures';
+import ItemTypes from './pages/ItemTypes';
+import AllItems from './pages/AllItems';
 
 const theme = createTheme({
   palette: {
@@ -39,8 +43,12 @@ function App() {
             <Route path="vendors/:vendorId/segments/:segmentId/regions" element={<VendorRegions />} />
             <Route path="vendors/:vendorId/segments/:segmentId/regions/:regionId/territories" element={<VendorTerritories />} />
             <Route path="vendors/:vendorId/segments/:segmentId/categories" element={<ItemCategories />} />
+            <Route path="vendors/:vendorId/segments/:segmentId/categories/:categoryId/items" element={<Items />} />
+            <Route path="all-items" element={<AllItems />} />
             <Route path="account-types" element={<AccountTypes />} />
             <Route path="vendor-types" element={<VendorTypes />} />
+            <Route path="unit-of-measures" element={<UnitOfMeasures />} />
+            <Route path="item-types" element={<ItemTypes />} />
           </Route>
         </Routes>
       </BrowserRouter>

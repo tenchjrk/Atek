@@ -19,6 +19,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<VendorRegion> VendorRegions => Set<VendorRegion>();
     public DbSet<VendorTerritory> VendorTerritories => Set<VendorTerritory>();
     public DbSet<ItemCategory> ItemCategories => Set<ItemCategory>();
+    public DbSet<UnitOfMeasure> UnitOfMeasures => Set<UnitOfMeasure>();
+    public DbSet<ItemType> ItemTypes => Set<ItemType>();
+    public DbSet<Item> Items => Set<Item>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -72,5 +75,35 @@ public class ApplicationDbContext : DbContext
             .WithMany()
             .HasForeignKey(ic => ic.VendorSegmentId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Item to ItemCategory relationship
+        modelBuilder.Entity<Item>()
+            .HasOne(i => i.ItemCategory)
+            .WithMany()
+            .HasForeignKey(i => i.ItemCategoryId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Item to UnitOfMeasure relationship
+        modelBuilder.Entity<Item>()
+            .HasOne(i => i.UnitOfMeasure)
+            .WithMany()
+            .HasForeignKey(i => i.UnitOfMeasureId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Item to ItemType relationship
+        modelBuilder.Entity<Item>()
+            .HasOne(i => i.ItemType)
+            .WithMany()
+            .HasForeignKey(i => i.ItemTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Configure decimal precision for Item prices
+        modelBuilder.Entity<Item>()
+            .Property(i => i.ListPrice)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<Item>()
+            .Property(i => i.Cost)
+            .HasPrecision(18, 2);
     }
 }
