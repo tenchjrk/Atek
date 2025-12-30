@@ -19,20 +19,15 @@ export default function Contracts() {
   const { items, loading, error, createItem, updateItem, deleteItem } =
     useCrud<Contract>(contractApi);
   const [accounts, setAccounts] = useState<Account[]>([]);
-  const [contractStatuses, setContractStatuses] = useState<ContractStatus[]>(
-    []
-  );
+  const [contractStatuses, setContractStatuses] = useState<ContractStatus[]>([]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
-  const [deletingContractId, setDeletingContractId] = useState<number | null>(
-    null
-  );
+  const [deletingContractId, setDeletingContractId] = useState<number | null>(null);
 
   // Apply sorting
-  const { sortedItems, sortField, sortOrder, handleSortChange } =
-    useContractSort(items);
+  const { sortedItems, sortField, sortOrder, handleSortChange } = useContractSort(items);
 
   // Fetch accounts and contract statuses
   useEffect(() => {
@@ -51,30 +46,27 @@ export default function Contracts() {
     fetchData();
   }, []);
 
-const handleCreate = async (contractData: {
-  accountId: number;
-  contractNumber: string;
-  contractStatusId: number;
-  executionDate: string | null;
-  termLengthMonths: number;
-}) => {
-  return await createItem(contractData as Omit<Contract, 'id'>);
-};
+  const handleCreate = async (contractData: {
+    accountId: number;
+    contractStatusId: number;
+    termLengthMonths: number;
+  }) => {
+    return await createItem(contractData as Omit<Contract, 'id'>);
+  };
+
   const handleEdit = (contract: Contract) => {
     setEditingContract(contract);
     setEditDialogOpen(true);
   };
 
-const handleUpdate = async (contractData: {
-  id: number;
-  accountId: number;
-  contractNumber: string;
-  contractStatusId: number;
-  executionDate: string | null;
-  termLengthMonths: number;
-}) => {
-  return await updateItem(contractData.id, contractData as Contract);
-};
+  const handleUpdate = async (contractData: {
+    id: number;
+    accountId: number;
+    contractStatusId: number;
+    termLengthMonths: number;
+  }) => {
+    return await updateItem(contractData.id, contractData as Contract);
+  };
 
   const handleDeleteClick = (id: number) => {
     setDeletingContractId(id);
@@ -97,9 +89,9 @@ const handleUpdate = async (contractData: {
   };
 
   const getDeletingContractName = () => {
-    const contract = items.find((c) => c.id === deletingContractId);
-    return contract?.contractNumber || "this contract";
-  };
+  const contract = items.find((c) => c.id === deletingContractId);
+  return contract ? `Contract #${contract.id}` : "this contract";
+};
 
   const renderContractSecondary = (contract: Contract) => {
     return (
@@ -140,8 +132,7 @@ const handleUpdate = async (contractData: {
           }}
         >
           Term: {contract.termLengthMonths} months
-          {contract.startDate &&
-            ` • Start: ${formatDateShort(contract.startDate)}`}
+          {contract.startDate && ` • Start: ${formatDateShort(contract.startDate)}`}
           {contract.endDate && ` • End: ${formatDateShort(contract.endDate)}`}
         </Box>
         <Box
@@ -187,7 +178,7 @@ const handleUpdate = async (contractData: {
             onClick={() => setCreateDialogOpen(true)}
             sx={{ mt: 1 }}
           >
-            Add Contract
+            New Contract
           </Button>
         </Box>
       </Box>
@@ -207,7 +198,7 @@ const handleUpdate = async (contractData: {
         onDelete={handleDeleteClick}
         emptyMessage='No contracts yet. Create your first contract above.'
         renderSecondary={renderContractSecondary}
-        getItemName={(item) => item.contractNumber}
+        getItemName={(item) => `Contract #${item.id}`}
       />
 
       <ContractCreateDialog
@@ -231,9 +222,9 @@ const handleUpdate = async (contractData: {
         open={deleteDialogOpen}
         title='Delete Contract'
         message={`Are you sure you want to delete "${getDeletingContractName()}"? This action cannot be undone.`}
-        confirmText='Delete'
-        cancelText='Cancel'
-        confirmColor='error'
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmColor="error"
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
       />

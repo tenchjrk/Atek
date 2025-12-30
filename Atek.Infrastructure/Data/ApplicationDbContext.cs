@@ -120,8 +120,6 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Contract>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.ContractNumber).IsRequired().HasMaxLength(50);
-            entity.HasIndex(e => e.ContractNumber).IsUnique();
             entity.Property(e => e.TermLengthMonths).IsRequired();
             entity.Property(e => e.CreatedDate).IsRequired();
             entity.Property(e => e.LastModifiedDate).IsRequired();

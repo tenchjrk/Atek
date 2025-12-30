@@ -226,14 +226,6 @@ export default function AllItems() {
         />
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setQuickAddDialogOpen(true)}
-            sx={{ mt: 1 }}
-          >
-            Quick Add Item
-          </Button>
-          <Button
             variant="outlined"
             onClick={() => navigate('/unit-of-measures')}
             sx={{ mt: 1 }}
@@ -246,6 +238,14 @@ export default function AllItems() {
             sx={{ mt: 1 }}
           >
             Manage Types
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setQuickAddDialogOpen(true)}
+            sx={{ mt: 1 }}
+          >
+            Add Item
           </Button>
         </Box>
       </Box>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -23,9 +23,7 @@ interface ContractCreateDialogProps {
   onClose: () => void;
   onSave: (contractData: {
     accountId: number;
-    contractNumber: string;
     contractStatusId: number;
-    executionDate: string | null;
     termLengthMonths: number;
   }) => Promise<boolean>;
 }
@@ -38,29 +36,34 @@ export default function ContractCreateDialog({
   onSave,
 }: ContractCreateDialogProps) {
   const [accountId, setAccountId] = useState<number | ''>('');
-  const [contractNumber, setContractNumber] = useState('');
-  const [contractStatusId, setContractStatusId] = useState<number | ''>('');
-  const [executionDate, setExecutionDate] = useState('');
   const [termLengthMonths, setTermLengthMonths] = useState('');
   const [saving, setSaving] = useState(false);
 
+  // Find the "Draft" status using useMemo
+  const draftStatusId = useMemo(() => {
+    const draftStatus = contractStatuses.find(
+      status => status.name.toLowerCase() === 'draft'
+    );
+    return draftStatus?.id ?? null;
+  }, [contractStatuses]);
+
   const handleClose = () => {
     setAccountId('');
-    setContractNumber('');
-    setContractStatusId('');
-    setExecutionDate('');
     setTermLengthMonths('');
     setSaving(false);
     onClose();
   };
 
   const handleSave = async () => {
+    if (!draftStatusId) {
+      alert('Draft status not found. Please create a "Draft" contract status first.');
+      return;
+    }
+    
     setSaving(true);
     const success = await onSave({
       accountId: accountId as number,
-      contractNumber,
-      contractStatusId: contractStatusId as number,
-      executionDate: executionDate || null,
+      contractStatusId: draftStatusId,
       termLengthMonths: parseInt(termLengthMonths),
     });
     setSaving(false);
@@ -70,9 +73,9 @@ export default function ContractCreateDialog({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        Add Contract
+        Create New Contract Draft
         <IconButton
           aria-label="close"
           onClick={handleClose}
@@ -101,45 +104,6 @@ export default function ContractCreateDialog({
           </FormControl>
 
           <TextField
-            label="Contract Number"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={contractNumber}
-            onChange={(e) => setContractNumber(e.target.value)}
-            disabled={saving}
-            required
-          />
-
-          <FormControl fullWidth required>
-            <InputLabel>Contract Status</InputLabel>
-            <Select
-              value={contractStatusId}
-              label="Contract Status"
-              onChange={(e) => setContractStatusId(e.target.value as number)}
-              disabled={saving}
-            >
-              {contractStatuses.map((status) => (
-                <MenuItem key={status.id} value={status.id}>
-                  {status.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <TextField
-            label="Execution Date"
-            type="date"
-            fullWidth
-            variant="outlined"
-            value={executionDate}
-            onChange={(e) => setExecutionDate(e.target.value)}
-            disabled={saving}
-            InputLabelProps={{ shrink: true }}
-            helperText="Start date will be calculated as first day of next month after execution"
-          />
-
-          <TextField
             label="Term Length (Months)"
             type="number"
             fullWidth
@@ -149,7 +113,7 @@ export default function ContractCreateDialog({
             disabled={saving}
             required
             inputProps={{ min: 1, step: 1 }}
-            helperText="End date will be calculated as start date + term length"
+            helperText="Contract duration in months"
           />
         </Stack>
       </DialogContent>
@@ -160,9 +124,9 @@ export default function ContractCreateDialog({
         <Button 
           onClick={handleSave} 
           variant="contained" 
-          disabled={saving || !accountId || !contractNumber || !contractStatusId || !termLengthMonths}
+          disabled={saving || !accountId || !termLengthMonths || !draftStatusId}
         >
-          Save
+          Create Draft
         </Button>
       </DialogActions>
     </Dialog>

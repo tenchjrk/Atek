@@ -42,75 +42,60 @@ public class ContractRepository : IContractRepository
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 
-    public async Task<Contract> CreateAsync(Contract contract)
+   public async Task<Contract> CreateAsync(Contract contract)
+{
+    contract.CreatedDate = DateTime.UtcNow;
+    contract.LastModifiedDate = DateTime.UtcNow;
+    contract.ExecutionDate = null; // Always null on creation
+    contract.StartDate = null;
+    contract.EndDate = null;
+    
+    _context.Contracts.Add(contract);
+    await _context.SaveChangesAsync();
+    
+    var created = await _context.Contracts
+        .Include(c => c.Account)
+        .Include(c => c.ContractStatus)
+        .AsNoTracking()
+        .FirstOrDefaultAsync(c => c.Id == contract.Id);
+    
+    return created ?? contract;
+}
+
+public async Task<Contract> UpdateAsync(Contract contract)
+{
+    var existing = await _context.Contracts.FindAsync(contract.Id);
+    if (existing != null)
     {
-        contract.CreatedDate = DateTime.UtcNow;
-        contract.LastModifiedDate = DateTime.UtcNow;
+        existing.AccountId = contract.AccountId;
+        existing.ContractStatusId = contract.ContractStatusId;
+        existing.TermLengthMonths = contract.TermLengthMonths;
+        existing.LastModifiedDate = DateTime.UtcNow;
         
-        // Calculate dates if execution date is provided
-        if (contract.ExecutionDate.HasValue)
+        // Only update dates if execution date is being set
+        if (contract.ExecutionDate.HasValue && !existing.ExecutionDate.HasValue)
         {
-            contract.StartDate = new DateTime(
-                contract.ExecutionDate.Value.Year,
-                contract.ExecutionDate.Value.Month,
+            existing.ExecutionDate = contract.ExecutionDate;
+            existing.StartDate = new DateTime(
+                existing.ExecutionDate.Value.Year,
+                existing.ExecutionDate.Value.Month,
                 1
             ).AddMonths(1);
             
-            contract.EndDate = contract.StartDate.Value.AddMonths(contract.TermLengthMonths);
+            existing.EndDate = existing.StartDate.Value.AddMonths(existing.TermLengthMonths);
         }
         
-        _context.Contracts.Add(contract);
         await _context.SaveChangesAsync();
-        
-        var created = await _context.Contracts
-            .Include(c => c.Account)
-            .Include(c => c.ContractStatus)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == contract.Id);
-        
-        return created ?? contract;
     }
-
-    public async Task<Contract> UpdateAsync(Contract contract)
-    {
-        var existing = await _context.Contracts.FindAsync(contract.Id);
-        if (existing != null)
-        {
-            existing.AccountId = contract.AccountId;
-            existing.ContractNumber = contract.ContractNumber;
-            existing.ContractStatusId = contract.ContractStatusId;
-            existing.ExecutionDate = contract.ExecutionDate;
-            existing.TermLengthMonths = contract.TermLengthMonths;
-            existing.LastModifiedDate = DateTime.UtcNow;
-            
-            // Recalculate dates if execution date is provided
-            if (existing.ExecutionDate.HasValue)
-            {
-                existing.StartDate = new DateTime(
-                    existing.ExecutionDate.Value.Year,
-                    existing.ExecutionDate.Value.Month,
-                    1
-                ).AddMonths(1);
-                
-                existing.EndDate = existing.StartDate.Value.AddMonths(existing.TermLengthMonths);
-            }
-            else
-            {
-                existing.StartDate = null;
-                existing.EndDate = null;
-            }
-            
-            await _context.SaveChangesAsync();
-        }
-        
-        var updated = await _context.Contracts
-            .Include(c => c.Account)
-            .Include(c => c.ContractStatus)
-            .AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == contract.Id);
-        
-        return updated ?? contract;
-    }
+    
+    var updated = await _context.Contracts
+        .Include(c => c.Account)
+        .Include(c => c.ContractStatus)
+        .AsNoTracking()
+        .FirstOrDefaultAsync(c => c.Id == contract.Id);
+    
+    return updated ?? contract;
+}
 
     public async Task DeleteAsync(int id)
     {

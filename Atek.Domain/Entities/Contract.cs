@@ -4,7 +4,6 @@ public class Contract
 {
     public int Id { get; set; }
     public int AccountId { get; set; }
-    public string ContractNumber { get; set; } = string.Empty;
     public int ContractStatusId { get; set; }
     public DateTime? ExecutionDate { get; set; }
     public DateTime? StartDate { get; set; }

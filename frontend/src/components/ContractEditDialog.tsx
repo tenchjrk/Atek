@@ -25,9 +25,7 @@ interface ContractEditDialogProps {
   onSave: (contractData: {
     id: number;
     accountId: number;
-    contractNumber: string;
     contractStatusId: number;
-    executionDate: string | null;
     termLengthMonths: number;
   }) => Promise<boolean>;
 }
@@ -41,27 +39,21 @@ export default function ContractEditDialog({
   onSave,
 }: ContractEditDialogProps) {
   const [accountId, setAccountId] = useState<number | ''>('');
-  const [contractNumber, setContractNumber] = useState('');
   const [contractStatusId, setContractStatusId] = useState<number | ''>('');
-  const [executionDate, setExecutionDate] = useState('');
   const [termLengthMonths, setTermLengthMonths] = useState('');
   const [saving, setSaving] = useState(false);
 
   const handleOpen = () => {
     if (contract) {
       setAccountId(contract.accountId);
-      setContractNumber(contract.contractNumber);
       setContractStatusId(contract.contractStatusId);
-      setExecutionDate(contract.executionDate ? contract.executionDate.split('T')[0] : '');
       setTermLengthMonths(contract.termLengthMonths.toString());
     }
   };
 
   const handleClose = () => {
     setAccountId('');
-    setContractNumber('');
     setContractStatusId('');
-    setExecutionDate('');
     setTermLengthMonths('');
     setSaving(false);
     onClose();
@@ -73,9 +65,7 @@ export default function ContractEditDialog({
     const success = await onSave({
       id: contract.id,
       accountId: accountId as number,
-      contractNumber,
       contractStatusId: contractStatusId as number,
-      executionDate: executionDate || null,
       termLengthMonths: parseInt(termLengthMonths),
     });
     setSaving(false);
@@ -123,17 +113,6 @@ export default function ContractEditDialog({
             </Select>
           </FormControl>
 
-          <TextField
-            label="Contract Number"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={contractNumber}
-            onChange={(e) => setContractNumber(e.target.value)}
-            disabled={saving}
-            required
-          />
-
           <FormControl fullWidth required>
             <InputLabel>Contract Status</InputLabel>
             <Select
@@ -151,18 +130,6 @@ export default function ContractEditDialog({
           </FormControl>
 
           <TextField
-            label="Execution Date"
-            type="date"
-            fullWidth
-            variant="outlined"
-            value={executionDate}
-            onChange={(e) => setExecutionDate(e.target.value)}
-            disabled={saving}
-            InputLabelProps={{ shrink: true }}
-            helperText="Start date will be calculated as first day of next month after execution"
-          />
-
-          <TextField
             label="Term Length (Months)"
             type="number"
             fullWidth
@@ -172,7 +139,7 @@ export default function ContractEditDialog({
             disabled={saving}
             required
             inputProps={{ min: 1, step: 1 }}
-            helperText="End date will be calculated as start date + term length"
+            helperText="Contract duration in months"
           />
         </Stack>
       </DialogContent>
@@ -183,7 +150,7 @@ export default function ContractEditDialog({
         <Button 
           onClick={handleSave} 
           variant="contained" 
-          disabled={saving || !accountId || !contractNumber || !contractStatusId || !termLengthMonths}
+          disabled={saving || !accountId || !contractStatusId || !termLengthMonths}
         >
           Save
         </Button>
