@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Box, Chip, Autocomplete, TextField, Button } from '@mui/material';
+import { Box, Chip, Autocomplete, TextField, Button, } from '@mui/material';
+import { Add as AddIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { 
   itemApi, 
@@ -16,6 +17,9 @@ import PageHeader from '../components/PageHeader';
 import EntityList from '../components/EntityList';
 import ItemFilters from '../components/ItemFilters';
 import SortControls from '../components/SortControls';
+import QuickAddItemDialog from '../components/QuickAddItemDialog';
+import QuickEditItemDialog from '../components/QuickEditItemDialog';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { formatDateShort } from '../utils/dateFormatter';
 
 export default function AllItems() {
@@ -29,6 +33,11 @@ export default function AllItems() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<Item[]>([]);
+  const [quickAddDialogOpen, setQuickAddDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const [deletingItemId, setDeletingItemId] = useState<number | null>(null);
 
   const {
     vendorFilter,
@@ -57,51 +66,118 @@ export default function AllItems() {
   // Apply sorting to filtered items
   const { sortedItems, sortField, sortOrder, handleSortChange } = useSort(searchFilteredItems);
 
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [
+        itemsResponse,
+        vendorsResponse,
+        segmentsResponse,
+        categoriesResponse,
+        itemTypesResponse,
+        unitOfMeasuresResponse,
+      ] = await Promise.all([
+        itemApi.getAll(),
+        vendorApi.getAll(),
+        vendorSegmentApi.getAll(),
+        itemCategoryApi.getAll(),
+        itemTypeApi.getAll(),
+        unitOfMeasureApi.getAll(),
+      ]);
+
+      setItems(itemsResponse.data);
+      setVendors(vendorsResponse.data);
+      setSegments(segmentsResponse.data);
+      setCategories(categoriesResponse.data);
+      setItemTypes(itemTypesResponse.data);
+      setUnitOfMeasures(unitOfMeasuresResponse.data);
+      setError(null);
+    } catch (err) {
+      setError('Error loading items');
+      console.error('Error loading items:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [
-          itemsResponse,
-          vendorsResponse,
-          segmentsResponse,
-          categoriesResponse,
-          itemTypesResponse,
-          unitOfMeasuresResponse,
-        ] = await Promise.all([
-          itemApi.getAll(),
-          vendorApi.getAll(),
-          vendorSegmentApi.getAll(),
-          itemCategoryApi.getAll(),
-          itemTypeApi.getAll(),
-          unitOfMeasureApi.getAll(),
-        ]);
-
-        setItems(itemsResponse.data);
-        setVendors(vendorsResponse.data);
-        setSegments(segmentsResponse.data);
-        setCategories(categoriesResponse.data);
-        setItemTypes(itemTypesResponse.data);
-        setUnitOfMeasures(unitOfMeasuresResponse.data);
-        setError(null);
-      } catch (err) {
-        setError('Error loading items');
-        console.error('Error loading items:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchData();
   }, []);
 
-  // Empty handlers for read-only view
-  const handleEdit = () => {
-    // Read-only page - no edit functionality
+  const handleEdit = (item: Item) => {
+    setEditingItem(item);
+    setEditDialogOpen(true);
   };
 
-  const handleDelete = () => {
-    // Read-only page - no delete functionality
+  const handleUpdate = async (itemData: {
+    id: number;
+    itemCategoryId: number;
+    name: string;
+    shortName: string;
+    description: string;
+    listPrice: number;
+    cost: number;
+    eachesPerUnitOfMeasure: number;
+    unitOfMeasureId: number;
+    itemTypeId: number;
+  }) => {
+    try {
+      await itemApi.update(itemData.id, itemData as Item);
+      await fetchData();
+      return true;
+    } catch (err) {
+      console.error('Error updating item:', err);
+      return false;
+    }
+  };
+
+  const handleDeleteClick = (id: number) => {
+    setDeletingItemId(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (deletingItemId !== null) {
+      try {
+        await itemApi.delete(deletingItemId);
+        await fetchData();
+        setDeleteDialogOpen(false);
+        setDeletingItemId(null);
+      } catch (err) {
+        console.error('Error deleting item:', err);
+      }
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setDeletingItemId(null);
+  };
+
+  const getDeletingItemName = () => {
+    const item = items.find(i => i.id === deletingItemId);
+    return item?.name || 'this item';
+  };
+
+  const handleQuickAdd = async (itemData: {
+    itemCategoryId: number;
+    name: string;
+    shortName: string;
+    description: string;
+    listPrice: number;
+    cost: number;
+    eachesPerUnitOfMeasure: number;
+    unitOfMeasureId: number;
+    itemTypeId: number;
+  }) => {
+    try {
+      await itemApi.create(itemData as Omit<Item, 'id'>);
+      await fetchData();
+      return true;
+    } catch (err) {
+      console.error('Error creating item:', err);
+      return false;
+    }
   };
 
   const renderItemSecondary = (item: Item) => {
@@ -149,6 +225,14 @@ export default function AllItems() {
           subtitle="Browse and manage all items across all vendors"
         />
         <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setQuickAddDialogOpen(true)}
+            sx={{ mt: 1 }}
+          >
+            Quick Add Item
+          </Button>
           <Button
             variant="outlined"
             onClick={() => navigate('/unit-of-measures')}
@@ -243,13 +327,47 @@ export default function AllItems() {
         loading={loading}
         error={error}
         onEdit={handleEdit}
-        onDelete={handleDelete}
+        onDelete={handleDeleteClick}
         emptyMessage={
           totalActiveFilters > 0
             ? 'No items match your search or filters.'
             : 'No items yet. Items are created within vendor categories.'
         }
         renderSecondary={renderItemSecondary}
+      />
+
+      <QuickAddItemDialog
+        open={quickAddDialogOpen}
+        vendors={vendors}
+        segments={segments}
+        categories={categories}
+        unitOfMeasures={unitOfMeasures}
+        itemTypes={itemTypes}
+        onClose={() => setQuickAddDialogOpen(false)}
+        onSave={handleQuickAdd}
+      />
+
+      <QuickEditItemDialog
+        open={editDialogOpen}
+        item={editingItem}
+        vendors={vendors}
+        segments={segments}
+        categories={categories}
+        unitOfMeasures={unitOfMeasures}
+        itemTypes={itemTypes}
+        onClose={() => setEditDialogOpen(false)}
+        onSave={handleUpdate}
+      />
+
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        title="Delete Item"
+        message={`Are you sure you want to delete "${getDeletingItemName()}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmColor="error"
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
       />
     </Box>
   );

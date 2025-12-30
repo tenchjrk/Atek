@@ -6,11 +6,11 @@ import { Link } from "react-router-dom";
 export default function Home() {
   return (
     <Box>
-      <Typography variant='h3' component='h1' gutterBottom>
-        Welcome to Atek Data Solutions
+      <Typography variant='h3' component='h1' gutterBottom align='center'>
+        Welcome to Atek
       </Typography>
-      <Typography variant='h6' color='text.secondary' paragraph>
-        Your Contract Management Platform for managing accounts, vendors, and business relationships
+      <Typography variant='h6' color='text.secondary' paragraph align='center'>
+        Your online contract management platform
       </Typography>
 
       <Grid container spacing={3} sx={{ mt: 3 }}>
