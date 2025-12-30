@@ -22,6 +22,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<UnitOfMeasure> UnitOfMeasures => Set<UnitOfMeasure>();
     public DbSet<ItemType> ItemTypes => Set<ItemType>();
     public DbSet<Item> Items => Set<Item>();
+    public DbSet<ContractStatus> ContractStatuses { get; set; }
+    public DbSet<Contract> Contracts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -105,5 +107,34 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Item>()
             .Property(i => i.Cost)
             .HasPrecision(18, 2);
+
+                // ContractStatus configuration
+        modelBuilder.Entity<ContractStatus>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.HasIndex(e => e.Name).IsUnique();
+        });
+
+        // Contract configuration
+        modelBuilder.Entity<Contract>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ContractNumber).IsRequired().HasMaxLength(50);
+            entity.HasIndex(e => e.ContractNumber).IsUnique();
+            entity.Property(e => e.TermLengthMonths).IsRequired();
+            entity.Property(e => e.CreatedDate).IsRequired();
+            entity.Property(e => e.LastModifiedDate).IsRequired();
+
+            entity.HasOne(e => e.Account)
+                .WithMany()
+                .HasForeignKey(e => e.AccountId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.ContractStatus)
+                .WithMany()
+                .HasForeignKey(e => e.ContractStatusId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
     }
 }
