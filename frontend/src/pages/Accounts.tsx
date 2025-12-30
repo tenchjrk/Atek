@@ -171,7 +171,7 @@ export default function Accounts() {
           )}
           {account.accountType && (
             <Chip
-              label={account.accountType.type}
+              label={account.accountType.name}
               size='small'
               color='secondary'
               variant='outlined'

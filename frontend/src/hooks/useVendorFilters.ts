@@ -7,29 +7,35 @@ export function useVendorFilters(vendors: Vendor[]) {
   const [stateFilter, setStateFilter] = useState('');
   const [postalCodeFilter, setPostalCodeFilter] = useState('');
   const [countryFilter, setCountryFilter] = useState('');
-  const [vendorTypeFilter, setVendorTypeFilter] = useState<number | null>(null);
+  const [vendorTypeFilter, setVendorTypeFilter] = useState<number[]>([]);
 
   const filteredVendors = useMemo(() => {
     return vendors.filter((vendor) => {
+      // Search filter (ID or name)
       const search = searchTerm.toLowerCase();
       const matchesSearch = searchTerm === '' || 
         vendor.id.toString().includes(search) ||
         vendor.name.toLowerCase().includes(search);
 
+      // City filter
       const matchesCity = cityFilter === '' ||
         (vendor.city?.toLowerCase().includes(cityFilter.toLowerCase()) ?? false);
 
+      // State filter
       const matchesState = stateFilter === '' ||
         (vendor.state?.toLowerCase().includes(stateFilter.toLowerCase()) ?? false);
 
+      // Postal code filter
       const matchesPostalCode = postalCodeFilter === '' ||
         (vendor.postalCode?.toLowerCase().includes(postalCodeFilter.toLowerCase()) ?? false);
 
+      // Country filter
       const matchesCountry = countryFilter === '' ||
         (vendor.country?.toLowerCase().includes(countryFilter.toLowerCase()) ?? false);
 
-      const matchesVendorType = vendorTypeFilter === null ||
-        vendor.vendorTypeId === vendorTypeFilter;
+      // Vendor type filter
+      const matchesVendorType = vendorTypeFilter.length === 0 ||
+        (vendor.vendorTypeId && vendorTypeFilter.includes(vendor.vendorTypeId));
 
       return matchesSearch && matchesCity && matchesState && matchesPostalCode && matchesCountry && matchesVendorType;
     });
@@ -40,7 +46,7 @@ export function useVendorFilters(vendors: Vendor[]) {
     stateFilter,
     postalCodeFilter,
     countryFilter,
-  ].filter(Boolean).length + (vendorTypeFilter !== null ? 1 : 0);
+  ].filter(Boolean).length + (vendorTypeFilter.length > 0 ? 1 : 0);
 
   const clearFilters = () => {
     setSearchTerm('');
@@ -48,7 +54,7 @@ export function useVendorFilters(vendors: Vendor[]) {
     setStateFilter('');
     setPostalCodeFilter('');
     setCountryFilter('');
-    setVendorTypeFilter(null);
+    setVendorTypeFilter([]);
   };
 
   return {

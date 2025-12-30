@@ -6,6 +6,7 @@ import {
   DialogActions,
   TextField,
   Button,
+  Stack,
   IconButton,
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
@@ -13,7 +14,7 @@ import { Close as CloseIcon } from '@mui/icons-material';
 interface VendorTypeCreateDialogProps {
   open: boolean;
   onClose: () => void;
-  onSave: (type: string) => Promise<boolean>;
+  onSave: (name: string) => Promise<boolean>;
 }
 
 export default function VendorTypeCreateDialog({
@@ -21,18 +22,18 @@ export default function VendorTypeCreateDialog({
   onClose,
   onSave,
 }: VendorTypeCreateDialogProps) {
-  const [type, setType] = useState('');
+  const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
 
   const handleClose = () => {
-    setType('');
+    setName('');
     setSaving(false);
     onClose();
   };
 
   const handleSave = async () => {
     setSaving(true);
-    const success = await onSave(type);
+    const success = await onSave(name);
     setSaving(false);
     if (success) {
       handleClose();
@@ -42,7 +43,7 @@ export default function VendorTypeCreateDialog({
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        Create New Vendor Type
+        Add Vendor Type
         <IconButton
           aria-label="close"
           onClick={handleClose}
@@ -53,26 +54,26 @@ export default function VendorTypeCreateDialog({
         </IconButton>
       </DialogTitle>
       <DialogContent>
-        <TextField
-          autoFocus
-          margin="dense"
-          label="Vendor Type"
-          type="text"
-          fullWidth
-          variant="outlined"
-          value={type}
-          onChange={(e) => setType(e.target.value)}
-          disabled={saving}
-          required
-          sx={{ mt: 2 }}
-        />
+        <Stack spacing={3} sx={{ mt: 2 }}>
+          <TextField
+            autoFocus
+            label="Vendor Type Name"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={saving}
+            required
+          />
+        </Stack>
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} disabled={saving}>
           Cancel
         </Button>
-        <Button onClick={handleSave} variant="contained" disabled={saving || !type}>
-          Create
+        <Button onClick={handleSave} variant="contained" disabled={saving || !name}>
+          Save
         </Button>
       </DialogActions>
     </Dialog>

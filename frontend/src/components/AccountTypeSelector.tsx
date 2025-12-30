@@ -35,7 +35,7 @@ export default function AccountTypeSelector({
         </MenuItem>
         {accountTypes.map((accountType) => (
           <MenuItem key={accountType.id} value={accountType.id}>
-            {accountType.type}
+            {accountType.name}
           </MenuItem>
         ))}
       </Select>

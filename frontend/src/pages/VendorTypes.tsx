@@ -1,21 +1,25 @@
-import { useState } from 'react';
-import { Box, Button, Alert, IconButton } from '@mui/material';
-import { Add as AddIcon, ArrowBack as ArrowBackIcon } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
-import { vendorTypeApi } from '../services/api';
-import { useCrud } from '../hooks/useCrud';
-import { useSortSimple } from '../hooks/useSortSimple';
-import type { VendorType } from '../types';
-import PageHeader from '../components/PageHeader';
-import EntityList from '../components/EntityList';
-import VendorTypeCreateDialog from '../components/VendorTypeCreateDialog';
-import VendorTypeEditDialog from '../components/VendorTypeEditDialog';
-import SortControlsSimple from '../components/SortControlsSimple';
-import ConfirmDialog from '../components/ConfirmDialog';
+import { useState } from "react";
+import { Box, Button, Alert, IconButton } from "@mui/material";
+import {
+  Add as AddIcon,
+  ArrowBack as ArrowBackIcon,
+} from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
+import { vendorTypeApi } from "../services/api";
+import { useCrud } from "../hooks/useCrud";
+import { useSortSimple } from "../hooks/useSortSimple";
+import type { VendorType } from "../types";
+import PageHeader from "../components/PageHeader";
+import EntityList from "../components/EntityList";
+import VendorTypeCreateDialog from "../components/VendorTypeCreateDialog";
+import VendorTypeEditDialog from "../components/VendorTypeEditDialog";
+import SortControlsSimple from "../components/SortControlsSimple";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 export default function VendorTypes() {
   const navigate = useNavigate();
-  const { items, loading, error, createItem, updateItem, deleteItem } = useCrud<VendorType>(vendorTypeApi);
+  const { items, loading, error, createItem, updateItem, deleteItem } =
+    useCrud<VendorType>(vendorTypeApi);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -26,8 +30,8 @@ export default function VendorTypes() {
   // Apply sorting
   const { sortedItems, sortField, sortOrder, handleSortChange } = useSortSimple(items);
 
-  const handleCreate = async (type: string) => {
-    return await createItem({ type });
+  const handleCreate = async (name: string) => {
+    return await createItem({ name });
   };
 
   const handleEdit = (vendorType: VendorType) => {
@@ -35,8 +39,8 @@ export default function VendorTypes() {
     setEditDialogOpen(true);
   };
 
-  const handleUpdate = async (id: number, type: string) => {
-    return await updateItem(id, { id, type });
+  const handleUpdate = async (id: number, name: string) => {
+    return await updateItem(id, { id, name });
   };
 
   const handleDeleteClick = (id: number) => {
@@ -65,8 +69,8 @@ export default function VendorTypes() {
   };
 
   const getDeletingVendorTypeName = () => {
-    const vendorType = items.find(vt => vt.id === deletingVendorTypeId);
-    return vendorType?.type || 'this vendor type';
+    const vendorType = items.find((vt) => vt.id === deletingVendorTypeId);
+    return vendorType?.name || "this vendor type";
   };
 
   const renderVendorTypeSecondary = (vendorType: VendorType) => {
@@ -75,18 +79,18 @@ export default function VendorTypes() {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-        <IconButton onClick={() => navigate('/vendors')} size="large">
+      <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
+        <IconButton onClick={() => navigate("/vendors")} size='large'>
           <ArrowBackIcon />
         </IconButton>
         <Box sx={{ flexGrow: 1 }}>
-          <PageHeader 
-            title="Vendor Type Management" 
-            subtitle="Manage vendor type classifications"
+          <PageHeader
+            title='Vendor Type Management'
+            subtitle='Manage vendor type classifications'
           />
         </Box>
         <Button
-          variant="contained"
+          variant='contained'
           startIcon={<AddIcon />}
           onClick={() => setCreateDialogOpen(true)}
           sx={{ mt: 1 }}
@@ -99,18 +103,18 @@ export default function VendorTypes() {
         sortField={sortField}
         sortOrder={sortOrder}
         onSortChange={handleSortChange}
-        showNameField={false}
-        showTypeField={true}
+        showNameField={true}
+        showTypeField={false}
       />
 
       <EntityList
-        title="Vendor Types"
+        title='Vendor Types'
         items={sortedItems}
         loading={loading}
         error={error}
         onEdit={handleEdit}
         onDelete={handleDeleteClick}
-        emptyMessage="No vendor types yet. Create your first vendor type above."
+        emptyMessage='No vendor types yet. Create your first vendor type above.'
         renderSecondary={renderVendorTypeSecondary}
       />
 
@@ -129,11 +133,11 @@ export default function VendorTypes() {
 
       <ConfirmDialog
         open={deleteDialogOpen}
-        title="Delete Vendor Type"
+        title='Delete Vendor Type'
         message={
           deleteError ? (
             <Box>
-              <Alert severity="error" sx={{ mb: 2 }}>
+              <Alert severity='error' sx={{ mb: 2 }}>
                 {deleteError}
               </Alert>
             </Box>

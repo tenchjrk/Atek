@@ -1,5 +1,4 @@
-import { TextField, Box, Stack, Chip, IconButton, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import type { SelectChangeEvent } from '@mui/material';
+import { TextField, Box, Stack, Chip, IconButton, FormControl, InputLabel, Select, MenuItem, Checkbox, ListItemText } from '@mui/material';
 import { Clear as ClearIcon } from '@mui/icons-material';
 import type { AccountType } from '../types';
 
@@ -14,8 +13,8 @@ interface AccountFiltersProps {
   onPostalCodeFilterChange: (value: string) => void;
   countryFilter: string;
   onCountryFilterChange: (value: string) => void;
-  accountTypeFilter: number | null;
-  onAccountTypeFilterChange: (value: number | null) => void;
+  accountTypeFilter: number[];
+  onAccountTypeFilterChange: (value: number[]) => void;
   accountTypes: AccountType[];
   onClearFilters: () => void;
   activeFilterCount: number;
@@ -38,9 +37,23 @@ export default function AccountFilters({
   onClearFilters,
   activeFilterCount,
 }: AccountFiltersProps) {
-  const handleAccountTypeChange = (event: SelectChangeEvent<number | string>) => {
-    const value = event.target.value;
-    onAccountTypeFilterChange(value === '' ? null : Number(value));
+  const handleAccountTypeChange = (value: number[]) => {
+    if (value.includes(-1)) {
+      // Toggle select all
+      if (accountTypeFilter.length === accountTypes.length) {
+        onAccountTypeFilterChange([]);
+      } else {
+        onAccountTypeFilterChange(accountTypes.map(at => at.id));
+      }
+    } else {
+      onAccountTypeFilterChange(value);
+    }
+  };
+
+  const getFilterLabel = (count: number, total: number) => {
+    if (count === 0) return 'All Types';
+    if (count === total) return 'All Types';
+    return `${count} Type${count !== 1 ? 's' : ''}`;
   };
 
   return (
@@ -61,16 +74,20 @@ export default function AccountFilters({
           <FormControl fullWidth size="small">
             <InputLabel>Filter by Account Type</InputLabel>
             <Select
-              value={accountTypeFilter ?? ''}
+              multiple
+              value={accountTypeFilter}
               label="Filter by Account Type"
-              onChange={handleAccountTypeChange}
+              onChange={(e) => handleAccountTypeChange(e.target.value as number[])}
+              renderValue={() => getFilterLabel(accountTypeFilter.length, accountTypes.length)}
             >
-              <MenuItem value="">
-                <em>All Types</em>
+              <MenuItem value={-1}>
+                <Checkbox checked={accountTypeFilter.length === accountTypes.length} />
+                <ListItemText primary="Select All" />
               </MenuItem>
               {accountTypes.map((type) => (
                 <MenuItem key={type.id} value={type.id}>
-                  {type.type}
+                  <Checkbox checked={accountTypeFilter.includes(type.id)} />
+                  <ListItemText primary={type.name} />
                 </MenuItem>
               ))}
             </Select>

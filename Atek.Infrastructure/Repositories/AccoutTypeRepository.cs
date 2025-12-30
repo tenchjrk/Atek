@@ -16,16 +16,12 @@ public class AccountTypeRepository : IAccountTypeRepository
 
     public async Task<List<AccountType>> GetAllAsync()
     {
-        return await _context.AccountTypes
-            .AsNoTracking()
-            .ToListAsync();
+        return await _context.AccountTypes.AsNoTracking().ToListAsync();
     }
 
     public async Task<AccountType?> GetByIdAsync(int id)
     {
-        return await _context.AccountTypes
-            .AsNoTracking()
-            .FirstOrDefaultAsync(at => at.Id == id);
+        return await _context.AccountTypes.AsNoTracking().FirstOrDefaultAsync(at => at.Id == id);
     }
 
     public async Task<AccountType> CreateAsync(AccountType accountType)
@@ -40,7 +36,7 @@ public class AccountTypeRepository : IAccountTypeRepository
         var existing = await _context.AccountTypes.FindAsync(accountType.Id);
         if (existing != null)
         {
-            existing.Type = accountType.Type;
+            existing.Name = accountType.Name;
             await _context.SaveChangesAsync();
         }
         return accountType;
@@ -51,20 +47,13 @@ public class AccountTypeRepository : IAccountTypeRepository
         var accountType = await _context.AccountTypes.FindAsync(id);
         if (accountType != null)
         {
-            // Check if any accounts use this type
-            var accountsUsingType = await _context.Accounts
-                .Where(a => a.AccountTypeId == id)
-                .CountAsync();
-            
-            if (accountsUsingType > 0)
-            {
-                throw new InvalidOperationException(
-                    $"Cannot delete account type '{accountType.Type}' because it is being used by {accountsUsingType} account(s). " +
-                    "Please reassign or remove these accounts first.");
-            }
-            
             _context.AccountTypes.Remove(accountType);
             await _context.SaveChangesAsync();
         }
+    }
+
+    public async Task<bool> IsInUseAsync(int id)
+    {
+        return await _context.Accounts.AnyAsync(a => a.AccountTypeId == id);
     }
 }

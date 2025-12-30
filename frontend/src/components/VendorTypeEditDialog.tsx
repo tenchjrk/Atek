@@ -6,6 +6,7 @@ import {
   DialogActions,
   TextField,
   Button,
+  Stack,
   IconButton,
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
@@ -15,7 +16,7 @@ interface VendorTypeEditDialogProps {
   open: boolean;
   vendorType: VendorType | null;
   onClose: () => void;
-  onSave: (id: number, type: string) => Promise<boolean>;
+  onSave: (id: number, name: string) => Promise<boolean>;
 }
 
 export default function VendorTypeEditDialog({
@@ -24,17 +25,17 @@ export default function VendorTypeEditDialog({
   onClose,
   onSave,
 }: VendorTypeEditDialogProps) {
-  const [type, setType] = useState('');
+  const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
 
   const handleOpen = () => {
     if (vendorType) {
-      setType(vendorType.type);
+      setName(vendorType.name);
     }
   };
 
   const handleClose = () => {
-    setType('');
+    setName('');
     setSaving(false);
     onClose();
   };
@@ -42,7 +43,7 @@ export default function VendorTypeEditDialog({
   const handleSave = async () => {
     if (!vendorType) return;
     setSaving(true);
-    const success = await onSave(vendorType.id, type);
+    const success = await onSave(vendorType.id, name);
     setSaving(false);
     if (success) {
       handleClose();
@@ -71,24 +72,25 @@ export default function VendorTypeEditDialog({
         </IconButton>
       </DialogTitle>
       <DialogContent>
-        <TextField
-          autoFocus
-          margin="dense"
-          label="Vendor Type"
-          type="text"
-          fullWidth
-          variant="outlined"
-          value={type}
-          onChange={(e) => setType(e.target.value)}
-          disabled={saving}
-          sx={{ mt: 2 }}
-        />
+        <Stack spacing={3} sx={{ mt: 2 }}>
+          <TextField
+            autoFocus
+            label="Vendor Type Name"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={saving}
+            required
+          />
+        </Stack>
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} disabled={saving}>
           Cancel
         </Button>
-        <Button onClick={handleSave} variant="contained" disabled={saving}>
+        <Button onClick={handleSave} variant="contained" disabled={saving || !name}>
           Save
         </Button>
       </DialogActions>

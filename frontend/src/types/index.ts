@@ -1,11 +1,11 @@
 export interface AccountType {
   id: number;
-  type: string;
+  name: string;
 }
 
 export interface VendorType {
   id: number;
-  type: string;
+  name: string;
 }
 
 export interface Account {

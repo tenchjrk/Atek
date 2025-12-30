@@ -1,5 +1,4 @@
-import { TextField, Box, Stack, Chip, IconButton, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import type { SelectChangeEvent } from '@mui/material';
+import { TextField, Box, Stack, Chip, IconButton, FormControl, InputLabel, Select, MenuItem, Checkbox, ListItemText } from '@mui/material';
 import { Clear as ClearIcon } from '@mui/icons-material';
 import type { VendorType } from '../types';
 
@@ -14,8 +13,8 @@ interface VendorFiltersProps {
   onPostalCodeFilterChange: (value: string) => void;
   countryFilter: string;
   onCountryFilterChange: (value: string) => void;
-  vendorTypeFilter: number | null;
-  onVendorTypeFilterChange: (value: number | null) => void;
+  vendorTypeFilter: number[];
+  onVendorTypeFilterChange: (value: number[]) => void;
   vendorTypes: VendorType[];
   onClearFilters: () => void;
   activeFilterCount: number;
@@ -38,9 +37,23 @@ export default function VendorFilters({
   onClearFilters,
   activeFilterCount,
 }: VendorFiltersProps) {
-  const handleVendorTypeChange = (event: SelectChangeEvent<number | string>) => {
-    const value = event.target.value;
-    onVendorTypeFilterChange(value === '' ? null : Number(value));
+  const handleVendorTypeChange = (value: number[]) => {
+    if (value.includes(-1)) {
+      // Toggle select all
+      if (vendorTypeFilter.length === vendorTypes.length) {
+        onVendorTypeFilterChange([]);
+      } else {
+        onVendorTypeFilterChange(vendorTypes.map(vt => vt.id));
+      }
+    } else {
+      onVendorTypeFilterChange(value);
+    }
+  };
+
+  const getFilterLabel = (count: number, total: number) => {
+    if (count === 0) return 'All Types';
+    if (count === total) return 'All Types';
+    return `${count} Type${count !== 1 ? 's' : ''}`;
   };
 
   return (
@@ -61,16 +74,20 @@ export default function VendorFilters({
           <FormControl fullWidth size="small">
             <InputLabel>Filter by Vendor Type</InputLabel>
             <Select
-              value={vendorTypeFilter ?? ''}
+              multiple
+              value={vendorTypeFilter}
               label="Filter by Vendor Type"
-              onChange={handleVendorTypeChange}
+              onChange={(e) => handleVendorTypeChange(e.target.value as number[])}
+              renderValue={() => getFilterLabel(vendorTypeFilter.length, vendorTypes.length)}
             >
-              <MenuItem value="">
-                <em>All Types</em>
+              <MenuItem value={-1}>
+                <Checkbox checked={vendorTypeFilter.length === vendorTypes.length} />
+                <ListItemText primary="Select All" />
               </MenuItem>
               {vendorTypes.map((type) => (
                 <MenuItem key={type.id} value={type.id}>
-                  {type.type}
+                  <Checkbox checked={vendorTypeFilter.includes(type.id)} />
+                  <ListItemText primary={type.name} />
                 </MenuItem>
               ))}
             </Select>

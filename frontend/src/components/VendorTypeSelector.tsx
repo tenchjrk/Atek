@@ -35,7 +35,7 @@ export default function VendorTypeSelector({
         </MenuItem>
         {vendorTypes.map((vendorType) => (
           <MenuItem key={vendorType.id} value={vendorType.id}>
-            {vendorType.type}
+            {vendorType.name}
           </MenuItem>
         ))}
       </Select>

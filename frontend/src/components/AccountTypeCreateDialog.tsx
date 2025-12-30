@@ -6,14 +6,12 @@ import {
   DialogActions,
   TextField,
   Button,
-  IconButton,
 } from '@mui/material';
-import { Close as CloseIcon } from '@mui/icons-material';
 
 interface AccountTypeCreateDialogProps {
   open: boolean;
   onClose: () => void;
-  onSave: (type: string) => Promise<boolean>;
+  onSave: (name: string) => Promise<boolean>;
 }
 
 export default function AccountTypeCreateDialog({
@@ -21,58 +19,38 @@ export default function AccountTypeCreateDialog({
   onClose,
   onSave,
 }: AccountTypeCreateDialogProps) {
-  const [type, setType] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  const handleClose = () => {
-    setType('');
-    setSaving(false);
-    onClose();
-  };
+  const [name, setName] = useState('');
 
   const handleSave = async () => {
-    setSaving(true);
-    const success = await onSave(type);
-    setSaving(false);
+    const success = await onSave(name);
     if (success) {
-      handleClose();
+      setName('');
+      onClose();
     }
+  };
+
+  const handleClose = () => {
+    setName('');
+    onClose();
   };
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        Create New Account Type
-        <IconButton
-          aria-label="close"
-          onClick={handleClose}
-          disabled={saving}
-          sx={{ color: (theme) => theme.palette.grey[500] }}
-        >
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
+      <DialogTitle>Add Account Type</DialogTitle>
       <DialogContent>
         <TextField
           autoFocus
           margin="dense"
-          label="Account Type"
-          type="text"
+          label="Account Type Name"
           fullWidth
-          variant="outlined"
-          value={type}
-          onChange={(e) => setType(e.target.value)}
-          disabled={saving}
-          required
-          sx={{ mt: 2 }}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose} disabled={saving}>
-          Cancel
-        </Button>
-        <Button onClick={handleSave} variant="contained" disabled={saving || !type}>
-          Create
+        <Button onClick={handleClose}>Cancel</Button>
+        <Button onClick={handleSave} variant="contained" disabled={!name.trim()}>
+          Save
         </Button>
       </DialogActions>
     </Dialog>

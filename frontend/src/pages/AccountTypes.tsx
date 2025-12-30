@@ -23,19 +23,15 @@ export default function AccountTypes() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [editingAccountType, setEditingAccountType] =
-    useState<AccountType | null>(null);
-  const [deletingAccountTypeId, setDeletingAccountTypeId] = useState<
-    number | null
-  >(null);
+  const [editingAccountType, setEditingAccountType] = useState<AccountType | null>(null);
+  const [deletingAccountTypeId, setDeletingAccountTypeId] = useState<number | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Apply sorting
-  const { sortedItems, sortField, sortOrder, handleSortChange } =
-    useSortSimple(items);
+  const { sortedItems, sortField, sortOrder, handleSortChange } = useSortSimple(items);
 
-  const handleCreate = async (type: string) => {
-    return await createItem({ type });
+  const handleCreate = async (name: string) => {
+    return await createItem({ name });
   };
 
   const handleEdit = (accountType: AccountType) => {
@@ -43,8 +39,8 @@ export default function AccountTypes() {
     setEditDialogOpen(true);
   };
 
-  const handleUpdate = async (id: number, type: string) => {
-    return await updateItem(id, { id, type });
+  const handleUpdate = async (id: number, name: string) => {
+    return await updateItem(id, { id, name });
   };
 
   const handleDeleteClick = (id: number) => {
@@ -74,7 +70,7 @@ export default function AccountTypes() {
 
   const getDeletingAccountTypeName = () => {
     const accountType = items.find((at) => at.id === deletingAccountTypeId);
-    return accountType?.type || "this account type";
+    return accountType?.name || "this account type";
   };
 
   const renderAccountTypeSecondary = (accountType: AccountType) => {
@@ -107,8 +103,8 @@ export default function AccountTypes() {
         sortField={sortField}
         sortOrder={sortOrder}
         onSortChange={handleSortChange}
-        showNameField={false}
-        showTypeField={true}
+        showNameField={true}
+        showTypeField={false}
       />
 
       <EntityList

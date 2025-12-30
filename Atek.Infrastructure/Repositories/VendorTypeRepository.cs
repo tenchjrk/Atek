@@ -16,16 +16,12 @@ public class VendorTypeRepository : IVendorTypeRepository
 
     public async Task<List<VendorType>> GetAllAsync()
     {
-        return await _context.VendorTypes
-            .AsNoTracking()
-            .ToListAsync();
+        return await _context.VendorTypes.AsNoTracking().ToListAsync();
     }
 
     public async Task<VendorType?> GetByIdAsync(int id)
     {
-        return await _context.VendorTypes
-            .AsNoTracking()
-            .FirstOrDefaultAsync(vt => vt.Id == id);
+        return await _context.VendorTypes.AsNoTracking().FirstOrDefaultAsync(vt => vt.Id == id);
     }
 
     public async Task<VendorType> CreateAsync(VendorType vendorType)
@@ -40,7 +36,7 @@ public class VendorTypeRepository : IVendorTypeRepository
         var existing = await _context.VendorTypes.FindAsync(vendorType.Id);
         if (existing != null)
         {
-            existing.Type = vendorType.Type;
+            existing.Name = vendorType.Name;
             await _context.SaveChangesAsync();
         }
         return vendorType;
@@ -51,20 +47,13 @@ public class VendorTypeRepository : IVendorTypeRepository
         var vendorType = await _context.VendorTypes.FindAsync(id);
         if (vendorType != null)
         {
-            // Check if any vendors use this type
-            var vendorsUsingType = await _context.Vendors
-                .Where(v => v.VendorTypeId == id)
-                .CountAsync();
-            
-            if (vendorsUsingType > 0)
-            {
-                throw new InvalidOperationException(
-                    $"Cannot delete vendor type '{vendorType.Type}' because it is being used by {vendorsUsingType} vendor(s). " +
-                    "Please reassign or remove these vendors first.");
-            }
-            
             _context.VendorTypes.Remove(vendorType);
             await _context.SaveChangesAsync();
         }
+    }
+
+    public async Task<bool> IsInUseAsync(int id)
+    {
+        return await _context.Vendors.AnyAsync(v => v.VendorTypeId == id);
     }
 }

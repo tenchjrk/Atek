@@ -169,7 +169,7 @@ export default function Vendors() {
           )}
           {vendor.vendorType && (
             <Chip
-              label={vendor.vendorType.type}
+              label={vendor.vendorType.name}
               size='small'
               color='secondary'
               variant='outlined'

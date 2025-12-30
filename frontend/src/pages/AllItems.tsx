@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Box, Chip, TextField, Button } from '@mui/material';
+import { Box, Chip, Autocomplete, TextField, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { 
   itemApi, 
@@ -28,10 +28,9 @@ export default function AllItems() {
   const [unitOfMeasures, setUnitOfMeasures] = useState<UnitOfMeasure[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedItems, setSelectedItems] = useState<Item[]>([]);
 
   const {
-    searchTerm,
-    setSearchTerm,
     vendorFilter,
     setVendorFilter,
     segmentFilter,
@@ -47,8 +46,16 @@ export default function AllItems() {
     clearFilters,
   } = useItemFilters(items);
 
+  // Filter by selected items OR search term
+  const searchFilteredItems = filteredItems.filter(item => {
+    if (selectedItems.length > 0) {
+      return selectedItems.some(selected => selected.id === item.id);
+    }
+    return true;
+  });
+
   // Apply sorting to filtered items
-  const { sortedItems, sortField, sortOrder, handleSortChange } = useSort(filteredItems);
+  const { sortedItems, sortField, sortOrder, handleSortChange } = useSort(searchFilteredItems);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -127,6 +134,13 @@ export default function AllItems() {
     );
   };
 
+  const totalActiveFilters = activeFilterCount + (selectedItems.length > 0 ? 1 : 0);
+
+  const handleClearAllFilters = () => {
+    clearFilters();
+    setSelectedItems([]);
+  };
+
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
@@ -153,11 +167,47 @@ export default function AllItems() {
       </Box>
 
       <Box sx={{ mb: 2 }}>
-        <TextField
-          fullWidth
-          placeholder='Search items by name, short name, or description...'
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+        <Autocomplete
+          multiple
+          options={items}
+          value={selectedItems}
+          onChange={(_, newValue) => setSelectedItems(newValue)}
+          getOptionLabel={(option) => option.name}
+          filterOptions={(options, { inputValue }) => {
+            const searchLower = inputValue.toLowerCase();
+            return options.filter(option => 
+              option.name.toLowerCase().includes(searchLower) ||
+              option.shortName?.toLowerCase().includes(searchLower) ||
+              option.description?.toLowerCase().includes(searchLower)
+            );
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              placeholder={selectedItems.length === 0 ? 'Search items by name, short name, or description...' : ''}
+            />
+          )}
+          renderTags={(value, getTagProps) =>
+            value.map((option, index) => (
+              <Chip
+                label={option.name}
+                {...getTagProps({ index })}
+                size="small"
+              />
+            ))
+          }
+          renderOption={(props, option) => (
+            <li {...props}>
+              <Box>
+                <Box sx={{ fontWeight: 500 }}>{option.name}</Box>
+                {option.shortName && (
+                  <Box sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>
+                    {option.shortName}
+                  </Box>
+                )}
+              </Box>
+            </li>
+          )}
         />
       </Box>
 
@@ -177,8 +227,8 @@ export default function AllItems() {
         categories={categories}
         itemTypes={itemTypes}
         unitOfMeasures={unitOfMeasures}
-        onClearFilters={clearFilters}
-        activeFilterCount={activeFilterCount}
+        onClearFilters={handleClearAllFilters}
+        activeFilterCount={totalActiveFilters}
       />
 
       <SortControls
@@ -195,7 +245,7 @@ export default function AllItems() {
         onEdit={handleEdit}
         onDelete={handleDelete}
         emptyMessage={
-          activeFilterCount > 0 || searchTerm
+          totalActiveFilters > 0
             ? 'No items match your search or filters.'
             : 'No items yet. Items are created within vendor categories.'
         }
