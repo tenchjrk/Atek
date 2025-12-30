@@ -1,6 +1,5 @@
 import {
   Box,
-  TextField,
   FormControl,
   InputLabel,
   Select,
@@ -18,8 +17,6 @@ import type {
 } from "../types";
 
 interface ItemFiltersProps {
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
   vendorFilter: number | "";
   onVendorFilterChange: (value: number | "") => void;
   segmentFilter: number | "";
@@ -40,8 +37,6 @@ interface ItemFiltersProps {
 }
 
 export default function ItemFilters({
-  searchTerm,
-  onSearchChange,
   vendorFilter,
   onVendorFilterChange,
   segmentFilter,
@@ -60,35 +55,15 @@ export default function ItemFilters({
   onClearFilters,
   activeFilterCount,
 }: ItemFiltersProps) {
-  // Filter segments based on selected vendor
-  const filteredSegments = vendorFilter
-    ? segments.filter((s) => s.vendorId === vendorFilter)
-    : segments;
-
-  // Filter categories based on selected segment
-  const filteredCategories = segmentFilter
-    ? categories.filter((c) => c.vendorSegmentId === segmentFilter)
-    : categories;
-
   return (
-    <Box sx={{ mb: 3 }}>
-      <Box sx={{ display: "flex", gap: 2, mb: 2, flexWrap: "wrap" }}>
-        <TextField
-          placeholder='Search items...'
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-          sx={{ flexGrow: 1, minWidth: "200px" }}
-        />
-        <FormControl sx={{ minWidth: 150 }}>
+    <Box sx={{ mb: 2 }}>
+      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2 }}>
+        <FormControl size="small" sx={{ minWidth: 150, flex: 1 }}>
           <InputLabel>Vendor</InputLabel>
           <Select
             value={vendorFilter}
             label='Vendor'
-            onChange={(e) => {
-              onVendorFilterChange(e.target.value as number | "");
-              onSegmentFilterChange("");
-              onCategoryFilterChange("");
-            }}
+            onChange={(e) => onVendorFilterChange(e.target.value as number | "")}
           >
             <MenuItem value=''>All Vendors</MenuItem>
             {vendors.map((vendor) => (
@@ -98,26 +73,22 @@ export default function ItemFilters({
             ))}
           </Select>
         </FormControl>
-        <FormControl sx={{ minWidth: 150 }}>
+        <FormControl size="small" sx={{ minWidth: 150, flex: 1 }}>
           <InputLabel>Segment</InputLabel>
           <Select
             value={segmentFilter}
             label='Segment'
-            onChange={(e) => {
-              onSegmentFilterChange(e.target.value as number | "");
-              onCategoryFilterChange("");
-            }}
-            disabled={!vendorFilter}
+            onChange={(e) => onSegmentFilterChange(e.target.value as number | "")}
           >
             <MenuItem value=''>All Segments</MenuItem>
-            {filteredSegments.map((segment) => (
+            {segments.map((segment) => (
               <MenuItem key={segment.id} value={segment.id}>
                 {segment.name}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
-        <FormControl sx={{ minWidth: 150 }}>
+        <FormControl size="small" sx={{ minWidth: 150, flex: 1 }}>
           <InputLabel>Category</InputLabel>
           <Select
             value={categoryFilter}
@@ -125,17 +96,16 @@ export default function ItemFilters({
             onChange={(e) =>
               onCategoryFilterChange(e.target.value as number | "")
             }
-            disabled={!segmentFilter}
           >
             <MenuItem value=''>All Categories</MenuItem>
-            {filteredCategories.map((category) => (
+            {categories.map((category) => (
               <MenuItem key={category.id} value={category.id}>
                 {category.name}
               </MenuItem>
             ))}
           </Select>
         </FormControl>
-        <FormControl sx={{ minWidth: 150 }}>
+        <FormControl size="small" sx={{ minWidth: 150, flex: 1 }}>
           <InputLabel>Item Type</InputLabel>
           <Select
             value={itemTypeFilter}
@@ -152,7 +122,7 @@ export default function ItemFilters({
             ))}
           </Select>
         </FormControl>
-        <FormControl sx={{ minWidth: 150 }}>
+        <FormControl size="small" sx={{ minWidth: 150, flex: 1 }}>
           <InputLabel>UOM</InputLabel>
           <Select
             value={unitOfMeasureFilter}
@@ -171,18 +141,20 @@ export default function ItemFilters({
         </FormControl>
       </Box>
       {activeFilterCount > 0 && (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Chip
             label={`${activeFilterCount} filter${
               activeFilterCount > 1 ? "s" : ""
             } active`}
-            onDelete={onClearFilters}
-            deleteIcon={<ClearIcon />}
             color='primary'
             variant='outlined'
           />
-          <Button size='small' onClick={onClearFilters}>
-            Clear all filters
+          <Button 
+            size="small" 
+            onClick={onClearFilters}
+            startIcon={<ClearIcon />}
+          >
+            Clear Filters
           </Button>
         </Box>
       )}

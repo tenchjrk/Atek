@@ -5,14 +5,14 @@ import { useNavigate } from "react-router-dom";
 import { vendorApi, vendorTypeApi } from "../services/api";
 import { useCrud } from "../hooks/useCrud";
 import { useVendorFilters } from "../hooks/useVendorFilters";
-import { useSort } from "../hooks/useSort";
+import { useSortSimple } from "../hooks/useSortSimple";
 import type { Vendor, VendorType } from "../types";
 import PageHeader from "../components/PageHeader";
 import EntityList from "../components/EntityList";
 import VendorEditDialog from "../components/VendorEditDialog";
 import VendorCreateDialog from "../components/VendorCreateDialog";
 import VendorFilters from "../components/VendorFilters";
-import SortControls from "../components/SortControls";
+import SortControlsSimple from "../components/SortControlsSimple";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { formatDateShort } from "../utils/dateFormatter";
 
@@ -48,7 +48,7 @@ export default function Vendors() {
 
   // Apply sorting to filtered vendors
   const { sortedItems, sortField, sortOrder, handleSortChange } =
-    useSort(filteredVendors);
+    useSortSimple(filteredVendors);
 
   // Fetch vendor types
   useEffect(() => {
@@ -267,7 +267,7 @@ export default function Vendors() {
         activeFilterCount={activeFilterCount}
       />
 
-      <SortControls
+      <SortControlsSimple
         sortField={sortField}
         sortOrder={sortOrder}
         onSortChange={handleSortChange}

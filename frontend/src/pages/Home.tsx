@@ -15,7 +15,7 @@ export default function Home() {
 
       <Grid container spacing={3} sx={{ mt: 3 }}>
         
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card
             component={Link}
             to='/accounts'
@@ -45,7 +45,7 @@ export default function Home() {
           </Card>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card
             component={Link}
             to='/vendors'
@@ -73,7 +73,7 @@ export default function Home() {
           </Card>
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card
             component={Link}
             to='/all-items'

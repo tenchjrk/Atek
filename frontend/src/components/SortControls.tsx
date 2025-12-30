@@ -18,18 +18,31 @@ export default function SortControls({ sortField, sortOrder, onSortChange }: Sor
     onSortChange(sortField); // This will toggle the order
   };
 
+  const getFieldLabel = () => {
+    switch (sortField) {
+      case 'id': return 'ID';
+      case 'name': return 'Name';
+      case 'lastModifiedDate': return 'Last Modified';
+      case 'listPrice': return 'List Price';
+      case 'cost': return 'Cost';
+      default: return '';
+    }
+  };
+
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-      <FormControl size="small" sx={{ minWidth: 150 }}>
+      <FormControl size="small" sx={{ minWidth: 200 }}>
         <InputLabel>Sort by</InputLabel>
         <Select
           value={sortField}
           label="Sort by"
           onChange={handleFieldChange}
         >
-          <MenuItem value="lastModified">Last Modified</MenuItem>
+          <MenuItem value="lastModifiedDate">Last Modified</MenuItem>
           <MenuItem value="name">Name</MenuItem>
           <MenuItem value="id">ID</MenuItem>
+          <MenuItem value="listPrice">List Price</MenuItem>
+          <MenuItem value="cost">Cost</MenuItem>
         </Select>
       </FormControl>
 
@@ -48,9 +61,7 @@ export default function SortControls({ sortField, sortOrder, onSortChange }: Sor
       </ToggleButtonGroup>
 
       <Box sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
-        {sortField === 'lastModified' && 'Last Modified'}
-        {sortField === 'name' && 'Name'}
-        {sortField === 'id' && 'ID'}
+        {getFieldLabel()}
         {' • '}
         {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
       </Box>

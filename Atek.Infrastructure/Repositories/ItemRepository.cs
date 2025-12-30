@@ -18,6 +18,8 @@ public class ItemRepository : IItemRepository
     {
         return await _context.Items
             .Include(i => i.ItemCategory)
+                .ThenInclude(ic => ic!.VendorSegment)
+                    .ThenInclude(vs => vs!.Vendor)
             .Include(i => i.UnitOfMeasure)
             .Include(i => i.ItemType)
             .AsNoTracking()
@@ -29,6 +31,8 @@ public class ItemRepository : IItemRepository
         return await _context.Items
             .Where(i => i.ItemCategoryId == categoryId)
             .Include(i => i.ItemCategory)
+                .ThenInclude(ic => ic!.VendorSegment)
+                    .ThenInclude(vs => vs!.Vendor)
             .Include(i => i.UnitOfMeasure)
             .Include(i => i.ItemType)
             .AsNoTracking()
@@ -39,6 +43,8 @@ public class ItemRepository : IItemRepository
     {
         return await _context.Items
             .Include(i => i.ItemCategory)
+                .ThenInclude(ic => ic!.VendorSegment)
+                    .ThenInclude(vs => vs!.Vendor)
             .Include(i => i.UnitOfMeasure)
             .Include(i => i.ItemType)
             .AsNoTracking()
@@ -55,6 +61,8 @@ public class ItemRepository : IItemRepository
         
         var created = await _context.Items
             .Include(i => i.ItemCategory)
+                .ThenInclude(ic => ic!.VendorSegment)
+                    .ThenInclude(vs => vs!.Vendor)
             .Include(i => i.UnitOfMeasure)
             .Include(i => i.ItemType)
             .AsNoTracking()
@@ -84,6 +92,8 @@ public class ItemRepository : IItemRepository
         
         var updated = await _context.Items
             .Include(i => i.ItemCategory)
+                .ThenInclude(ic => ic!.VendorSegment)
+                    .ThenInclude(vs => vs!.Vendor)
             .Include(i => i.UnitOfMeasure)
             .Include(i => i.ItemType)
             .AsNoTracking()

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Box, Chip } from '@mui/material';
+import { Box, Chip, TextField, Button } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import { 
   itemApi, 
   vendorApi, 
@@ -18,6 +19,7 @@ import SortControls from '../components/SortControls';
 import { formatDateShort } from '../utils/dateFormatter';
 
 export default function AllItems() {
+  const navigate = useNavigate();
   const [items, setItems] = useState<Item[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [segments, setSegments] = useState<VendorSegment[]>([]);
@@ -132,11 +134,34 @@ export default function AllItems() {
           title="All Items" 
           subtitle="Browse and manage all items across all vendors"
         />
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="outlined"
+            onClick={() => navigate('/unit-of-measures')}
+            sx={{ mt: 1 }}
+          >
+            Manage UOMs
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={() => navigate('/item-types')}
+            sx={{ mt: 1 }}
+          >
+            Manage Types
+          </Button>
+        </Box>
+      </Box>
+
+      <Box sx={{ mb: 2 }}>
+        <TextField
+          fullWidth
+          placeholder='Search items by name, short name, or description...'
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </Box>
 
       <ItemFilters
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
         vendorFilter={vendorFilter}
         onVendorFilterChange={setVendorFilter}
         segmentFilter={segmentFilter}

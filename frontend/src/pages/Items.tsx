@@ -12,12 +12,12 @@ import {
   itemTypeApi,
 } from "../services/api";
 import { useSimpleSearch } from "../hooks/useSimpleSearch";
-import { useSortSimple } from "../hooks/useSortSimple";
+import { useSort } from "../hooks/useSort";
 import type { Item, ItemCategory, UnitOfMeasure, ItemType } from "../types";
 import PageHeader from "../components/PageHeader";
 import EntityList from "../components/EntityList";
 import SimpleSearchBar from "../components/SimpleSearchBar";
-import SortControlsSimple from "../components/SortControlsSimple";
+import SortControls from "../components/SortControls";
 import ItemCreateDialog from "../components/ItemCreateDialog";
 import ItemEditDialog from "../components/ItemEditDialog";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -47,7 +47,7 @@ export default function Items() {
 
   // Apply sorting to filtered items
   const { sortedItems, sortField, sortOrder, handleSortChange } =
-    useSortSimple(filteredItems);
+    useSort(filteredItems);
 
   const fetchData = useCallback(async () => {
     if (!categoryId) return;
@@ -247,30 +247,14 @@ export default function Items() {
             subtitle='Manage items and products in this category'
           />
         </Box>
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <Button
-            variant='outlined'
-            onClick={() => navigate("/unit-of-measures")}
-            sx={{ mt: 1 }}
-          >
-            Manage Units
-          </Button>
-          <Button
-            variant='outlined'
-            onClick={() => navigate("/item-types")}
-            sx={{ mt: 1 }}
-          >
-            Manage Types
-          </Button>
-          <Button
-            variant='contained'
-            startIcon={<AddIcon />}
-            onClick={() => setCreateDialogOpen(true)}
-            sx={{ mt: 1 }}
-          >
-            Add Item
-          </Button>
-        </Box>
+        <Button
+          variant='contained'
+          startIcon={<AddIcon />}
+          onClick={() => setCreateDialogOpen(true)}
+          sx={{ mt: 1 }}
+        >
+          Add Item
+        </Button>
       </Box>
 
       <SimpleSearchBar
@@ -279,7 +263,7 @@ export default function Items() {
         placeholder='Search items by name...'
       />
 
-      <SortControlsSimple
+      <SortControls
         sortField={sortField}
         sortOrder={sortOrder}
         onSortChange={handleSortChange}

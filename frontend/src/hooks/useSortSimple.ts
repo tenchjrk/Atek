@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react';
 
-export type SimpleSortField = 'id' | 'name' | 'type';
+export type SimpleSortField = 'id' | 'name' | 'type' | 'lastModifiedDate';
 export type SortOrder = 'asc' | 'desc';
 
-export function useSortSimple<T extends { id: number } & ({ name: string } | { type: string })>(items: T[]) {
-  const [sortField, setSortField] = useState<SimpleSortField>('id');
+export function useSortSimple<T extends { id: number } & ({ name: string } | { type: string }) & Partial<{ lastModifiedDate: string }>>(items: T[]) {
+  const [sortField, setSortField] = useState<SimpleSortField>('lastModifiedDate');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
   const sortedItems = useMemo(() => {
@@ -25,6 +25,11 @@ export function useSortSimple<T extends { id: number } & ({ name: string } | { t
             comparison = a.type.localeCompare(b.type);
           }
           break;
+        case 'lastModifiedDate':
+          if ('lastModifiedDate' in a && 'lastModifiedDate' in b && a.lastModifiedDate && b.lastModifiedDate) {
+            comparison = new Date(a.lastModifiedDate).getTime() - new Date(b.lastModifiedDate).getTime();
+          }
+          break;
       }
 
       return sortOrder === 'asc' ? comparison : -comparison;
@@ -38,9 +43,9 @@ export function useSortSimple<T extends { id: number } & ({ name: string } | { t
       // Toggle order if same field
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
-      // New field, default to desc for id, asc for name/type
+      // New field, default to desc for id/lastModifiedDate, asc for name/type
       setSortField(field);
-      setSortOrder(field === 'id' ? 'desc' : 'asc');
+      setSortOrder(field === 'id' || field === 'lastModifiedDate' ? 'desc' : 'asc');
     }
   };
 

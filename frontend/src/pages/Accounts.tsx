@@ -4,14 +4,14 @@ import { Add as AddIcon } from "@mui/icons-material";
 import { accountApi, accountTypeApi } from "../services/api";
 import { useCrud } from "../hooks/useCrud";
 import { useAccountFilters } from "../hooks/useAccountFilters";
-import { useSort } from "../hooks/useSort";
+import { useSortSimple } from "../hooks/useSortSimple";
 import type { Account, AccountType } from "../types";
 import PageHeader from "../components/PageHeader";
 import EntityList from "../components/EntityList";
 import AccountEditDialog from "../components/AccountEditDialog";
 import AccountCreateDialog from "../components/AccountCreateDialog";
 import AccountFilters from "../components/AccountFilters";
-import SortControls from "../components/SortControls";
+import SortControlsSimple from "../components/SortControlsSimple";
 import ConfirmDialog from "../components/ConfirmDialog";
 import { formatDateShort } from "../utils/dateFormatter";
 import { useNavigate } from "react-router-dom";
@@ -50,7 +50,7 @@ export default function Accounts() {
 
   // Apply sorting to filtered accounts
   const { sortedItems, sortField, sortOrder, handleSortChange } =
-    useSort(filteredAccounts);
+    useSortSimple(filteredAccounts);
 
   // Fetch account types
   useEffect(() => {
@@ -267,7 +267,7 @@ export default function Accounts() {
         onClearFilters={clearFilters}
         activeFilterCount={activeFilterCount}
       />
-      <SortControls
+      <SortControlsSimple
         sortField={sortField}
         sortOrder={sortOrder}
         onSortChange={handleSortChange}

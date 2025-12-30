@@ -9,6 +9,7 @@ interface SortControlsSimpleProps {
   onSortChange: (field: SimpleSortField) => void;
   showNameField?: boolean;
   showTypeField?: boolean;
+  showLastModifiedField?: boolean;
 }
 
 export default function SortControlsSimple({ 
@@ -17,25 +18,27 @@ export default function SortControlsSimple({
   onSortChange,
   showNameField = true,
   showTypeField = false,
+  showLastModifiedField = true,
 }: SortControlsSimpleProps) {
   const handleFieldChange = (event: SelectChangeEvent) => {
     onSortChange(event.target.value as SimpleSortField);
   };
 
   const handleOrderToggle = () => {
-    onSortChange(sortField); // This will toggle the order
+    onSortChange(sortField);
   };
 
   const getFieldLabel = () => {
     if (sortField === 'id') return 'ID';
     if (sortField === 'name') return 'Name';
     if (sortField === 'type') return 'Type';
+    if (sortField === 'lastModifiedDate') return 'Last Modified';
     return '';
   };
 
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-      <FormControl size="small" sx={{ minWidth: 150 }}>
+      <FormControl size="small" sx={{ minWidth: 200 }}>
         <InputLabel>Sort by</InputLabel>
         <Select
           value={sortField}
@@ -45,6 +48,7 @@ export default function SortControlsSimple({
           <MenuItem value="id">ID</MenuItem>
           {showNameField && <MenuItem value="name">Name</MenuItem>}
           {showTypeField && <MenuItem value="type">Type</MenuItem>}
+          {showLastModifiedField && <MenuItem value="lastModifiedDate">Last Modified</MenuItem>}
         </Select>
       </FormControl>
 
