@@ -16,6 +16,8 @@ import Items from './pages/Items';
 import UnitOfMeasures from './pages/UnitOfMeasures';
 import ItemTypes from './pages/ItemTypes';
 import AllItems from './pages/AllItems';
+import ContractStatuses from './pages/ContractStatuses';
+import Contracts from './pages/Contracts';
 
 const theme = createTheme({
   palette: {
@@ -36,6 +38,7 @@ function App() {
         <Routes>
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Home />} />
+            <Route path="contracts" element={<Contracts />} />
             <Route path="accounts" element={<Accounts />} />
             <Route path="accounts/:accountId/addresses" element={<AccountAddresses />} />
             <Route path="vendors" element={<Vendors />} />
@@ -49,6 +52,7 @@ function App() {
             <Route path="vendor-types" element={<VendorTypes />} />
             <Route path="unit-of-measures" element={<UnitOfMeasures />} />
             <Route path="item-types" element={<ItemTypes />} />
+            <Route path="contract-statuses" element={<ContractStatuses />} />
           </Route>
         </Routes>
       </BrowserRouter>

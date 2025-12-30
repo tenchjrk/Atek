@@ -135,3 +135,23 @@ export interface Item {
   unitOfMeasure?: UnitOfMeasure | null;
   itemType?: ItemType | null;
 }
+
+export interface ContractStatus {
+  id: number;
+  name: string;
+}
+
+export interface Contract {
+  id: number;
+  accountId: number;
+  contractNumber: string;
+  contractStatusId: number;
+  executionDate?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  termLengthMonths: number;
+  createdDate: string;
+  lastModifiedDate: string;
+  account?: Account | null;
+  contractStatus?: ContractStatus | null;
+}

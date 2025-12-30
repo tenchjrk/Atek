@@ -19,6 +19,7 @@ import {
   Store as VendorIcon,
   Home as HomeIcon,
   Inventory as ItemsIcon,
+  Description as ContractIcon,
 } from '@mui/icons-material';
 import { useState } from 'react';
 
@@ -34,6 +35,7 @@ export default function MainLayout() {
 
   const menuItems = [
     { text: 'Home', icon: <HomeIcon />, path: '/' },
+    { text: 'Contracts', icon: <ContractIcon />, path: '/contracts' },
     { text: 'Accounts', icon: <AccountIcon />, path: '/accounts' },
     { text: 'Vendors', icon: <VendorIcon />, path: '/vendors' },
     { text: 'Items', icon: <ItemsIcon />, path: '/all-items' },

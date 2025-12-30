@@ -22,8 +22,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<UnitOfMeasure> UnitOfMeasures => Set<UnitOfMeasure>();
     public DbSet<ItemType> ItemTypes => Set<ItemType>();
     public DbSet<Item> Items => Set<Item>();
-    public DbSet<ContractStatus> ContractStatuses { get; set; }
-    public DbSet<Contract> Contracts { get; set; }
+    public DbSet<ContractStatus> ContractStatuses => Set<ContractStatus>();
+    public DbSet<Contract> Contracts => Set<Contract>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
