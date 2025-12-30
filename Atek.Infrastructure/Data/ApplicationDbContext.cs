@@ -116,23 +116,25 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.Name).IsUnique();
         });
 
-        // Contract configuration
-        modelBuilder.Entity<Contract>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.TermLengthMonths).IsRequired();
-            entity.Property(e => e.CreatedDate).IsRequired();
-            entity.Property(e => e.LastModifiedDate).IsRequired();
+       // Contract configuration
+modelBuilder.Entity<Contract>(entity =>
+{
+    entity.HasKey(e => e.Id);
+    entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+    entity.Property(e => e.Description).HasMaxLength(1000);
+    entity.Property(e => e.TermLengthMonths).IsRequired();
+    entity.Property(e => e.CreatedDate).IsRequired();
+    entity.Property(e => e.LastModifiedDate).IsRequired();
 
-            entity.HasOne(e => e.Account)
-                .WithMany()
-                .HasForeignKey(e => e.AccountId)
-                .OnDelete(DeleteBehavior.Restrict);
+    entity.HasOne(e => e.Account)
+        .WithMany()
+        .HasForeignKey(e => e.AccountId)
+        .OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasOne(e => e.ContractStatus)
-                .WithMany()
-                .HasForeignKey(e => e.ContractStatusId)
-                .OnDelete(DeleteBehavior.Restrict);
-        });
+    entity.HasOne(e => e.ContractStatus)
+        .WithMany()
+        .HasForeignKey(e => e.ContractStatusId)
+        .OnDelete(DeleteBehavior.Restrict);
+});
     }
 }

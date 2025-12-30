@@ -144,6 +144,8 @@ export interface ContractStatus {
 export interface Contract {
   id: number;
   accountId: number;
+  name: string;
+  description?: string | null;
   contractStatusId: number;
   executionDate?: string | null;
   startDate?: string | null;

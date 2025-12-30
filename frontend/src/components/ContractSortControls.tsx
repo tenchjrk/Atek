@@ -20,7 +20,8 @@ export default function ContractSortControls({ sortField, sortOrder, onSortChang
 
   const getFieldLabel = () => {
     if (sortField === 'id') return 'ID';
-    if (sortField === 'contractNumber') return 'Contract Number';
+    if (sortField === 'name') return 'Name';
+    if (sortField === 'status') return 'Status';
     if (sortField === 'lastModifiedDate') return 'Last Modified';
     return '';
   };
@@ -35,7 +36,8 @@ export default function ContractSortControls({ sortField, sortOrder, onSortChang
           onChange={handleFieldChange}
         >
           <MenuItem value="lastModifiedDate">Last Modified</MenuItem>
-          <MenuItem value="contractNumber">Contract Number</MenuItem>
+          <MenuItem value="name">Name</MenuItem>
+          <MenuItem value="status">Status</MenuItem>
           <MenuItem value="id">ID</MenuItem>
         </Select>
       </FormControl>

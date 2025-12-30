@@ -23,6 +23,8 @@ interface ContractCreateDialogProps {
   onClose: () => void;
   onSave: (contractData: {
     accountId: number;
+    name: string;
+    description: string;
     contractStatusId: number;
     termLengthMonths: number;
   }) => Promise<boolean>;
@@ -36,6 +38,8 @@ export default function ContractCreateDialog({
   onSave,
 }: ContractCreateDialogProps) {
   const [accountId, setAccountId] = useState<number | ''>('');
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
   const [termLengthMonths, setTermLengthMonths] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -49,6 +53,8 @@ export default function ContractCreateDialog({
 
   const handleClose = () => {
     setAccountId('');
+    setName('');
+    setDescription('');
     setTermLengthMonths('');
     setSaving(false);
     onClose();
@@ -63,6 +69,8 @@ export default function ContractCreateDialog({
     setSaving(true);
     const success = await onSave({
       accountId: accountId as number,
+      name,
+      description,
       contractStatusId: draftStatusId,
       termLengthMonths: parseInt(termLengthMonths),
     });
@@ -104,6 +112,32 @@ export default function ContractCreateDialog({
           </FormControl>
 
           <TextField
+            autoFocus
+            label="Contract Name"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={saving}
+            required
+            helperText="Give this contract a descriptive name"
+          />
+
+          <TextField
+            label="Description"
+            type="text"
+            fullWidth
+            multiline
+            rows={3}
+            variant="outlined"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            disabled={saving}
+            helperText="Optional notes about this contract"
+          />
+
+          <TextField
             label="Term Length (Months)"
             type="number"
             fullWidth
@@ -124,7 +158,7 @@ export default function ContractCreateDialog({
         <Button 
           onClick={handleSave} 
           variant="contained" 
-          disabled={saving || !accountId || !termLengthMonths || !draftStatusId}
+          disabled={saving || !accountId || !name || !termLengthMonths || !draftStatusId}
         >
           Create Draft
         </Button>

@@ -25,6 +25,8 @@ interface ContractEditDialogProps {
   onSave: (contractData: {
     id: number;
     accountId: number;
+    name: string;
+    description: string;
     contractStatusId: number;
     termLengthMonths: number;
   }) => Promise<boolean>;
@@ -39,6 +41,8 @@ export default function ContractEditDialog({
   onSave,
 }: ContractEditDialogProps) {
   const [accountId, setAccountId] = useState<number | ''>('');
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
   const [contractStatusId, setContractStatusId] = useState<number | ''>('');
   const [termLengthMonths, setTermLengthMonths] = useState('');
   const [saving, setSaving] = useState(false);
@@ -46,6 +50,8 @@ export default function ContractEditDialog({
   const handleOpen = () => {
     if (contract) {
       setAccountId(contract.accountId);
+      setName(contract.name);
+      setDescription(contract.description || '');
       setContractStatusId(contract.contractStatusId);
       setTermLengthMonths(contract.termLengthMonths.toString());
     }
@@ -53,6 +59,8 @@ export default function ContractEditDialog({
 
   const handleClose = () => {
     setAccountId('');
+    setName('');
+    setDescription('');
     setContractStatusId('');
     setTermLengthMonths('');
     setSaving(false);
@@ -65,6 +73,8 @@ export default function ContractEditDialog({
     const success = await onSave({
       id: contract.id,
       accountId: accountId as number,
+      name,
+      description,
       contractStatusId: contractStatusId as number,
       termLengthMonths: parseInt(termLengthMonths),
     });
@@ -113,6 +123,30 @@ export default function ContractEditDialog({
             </Select>
           </FormControl>
 
+          <TextField
+            autoFocus
+            label="Contract Name"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={saving}
+            required
+          />
+
+          <TextField
+            label="Description"
+            type="text"
+            fullWidth
+            multiline
+            rows={3}
+            variant="outlined"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            disabled={saving}
+          />
+
           <FormControl fullWidth required>
             <InputLabel>Contract Status</InputLabel>
             <Select
@@ -150,7 +184,7 @@ export default function ContractEditDialog({
         <Button 
           onClick={handleSave} 
           variant="contained" 
-          disabled={saving || !accountId || !contractStatusId || !termLengthMonths}
+          disabled={saving || !accountId || !name || !contractStatusId || !termLengthMonths}
         >
           Save
         </Button>

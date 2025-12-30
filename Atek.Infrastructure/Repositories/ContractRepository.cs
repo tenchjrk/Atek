@@ -42,60 +42,62 @@ public class ContractRepository : IContractRepository
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 
-   public async Task<Contract> CreateAsync(Contract contract)
-{
-    contract.CreatedDate = DateTime.UtcNow;
-    contract.LastModifiedDate = DateTime.UtcNow;
-    contract.ExecutionDate = null; // Always null on creation
-    contract.StartDate = null;
-    contract.EndDate = null;
-    
-    _context.Contracts.Add(contract);
-    await _context.SaveChangesAsync();
-    
-    var created = await _context.Contracts
-        .Include(c => c.Account)
-        .Include(c => c.ContractStatus)
-        .AsNoTracking()
-        .FirstOrDefaultAsync(c => c.Id == contract.Id);
-    
-    return created ?? contract;
-}
-
-public async Task<Contract> UpdateAsync(Contract contract)
-{
-    var existing = await _context.Contracts.FindAsync(contract.Id);
-    if (existing != null)
+    public async Task<Contract> CreateAsync(Contract contract)
     {
-        existing.AccountId = contract.AccountId;
-        existing.ContractStatusId = contract.ContractStatusId;
-        existing.TermLengthMonths = contract.TermLengthMonths;
-        existing.LastModifiedDate = DateTime.UtcNow;
+        contract.CreatedDate = DateTime.UtcNow;
+        contract.LastModifiedDate = DateTime.UtcNow;
+        contract.ExecutionDate = null; // Always null on creation
+        contract.StartDate = null;
+        contract.EndDate = null;
         
-        // Only update dates if execution date is being set
-        if (contract.ExecutionDate.HasValue && !existing.ExecutionDate.HasValue)
+        _context.Contracts.Add(contract);
+        await _context.SaveChangesAsync();
+        
+        var created = await _context.Contracts
+            .Include(c => c.Account)
+            .Include(c => c.ContractStatus)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == contract.Id);
+        
+        return created ?? contract;
+    }
+
+    public async Task<Contract> UpdateAsync(Contract contract)
+    {
+        var existing = await _context.Contracts.FindAsync(contract.Id);
+        if (existing != null)
         {
-            existing.ExecutionDate = contract.ExecutionDate;
-            existing.StartDate = new DateTime(
-                existing.ExecutionDate.Value.Year,
-                existing.ExecutionDate.Value.Month,
-                1
-            ).AddMonths(1);
+            existing.AccountId = contract.AccountId;
+            existing.Name = contract.Name;
+            existing.Description = contract.Description;
+            existing.ContractStatusId = contract.ContractStatusId;
+            existing.TermLengthMonths = contract.TermLengthMonths;
+            existing.LastModifiedDate = DateTime.UtcNow;
             
-            existing.EndDate = existing.StartDate.Value.AddMonths(existing.TermLengthMonths);
+            // Only update dates if execution date is being set
+            if (contract.ExecutionDate.HasValue && !existing.ExecutionDate.HasValue)
+            {
+                existing.ExecutionDate = contract.ExecutionDate;
+                existing.StartDate = new DateTime(
+                    existing.ExecutionDate.Value.Year,
+                    existing.ExecutionDate.Value.Month,
+                    1
+                ).AddMonths(1);
+                
+                existing.EndDate = existing.StartDate.Value.AddMonths(existing.TermLengthMonths);
+            }
+            
+            await _context.SaveChangesAsync();
         }
         
-        await _context.SaveChangesAsync();
+        var updated = await _context.Contracts
+            .Include(c => c.Account)
+            .Include(c => c.ContractStatus)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == contract.Id);
+        
+        return updated ?? contract;
     }
-    
-    var updated = await _context.Contracts
-        .Include(c => c.Account)
-        .Include(c => c.ContractStatus)
-        .AsNoTracking()
-        .FirstOrDefaultAsync(c => c.Id == contract.Id);
-    
-    return updated ?? contract;
-}
 
     public async Task DeleteAsync(int id)
     {

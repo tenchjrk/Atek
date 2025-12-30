@@ -48,6 +48,8 @@ export default function Contracts() {
 
   const handleCreate = async (contractData: {
     accountId: number;
+    name: string;
+    description: string;
     contractStatusId: number;
     termLengthMonths: number;
   }) => {
@@ -62,6 +64,8 @@ export default function Contracts() {
   const handleUpdate = async (contractData: {
     id: number;
     accountId: number;
+    name: string;
+    description: string;
     contractStatusId: number;
     termLengthMonths: number;
   }) => {
@@ -89,9 +93,9 @@ export default function Contracts() {
   };
 
   const getDeletingContractName = () => {
-  const contract = items.find((c) => c.id === deletingContractId);
-  return contract ? `Contract #${contract.id}` : "this contract";
-};
+    const contract = items.find((c) => c.id === deletingContractId);
+    return contract ? contract.name : "this contract";
+  };
 
   const renderContractSecondary = (contract: Contract) => {
     return (
@@ -123,6 +127,19 @@ export default function Contracts() {
             />
           )}
         </Box>
+        {contract.description && (
+          <Box
+            component='span'
+            sx={{
+              fontSize: "0.875rem",
+              color: "text.secondary",
+              display: "block",
+              fontStyle: "italic",
+            }}
+          >
+            {contract.description}
+          </Box>
+        )}
         <Box
           component='span'
           sx={{
@@ -198,7 +215,7 @@ export default function Contracts() {
         onDelete={handleDeleteClick}
         emptyMessage='No contracts yet. Create your first contract above.'
         renderSecondary={renderContractSecondary}
-        getItemName={(item) => `Contract #${item.id}`}
+        getItemName={(item) => item.name}
       />
 
       <ContractCreateDialog
