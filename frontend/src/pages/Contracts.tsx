@@ -2,11 +2,23 @@ import { useState, useEffect, useMemo } from "react";
 import { Box, Button, Chip, Stack } from "@mui/material";
 import { Add as AddIcon } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { contractApi, accountApi, contractStatusApi } from "../services/api";
+import {
+  contractApi,
+  accountApi,
+  vendorApi,
+  contractStatusApi,
+  contractTypeApi,
+} from "../services/api";
 import { useCrud } from "../hooks/useCrud";
 import { useContractSort } from "../hooks/useContractSort";
 import { useContractFilters } from "../hooks/useContractFilters";
-import type { Contract, Account, ContractStatus } from "../types";
+import type {
+  Contract,
+  Account,
+  Vendor,
+  ContractStatus,
+  ContractType,
+} from "../types";
 import PageHeader from "../components/PageHeader";
 import EntityList from "../components/EntityList";
 import ContractSortControls from "../components/ContractSortControls";
@@ -21,60 +33,111 @@ export default function Contracts() {
   const { items, loading, error, createItem, updateItem, deleteItem } =
     useCrud<Contract>(contractApi);
   const [accounts, setAccounts] = useState<Account[]>([]);
-  const [contractStatuses, setContractStatuses] = useState<ContractStatus[]>([]);
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [contractStatuses, setContractStatuses] = useState<ContractStatus[]>(
+    []
+  );
+  const [contractTypes, setContractTypes] = useState<ContractType[]>([]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
-  const [deletingContractId, setDeletingContractId] = useState<number | null>(null);
+  const [deletingContractId, setDeletingContractId] = useState<number | null>(
+    null
+  );
 
   // Apply filtering
-  const { 
-    filteredContracts, 
-    searchQuery, 
-    selectedStatusIds, 
+  const {
+    filteredContracts,
+    searchQuery,
+    selectedStatusIds,
     selectedAccountIds,
-    handleSearchChange, 
-    handleStatusChange, 
+    selectedVendorIds,
+    selectedTypeIds,
+    activeFilterCount,
+    handleSearchChange,
+    handleStatusChange,
     handleAccountChange,
-    clearFilters 
+    handleVendorChange,
+    handleTypeChange,
+    clearFilters,
   } = useContractFilters(items);
 
   // Apply sorting to filtered results
-  const { sortedItems, sortField, sortOrder, handleSortChange } = useContractSort(filteredContracts);
+  const { sortedItems, sortField, sortOrder, handleSortChange } =
+    useContractSort(filteredContracts);
 
   // Get available statuses for the filter
   const availableStatuses = useMemo(() => {
     const statusMap = new Map<number, ContractStatus>();
-    items.forEach(contract => {
+    items.forEach((contract) => {
       if (contract.contractStatus) {
         statusMap.set(contract.contractStatus.id, contract.contractStatus);
       }
     });
-    return Array.from(statusMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    return Array.from(statusMap.values()).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
   }, [items]);
 
   // Get available accounts for the filter
   const availableAccounts = useMemo(() => {
     const accountMap = new Map<number, Account>();
-    items.forEach(contract => {
+    items.forEach((contract) => {
       if (contract.account) {
         accountMap.set(contract.account.id, contract.account);
       }
     });
-    return Array.from(accountMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    return Array.from(accountMap.values()).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
   }, [items]);
 
-  // Fetch accounts and contract statuses
+  // Get available vendors for the filter
+  const availableVendors = useMemo(() => {
+    const vendorMap = new Map<number, Vendor>();
+    items.forEach((contract) => {
+      if (contract.vendor) {
+        vendorMap.set(contract.vendor.id, contract.vendor);
+      }
+    });
+    return Array.from(vendorMap.values()).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+  }, [items]);
+
+  // Get available types for the filter
+  const availableTypes = useMemo(() => {
+    const typeMap = new Map<number, ContractType>();
+    items.forEach((contract) => {
+      if (contract.contractType) {
+        typeMap.set(contract.contractType.id, contract.contractType);
+      }
+    });
+    return Array.from(typeMap.values()).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+  }, [items]);
+
+  // Fetch accounts, vendors, contract statuses, and contract types
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [accountsResponse, statusesResponse] = await Promise.all([
+        const [
+          accountsResponse,
+          vendorsResponse,
+          statusesResponse,
+          typesResponse,
+        ] = await Promise.all([
           accountApi.getAll(),
+          vendorApi.getAll(),
           contractStatusApi.getAll(),
+          contractTypeApi.getAll(),
         ]);
         setAccounts(accountsResponse.data);
+        setVendors(vendorsResponse.data);
         setContractStatuses(statusesResponse.data);
+        setContractTypes(typesResponse.data);
       } catch (err) {
         console.error("Error loading data:", err);
       }
@@ -84,12 +147,14 @@ export default function Contracts() {
 
   const handleCreate = async (contractData: {
     accountId: number;
+    vendorId: number;
     name: string;
     description: string;
     contractStatusId: number;
+    contractTypeId: number;
     termLengthMonths: number;
   }) => {
-    return await createItem(contractData as Omit<Contract, 'id'>);
+    return await createItem(contractData as Omit<Contract, "id">);
   };
 
   const handleEdit = (contract: Contract) => {
@@ -100,9 +165,11 @@ export default function Contracts() {
   const handleUpdate = async (contractData: {
     id: number;
     accountId: number;
+    vendorId: number;
     name: string;
     description: string;
     contractStatusId: number;
+    contractTypeId: number;
     termLengthMonths: number;
   }) => {
     return await updateItem(contractData.id, contractData as Contract);
@@ -135,9 +202,8 @@ export default function Contracts() {
 
   const renderContractSecondary = (contract: Contract) => {
     return (
-      <Stack spacing={0.5} sx={{ mt: 0.5 }} component='span'>
+      <Stack spacing={0.5} sx={{ mt: 0.5 }}>
         <Box
-          component='span'
           sx={{
             display: "flex",
             alignItems: "center",
@@ -146,11 +212,29 @@ export default function Contracts() {
           }}
         >
           <span style={{ fontSize: "0.875rem" }}>ID: {contract.id}</span>
+          {contract.vendor && (
+            <Chip
+              label={contract.vendor.name}
+              size='small'
+              color='secondary'
+              variant='outlined'
+            />
+          )}
+
           {contract.account && (
             <Chip
               label={contract.account.name}
               size='small'
               color='info'
+              variant='outlined'
+            />
+          )}
+
+          {contract.contractType && (
+            <Chip
+              label={contract.contractType.name}
+              size='small'
+              color='default'
               variant='outlined'
             />
           )}
@@ -165,7 +249,6 @@ export default function Contracts() {
         </Box>
         {contract.description && (
           <Box
-            component='span'
             sx={{
               fontSize: "0.875rem",
               color: "text.secondary",
@@ -177,7 +260,6 @@ export default function Contracts() {
           </Box>
         )}
         <Box
-          component='span'
           sx={{
             fontSize: "0.875rem",
             color: "text.secondary",
@@ -185,11 +267,11 @@ export default function Contracts() {
           }}
         >
           Term: {contract.termLengthMonths} months
-          {contract.startDate && ` • Start: ${formatDateShort(contract.startDate)}`}
+          {contract.startDate &&
+            ` • Start: ${formatDateShort(contract.startDate)}`}
           {contract.endDate && ` • End: ${formatDateShort(contract.endDate)}`}
         </Box>
         <Box
-          component='span'
           sx={{
             fontSize: "0.75rem",
             color: "text.secondary",
@@ -247,12 +329,19 @@ export default function Contracts() {
         searchQuery={searchQuery}
         selectedStatusIds={selectedStatusIds}
         selectedAccountIds={selectedAccountIds}
+        selectedVendorIds={selectedVendorIds}
+        selectedTypeIds={selectedTypeIds}
         availableStatuses={availableStatuses}
         availableAccounts={availableAccounts}
+        availableVendors={availableVendors}
+        availableTypes={availableTypes}
         onSearchChange={handleSearchChange}
         onStatusChange={handleStatusChange}
         onAccountChange={handleAccountChange}
+        onVendorChange={handleVendorChange}
+        onTypeChange={handleTypeChange}
         onClearFilters={clearFilters}
+        activeFilterCount={activeFilterCount}
       />
 
       <ContractSortControls
@@ -276,7 +365,9 @@ export default function Contracts() {
       <ContractCreateDialog
         open={createDialogOpen}
         accounts={accounts}
+        vendors={vendors}
         contractStatuses={contractStatuses}
+        contractTypes={contractTypes}
         onClose={() => setCreateDialogOpen(false)}
         onSave={handleCreate}
       />
@@ -285,7 +376,9 @@ export default function Contracts() {
         open={editDialogOpen}
         contract={editingContract}
         accounts={accounts}
+        vendors={vendors}
         contractStatuses={contractStatuses}
+        contractTypes={contractTypes}
         onClose={() => setEditDialogOpen(false)}
         onSave={handleUpdate}
       />
@@ -294,9 +387,9 @@ export default function Contracts() {
         open={deleteDialogOpen}
         title='Delete Contract'
         message={`Are you sure you want to delete "${getDeletingContractName()}"? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
-        confirmColor="error"
+        confirmText='Delete'
+        cancelText='Cancel'
+        confirmColor='error'
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
       />

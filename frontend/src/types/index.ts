@@ -150,10 +150,11 @@ export interface ContractType {
 export interface Contract {
   id: number;
   accountId: number;
+  vendorId: number;
   name: string;
   description?: string | null;
   contractStatusId: number;
-  contractTypeId?: number | null;
+  contractTypeId: number;  // Remove the ?
   executionDate?: string | null;
   startDate?: string | null;
   endDate?: string | null;
@@ -164,6 +165,28 @@ export interface Contract {
   createdDate: string;
   lastModifiedDate: string;
   account?: Account | null;
+  vendor?: Vendor | null;
   contractStatus?: ContractStatus | null;
   contractType?: ContractType | null;
+}
+
+export interface ContractItem {
+  id: number;
+  contractId: number;
+  pricingLevel: string; // "Item", "Category", or "Segment"
+  itemId?: number | null;
+  itemCategoryId?: number | null;
+  vendorSegmentId?: number | null;
+  discountPercentage?: number | null;
+  flatDiscountPrice?: number | null;
+  rebatePercentage?: number | null;
+  netRebatePrice?: number | null;
+  commitmentQuantity?: number | null;
+  commitmentDollars?: number | null;
+  createdDate: string;
+  lastModifiedDate: string;
+  contract?: Contract | null;
+  item?: Item | null;
+  itemCategory?: ItemCategory | null;
+  vendorSegment?: VendorSegment | null;
 }

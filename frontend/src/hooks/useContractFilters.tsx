@@ -5,6 +5,8 @@ export function useContractFilters(contracts: Contract[]) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatusIds, setSelectedStatusIds] = useState<number[]>([]);
   const [selectedAccountIds, setSelectedAccountIds] = useState<number[]>([]);
+  const [selectedVendorIds, setSelectedVendorIds] = useState<number[]>([]);
+  const [selectedTypeIds, setSelectedTypeIds] = useState<number[]>([]);
 
   const filteredContracts = useMemo(() => {
     return contracts.filter((contract) => {
@@ -22,9 +24,24 @@ export function useContractFilters(contracts: Contract[]) {
       const matchesAccount = selectedAccountIds.length === 0 || 
         selectedAccountIds.includes(contract.accountId);
 
-      return matchesSearch && matchesStatus && matchesAccount;
+      // Vendor filter
+      const matchesVendor = selectedVendorIds.length === 0 || 
+        selectedVendorIds.includes(contract.vendorId);
+
+      // Type filter
+      const matchesType = selectedTypeIds.length === 0 || 
+        (contract.contractTypeId && selectedTypeIds.includes(contract.contractTypeId));
+
+      return matchesSearch && matchesStatus && matchesAccount && matchesVendor && matchesType;
     });
-  }, [contracts, searchQuery, selectedStatusIds, selectedAccountIds]);
+  }, [contracts, searchQuery, selectedStatusIds, selectedAccountIds, selectedVendorIds, selectedTypeIds]);
+
+  const activeFilterCount = 
+    (searchQuery ? 1 : 0) + 
+    (selectedStatusIds.length > 0 ? 1 : 0) + 
+    (selectedAccountIds.length > 0 ? 1 : 0) +
+    (selectedVendorIds.length > 0 ? 1 : 0) +
+    (selectedTypeIds.length > 0 ? 1 : 0);
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
@@ -38,10 +55,20 @@ export function useContractFilters(contracts: Contract[]) {
     setSelectedAccountIds(accountIds);
   };
 
+  const handleVendorChange = (vendorIds: number[]) => {
+    setSelectedVendorIds(vendorIds);
+  };
+
+  const handleTypeChange = (typeIds: number[]) => {
+    setSelectedTypeIds(typeIds);
+  };
+
   const clearFilters = () => {
     setSearchQuery('');
     setSelectedStatusIds([]);
     setSelectedAccountIds([]);
+    setSelectedVendorIds([]);
+    setSelectedTypeIds([]);
   };
 
   return {
@@ -49,9 +76,14 @@ export function useContractFilters(contracts: Contract[]) {
     searchQuery,
     selectedStatusIds,
     selectedAccountIds,
+    selectedVendorIds,
+    selectedTypeIds,
+    activeFilterCount,
     handleSearchChange,
     handleStatusChange,
     handleAccountChange,
+    handleVendorChange,
+    handleTypeChange,
     clearFilters,
   };
 }

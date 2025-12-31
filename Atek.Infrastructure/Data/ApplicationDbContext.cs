@@ -25,7 +25,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<ContractStatus> ContractStatuses => Set<ContractStatus>();
     public DbSet<ContractType> ContractTypes => Set<ContractType>();
     public DbSet<Contract> Contracts => Set<Contract>();
-    
+    public DbSet<ContractItem> ContractItems => Set<ContractItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -137,13 +137,18 @@ modelBuilder.Entity<Contract>(entity =>
     entity.Property(e => e.LastModifiedDate).IsRequired();
     
     // Lease fields
-    entity.Property(e => e.InterestRate).HasPrecision(5, 4); // e.g., 12.5000%
-    entity.Property(e => e.APR).HasPrecision(5, 4); // e.g., 12.5000%
+    entity.Property(e => e.InterestRate).HasPrecision(5, 4);
+    entity.Property(e => e.APR).HasPrecision(5, 4);
     entity.Property(e => e.LeaseType).HasMaxLength(50);
 
     entity.HasOne(e => e.Account)
         .WithMany()
         .HasForeignKey(e => e.AccountId)
+        .OnDelete(DeleteBehavior.Restrict);
+
+    entity.HasOne(e => e.Vendor)
+        .WithMany()
+        .HasForeignKey(e => e.VendorId)
         .OnDelete(DeleteBehavior.Restrict);
 
     entity.HasOne(e => e.ContractStatus)
@@ -154,6 +159,44 @@ modelBuilder.Entity<Contract>(entity =>
     entity.HasOne(e => e.ContractType)
         .WithMany()
         .HasForeignKey(e => e.ContractTypeId)
+        .OnDelete(DeleteBehavior.Restrict);
+});
+
+// ContractItem configuration
+modelBuilder.Entity<ContractItem>(entity =>
+{
+    entity.HasKey(e => e.Id);
+    entity.Property(e => e.PricingLevel).IsRequired().HasMaxLength(50);
+    entity.Property(e => e.CreatedDate).IsRequired();
+    entity.Property(e => e.LastModifiedDate).IsRequired();
+    
+    // Pricing fields with precision
+    entity.Property(e => e.DiscountPercentage).HasPrecision(5, 4);
+    entity.Property(e => e.FlatDiscountPrice).HasPrecision(18, 2);
+    entity.Property(e => e.RebatePercentage).HasPrecision(5, 4);
+    entity.Property(e => e.NetRebatePrice).HasPrecision(18, 2);
+    entity.Property(e => e.CommitmentDollars).HasPrecision(18, 2);
+
+    entity.HasOne(e => e.Contract)
+        .WithMany()
+        .HasForeignKey(e => e.ContractId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+    entity.HasOne(e => e.Item)
+        .WithMany()
+        .HasForeignKey(e => e.ItemId)
+        .OnDelete(DeleteBehavior.Restrict)
+        .IsRequired(false);
+
+    entity.HasOne(e => e.ItemCategory)
+        .WithMany()
+        .HasForeignKey(e => e.ItemCategoryId)
+        .OnDelete(DeleteBehavior.Restrict)
+        .IsRequired(false);
+
+    entity.HasOne(e => e.VendorSegment)
+        .WithMany()
+        .HasForeignKey(e => e.VendorSegmentId)
         .OnDelete(DeleteBehavior.Restrict)
         .IsRequired(false);
 });

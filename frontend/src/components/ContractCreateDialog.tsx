@@ -14,18 +14,22 @@ import {
   MenuItem,
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
-import type { Account, ContractStatus } from '../types';
+import type { Account, Vendor, ContractStatus, ContractType } from '../types';
 
 interface ContractCreateDialogProps {
   open: boolean;
   accounts: Account[];
+  vendors: Vendor[];
   contractStatuses: ContractStatus[];
+  contractTypes: ContractType[];
   onClose: () => void;
   onSave: (contractData: {
     accountId: number;
+    vendorId: number;
     name: string;
     description: string;
     contractStatusId: number;
+    contractTypeId: number;
     termLengthMonths: number;
   }) => Promise<boolean>;
 }
@@ -33,11 +37,15 @@ interface ContractCreateDialogProps {
 export default function ContractCreateDialog({
   open,
   accounts,
+  vendors,
   contractStatuses,
+  contractTypes,
   onClose,
   onSave,
 }: ContractCreateDialogProps) {
   const [accountId, setAccountId] = useState<number | ''>('');
+  const [vendorId, setVendorId] = useState<number | ''>('');
+  const [contractTypeId, setContractTypeId] = useState<number | ''>('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [termLengthMonths, setTermLengthMonths] = useState('');
@@ -53,6 +61,8 @@ export default function ContractCreateDialog({
 
   const handleClose = () => {
     setAccountId('');
+    setVendorId('');
+    setContractTypeId('');
     setName('');
     setDescription('');
     setTermLengthMonths('');
@@ -69,9 +79,11 @@ export default function ContractCreateDialog({
     setSaving(true);
     const success = await onSave({
       accountId: accountId as number,
+      vendorId: vendorId as number,
       name,
       description,
       contractStatusId: draftStatusId,
+      contractTypeId: contractTypeId as number,
       termLengthMonths: parseInt(termLengthMonths),
     });
     setSaving(false);
@@ -95,6 +107,51 @@ export default function ContractCreateDialog({
       </DialogTitle>
       <DialogContent>
         <Stack spacing={3} sx={{ mt: 2 }}>
+          <TextField
+            autoFocus
+            label="Contract Name"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={saving}
+            required
+            helperText="Give this contract a descriptive name"
+          />
+
+          <FormControl fullWidth required>
+            <InputLabel>Contract Type</InputLabel>
+            <Select
+              value={contractTypeId}
+              label="Contract Type"
+              onChange={(e) => setContractTypeId(e.target.value as number)}
+              disabled={saving}
+            >
+              {contractTypes.map((type) => (
+                <MenuItem key={type.id} value={type.id}>
+                  {type.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl fullWidth required>
+            <InputLabel>Vendor</InputLabel>
+            <Select
+              value={vendorId}
+              label="Vendor"
+              onChange={(e) => setVendorId(e.target.value as number)}
+              disabled={saving}
+            >
+              {vendors.map((vendor) => (
+                <MenuItem key={vendor.id} value={vendor.id}>
+                  {vendor.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
           <FormControl fullWidth required>
             <InputLabel>Account</InputLabel>
             <Select
@@ -112,16 +169,16 @@ export default function ContractCreateDialog({
           </FormControl>
 
           <TextField
-            autoFocus
-            label="Contract Name"
-            type="text"
+            label="Term Length (Months)"
+            type="number"
             fullWidth
             variant="outlined"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={termLengthMonths}
+            onChange={(e) => setTermLengthMonths(e.target.value)}
             disabled={saving}
             required
-            helperText="Give this contract a descriptive name"
+            inputProps={{ min: 1, step: 1 }}
+            helperText="Contract duration in months"
           />
 
           <TextField
@@ -136,19 +193,6 @@ export default function ContractCreateDialog({
             disabled={saving}
             helperText="Optional notes about this contract"
           />
-
-          <TextField
-            label="Term Length (Months)"
-            type="number"
-            fullWidth
-            variant="outlined"
-            value={termLengthMonths}
-            onChange={(e) => setTermLengthMonths(e.target.value)}
-            disabled={saving}
-            required
-            inputProps={{ min: 1, step: 1 }}
-            helperText="Contract duration in months"
-          />
         </Stack>
       </DialogContent>
       <DialogActions>
@@ -158,7 +202,7 @@ export default function ContractCreateDialog({
         <Button 
           onClick={handleSave} 
           variant="contained" 
-          disabled={saving || !accountId || !name || !termLengthMonths || !draftStatusId}
+          disabled={saving || !accountId || !vendorId || !contractTypeId || !name || !termLengthMonths || !draftStatusId}
         >
           Create Draft
         </Button>

@@ -18,6 +18,7 @@ public class ContractRepository : IContractRepository
     {
         return await _context.Contracts
             .Include(c => c.Account)
+            .Include(c => c.Vendor)
             .Include(c => c.ContractStatus)
             .Include(c => c.ContractType)
             .AsNoTracking()
@@ -29,6 +30,7 @@ public class ContractRepository : IContractRepository
         return await _context.Contracts
             .Where(c => c.AccountId == accountId)
             .Include(c => c.Account)
+            .Include(c => c.Vendor)
             .Include(c => c.ContractStatus)
             .Include(c => c.ContractType)
             .AsNoTracking()
@@ -39,6 +41,7 @@ public class ContractRepository : IContractRepository
     {
         return await _context.Contracts
             .Include(c => c.Account)
+            .Include(c => c.Vendor)
             .Include(c => c.ContractStatus)
             .Include(c => c.ContractType)
             .AsNoTracking()
@@ -49,18 +52,20 @@ public class ContractRepository : IContractRepository
     {
         contract.CreatedDate = DateTime.UtcNow;
         contract.LastModifiedDate = DateTime.UtcNow;
-        contract.ExecutionDate = null; // Always null on creation
+        contract.ExecutionDate = null;
         contract.StartDate = null;
         contract.EndDate = null;
         contract.InterestRate = contract.InterestRate;
         contract.APR = contract.APR;
         contract.LeaseType = contract.LeaseType;
+        contract.VendorId = contract.VendorId;
         
         _context.Contracts.Add(contract);
         await _context.SaveChangesAsync();
         
         var created = await _context.Contracts
             .Include(c => c.Account)
+            .Include(c => c.Vendor)
             .Include(c => c.ContractStatus)
             .Include(c => c.ContractType)
             .AsNoTracking()
@@ -75,6 +80,7 @@ public class ContractRepository : IContractRepository
         if (existing != null)
         {
             existing.AccountId = contract.AccountId;
+            existing.VendorId = contract.VendorId;
             existing.Name = contract.Name;
             existing.Description = contract.Description;
             existing.ContractStatusId = contract.ContractStatusId;
@@ -103,6 +109,7 @@ public class ContractRepository : IContractRepository
         
         var updated = await _context.Contracts
             .Include(c => c.Account)
+            .Include(c => c.Vendor)
             .Include(c => c.ContractStatus)
             .Include(c => c.ContractType)
             .AsNoTracking()

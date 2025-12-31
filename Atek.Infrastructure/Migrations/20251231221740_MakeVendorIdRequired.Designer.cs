@@ -3,6 +3,7 @@ using System;
 using Atek.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Atek.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251231221740_MakeVendorIdRequired")]
+    partial class MakeVendorIdRequired
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.1");
@@ -162,7 +165,7 @@ namespace Atek.Infrastructure.Migrations
                     b.Property<int>("ContractStatusId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("ContractTypeId")
+                    b.Property<int?>("ContractTypeId")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("CreatedDate")
@@ -214,71 +217,6 @@ namespace Atek.Infrastructure.Migrations
                     b.HasIndex("VendorId");
 
                     b.ToTable("Contracts");
-                });
-
-            modelBuilder.Entity("Atek.Domain.Entities.ContractItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal?>("CommitmentDollars")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("CommitmentQuantity")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("ContractId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("DiscountPercentage")
-                        .HasPrecision(5, 4)
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("FlatDiscountPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("ItemCategoryId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("ItemId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("LastModifiedDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("NetRebatePrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("PricingLevel")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("RebatePercentage")
-                        .HasPrecision(5, 4)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("VendorSegmentId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ContractId");
-
-                    b.HasIndex("ItemCategoryId");
-
-                    b.HasIndex("ItemId");
-
-                    b.HasIndex("VendorSegmentId");
-
-                    b.ToTable("ContractItems");
                 });
 
             modelBuilder.Entity("Atek.Domain.Entities.ContractStatus", b =>
@@ -643,8 +581,7 @@ namespace Atek.Infrastructure.Migrations
                     b.HasOne("Atek.Domain.Entities.ContractType", "ContractType")
                         .WithMany()
                         .HasForeignKey("ContractTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Atek.Domain.Entities.Vendor", "Vendor")
                         .WithMany()
@@ -659,38 +596,6 @@ namespace Atek.Infrastructure.Migrations
                     b.Navigation("ContractType");
 
                     b.Navigation("Vendor");
-                });
-
-            modelBuilder.Entity("Atek.Domain.Entities.ContractItem", b =>
-                {
-                    b.HasOne("Atek.Domain.Entities.Contract", "Contract")
-                        .WithMany()
-                        .HasForeignKey("ContractId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Atek.Domain.Entities.ItemCategory", "ItemCategory")
-                        .WithMany()
-                        .HasForeignKey("ItemCategoryId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Atek.Domain.Entities.Item", "Item")
-                        .WithMany()
-                        .HasForeignKey("ItemId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("Atek.Domain.Entities.VendorSegment", "VendorSegment")
-                        .WithMany()
-                        .HasForeignKey("VendorSegmentId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Contract");
-
-                    b.Navigation("Item");
-
-                    b.Navigation("ItemCategory");
-
-                    b.Navigation("VendorSegment");
                 });
 
             modelBuilder.Entity("Atek.Domain.Entities.Item", b =>

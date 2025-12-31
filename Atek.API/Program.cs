@@ -37,6 +37,7 @@ builder.Services.AddScoped<IItemRepository, ItemRepository>();
 builder.Services.AddScoped<IContractStatusRepository, ContractStatusRepository>();
 builder.Services.AddScoped<IContractTypeRepository, ContractTypeRepository>();
 builder.Services.AddScoped<IContractRepository, ContractRepository>();
+builder.Services.AddScoped<IContractItemRepository, ContractItemRepository>();
 
 // CORS
 builder.Services.AddCors(options =>
