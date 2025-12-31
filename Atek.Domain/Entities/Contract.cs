@@ -12,6 +12,9 @@ public class Contract
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
     public int TermLengthMonths { get; set; }
+    public decimal? InterestRate { get; set; }
+    public decimal? APR { get; set; }
+    public string? LeaseType { get; set; }
     public DateTime CreatedDate { get; set; }
     public DateTime LastModifiedDate { get; set; }
 

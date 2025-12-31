@@ -3,6 +3,7 @@ using System;
 using Atek.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Atek.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251231195118_AddLeaseFieldsToContract")]
+    partial class AddLeaseFieldsToContract
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.1");
@@ -127,9 +130,6 @@ namespace Atek.Infrastructure.Migrations
 
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("NumberOfKiosks")
-                        .HasColumnType("INTEGER");
 
                     b.Property<string>("PostalCode")
                         .IsRequired()

@@ -126,7 +126,7 @@ modelBuilder.Entity<ContractType>(entity =>
     entity.HasIndex(e => e.Name).IsUnique();
 });
 
-       // Contract configuration
+// Contract configuration
 modelBuilder.Entity<Contract>(entity =>
 {
     entity.HasKey(e => e.Id);
@@ -135,6 +135,11 @@ modelBuilder.Entity<Contract>(entity =>
     entity.Property(e => e.TermLengthMonths).IsRequired();
     entity.Property(e => e.CreatedDate).IsRequired();
     entity.Property(e => e.LastModifiedDate).IsRequired();
+    
+    // Lease fields
+    entity.Property(e => e.InterestRate).HasPrecision(5, 4); // e.g., 12.5000%
+    entity.Property(e => e.APR).HasPrecision(5, 4); // e.g., 12.5000%
+    entity.Property(e => e.LeaseType).HasMaxLength(50);
 
     entity.HasOne(e => e.Account)
         .WithMany()
@@ -146,12 +151,11 @@ modelBuilder.Entity<Contract>(entity =>
         .HasForeignKey(e => e.ContractStatusId)
         .OnDelete(DeleteBehavior.Restrict);
     
-// In the Contract configuration section, update this:
-entity.HasOne(e => e.ContractType)
-    .WithMany()
-    .HasForeignKey(e => e.ContractTypeId)
-    .OnDelete(DeleteBehavior.Restrict)
-    .IsRequired(false);  // Add this line
+    entity.HasOne(e => e.ContractType)
+        .WithMany()
+        .HasForeignKey(e => e.ContractTypeId)
+        .OnDelete(DeleteBehavior.Restrict)
+        .IsRequired(false);
 });
     }
 }

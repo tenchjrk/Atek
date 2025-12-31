@@ -20,6 +20,9 @@ public class AccountAddress
     // Optional descriptive name
     public string? Name { get; set; }
     
+    // Kiosk information
+    public int NumberOfKiosks { get; set; }
+    
     // Audit fields
     public DateTime CreatedDate { get; set; }
     public DateTime LastModifiedDate { get; set; }

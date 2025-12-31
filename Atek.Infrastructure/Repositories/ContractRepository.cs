@@ -52,6 +52,9 @@ public class ContractRepository : IContractRepository
         contract.ExecutionDate = null; // Always null on creation
         contract.StartDate = null;
         contract.EndDate = null;
+        contract.InterestRate = contract.InterestRate;
+        contract.APR = contract.APR;
+        contract.LeaseType = contract.LeaseType;
         
         _context.Contracts.Add(contract);
         await _context.SaveChangesAsync();
@@ -77,6 +80,9 @@ public class ContractRepository : IContractRepository
             existing.ContractStatusId = contract.ContractStatusId;
             existing.ContractTypeId = contract.ContractTypeId;
             existing.TermLengthMonths = contract.TermLengthMonths;
+            existing.InterestRate = contract.InterestRate;
+            existing.APR = contract.APR;
+            existing.LeaseType = contract.LeaseType;
             existing.LastModifiedDate = DateTime.UtcNow;
             
             // Only update dates if execution date is being set

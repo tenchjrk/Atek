@@ -42,6 +42,7 @@ public class AccountAddressRepository : IAccountAddressRepository
     {
         accountAddress.CreatedDate = DateTime.UtcNow;
         accountAddress.LastModifiedDate = DateTime.UtcNow;
+        accountAddress.NumberOfKiosks = accountAddress.NumberOfKiosks;
         
         _context.AccountAddresses.Add(accountAddress);
         await _context.SaveChangesAsync();
@@ -69,6 +70,7 @@ public class AccountAddressRepository : IAccountAddressRepository
             existing.IsShipping = accountAddress.IsShipping;
             existing.IsBilling = accountAddress.IsBilling;
             existing.Name = accountAddress.Name;
+            existing.NumberOfKiosks = accountAddress.NumberOfKiosks;
             existing.LastModifiedDate = DateTime.UtcNow;
             
             await _context.SaveChangesAsync();

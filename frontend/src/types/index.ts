@@ -60,6 +60,7 @@ export interface AccountAddress {
   isShipping: boolean;
   isBilling: boolean;
   name?: string | null;
+  numberOfKiosks: number;
   createdDate: string;
   lastModifiedDate: string;
   account?: Account | null;
@@ -152,14 +153,17 @@ export interface Contract {
   name: string;
   description?: string | null;
   contractStatusId: number;
-  contractTypeId?: number | null;  // Add this line
+  contractTypeId?: number | null;
   executionDate?: string | null;
   startDate?: string | null;
   endDate?: string | null;
   termLengthMonths: number;
+  interestRate?: number | null;
+  apr?: number | null;
+  leaseType?: string | null;
   createdDate: string;
   lastModifiedDate: string;
   account?: Account | null;
   contractStatus?: ContractStatus | null;
-  contractType?: ContractType | null;  // Add this line
+  contractType?: ContractType | null;
 }
