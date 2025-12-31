@@ -226,6 +226,13 @@ export default function Contracts() {
             Manage Statuses
           </Button>
           <Button
+            variant='outlined'
+            onClick={() => navigate("/contract-types")}
+            sx={{ mt: 1 }}
+          >
+            Manage Types
+          </Button>
+          <Button
             variant='contained'
             startIcon={<AddIcon />}
             onClick={() => setCreateDialogOpen(true)}
@@ -295,4 +302,4 @@ export default function Contracts() {
       />
     </Box>
   );
-} 
+}

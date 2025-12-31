@@ -23,7 +23,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<ItemType> ItemTypes => Set<ItemType>();
     public DbSet<Item> Items => Set<Item>();
     public DbSet<ContractStatus> ContractStatuses => Set<ContractStatus>();
+    public DbSet<ContractType> ContractTypes => Set<ContractType>();
     public DbSet<Contract> Contracts => Set<Contract>();
+    
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -116,6 +118,14 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.Name).IsUnique();
         });
 
+        // ContractType configuration
+modelBuilder.Entity<ContractType>(entity =>
+{
+    entity.HasKey(e => e.Id);
+    entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+    entity.HasIndex(e => e.Name).IsUnique();
+});
+
        // Contract configuration
 modelBuilder.Entity<Contract>(entity =>
 {
@@ -135,6 +145,13 @@ modelBuilder.Entity<Contract>(entity =>
         .WithMany()
         .HasForeignKey(e => e.ContractStatusId)
         .OnDelete(DeleteBehavior.Restrict);
+    
+// In the Contract configuration section, update this:
+entity.HasOne(e => e.ContractType)
+    .WithMany()
+    .HasForeignKey(e => e.ContractTypeId)
+    .OnDelete(DeleteBehavior.Restrict)
+    .IsRequired(false);  // Add this line
 });
     }
 }

@@ -141,12 +141,18 @@ export interface ContractStatus {
   name: string;
 }
 
+export interface ContractType {
+  id: number;
+  name: string;
+}
+
 export interface Contract {
   id: number;
   accountId: number;
   name: string;
   description?: string | null;
   contractStatusId: number;
+  contractTypeId?: number | null;  // Add this line
   executionDate?: string | null;
   startDate?: string | null;
   endDate?: string | null;
@@ -155,4 +161,5 @@ export interface Contract {
   lastModifiedDate: string;
   account?: Account | null;
   contractStatus?: ContractStatus | null;
+  contractType?: ContractType | null;  // Add this line
 }

@@ -19,6 +19,7 @@ public class ContractRepository : IContractRepository
         return await _context.Contracts
             .Include(c => c.Account)
             .Include(c => c.ContractStatus)
+            .Include(c => c.ContractType)
             .AsNoTracking()
             .ToListAsync();
     }
@@ -29,6 +30,7 @@ public class ContractRepository : IContractRepository
             .Where(c => c.AccountId == accountId)
             .Include(c => c.Account)
             .Include(c => c.ContractStatus)
+            .Include(c => c.ContractType)
             .AsNoTracking()
             .ToListAsync();
     }
@@ -38,6 +40,7 @@ public class ContractRepository : IContractRepository
         return await _context.Contracts
             .Include(c => c.Account)
             .Include(c => c.ContractStatus)
+            .Include(c => c.ContractType)
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == id);
     }
@@ -56,6 +59,7 @@ public class ContractRepository : IContractRepository
         var created = await _context.Contracts
             .Include(c => c.Account)
             .Include(c => c.ContractStatus)
+            .Include(c => c.ContractType)
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == contract.Id);
         
@@ -71,6 +75,7 @@ public class ContractRepository : IContractRepository
             existing.Name = contract.Name;
             existing.Description = contract.Description;
             existing.ContractStatusId = contract.ContractStatusId;
+            existing.ContractTypeId = contract.ContractTypeId;
             existing.TermLengthMonths = contract.TermLengthMonths;
             existing.LastModifiedDate = DateTime.UtcNow;
             
@@ -93,6 +98,7 @@ public class ContractRepository : IContractRepository
         var updated = await _context.Contracts
             .Include(c => c.Account)
             .Include(c => c.ContractStatus)
+            .Include(c => c.ContractType)
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == contract.Id);
         

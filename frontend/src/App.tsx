@@ -17,6 +17,7 @@ import UnitOfMeasures from './pages/UnitOfMeasures';
 import ItemTypes from './pages/ItemTypes';
 import AllItems from './pages/AllItems';
 import ContractStatuses from './pages/ContractStatuses';
+import ContractTypes from './pages/ContractTypes';
 import Contracts from './pages/Contracts';
 
 const theme = createTheme({
@@ -53,6 +54,7 @@ function App() {
             <Route path="unit-of-measures" element={<UnitOfMeasures />} />
             <Route path="item-types" element={<ItemTypes />} />
             <Route path="contract-statuses" element={<ContractStatuses />} />
+            <Route path="contract-types" element={<ContractTypes />} />
           </Route>
         </Routes>
       </BrowserRouter>

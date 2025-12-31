@@ -7,6 +7,7 @@ public class Contract
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public int ContractStatusId { get; set; }
+    public int? ContractTypeId { get; set; }
     public DateTime? ExecutionDate { get; set; }
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
@@ -17,4 +18,5 @@ public class Contract
     // Navigation properties
     public Account? Account { get; set; }
     public ContractStatus? ContractStatus { get; set; }
+    public ContractType? ContractType { get; set; }
 }
