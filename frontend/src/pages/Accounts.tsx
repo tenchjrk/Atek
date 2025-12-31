@@ -150,9 +150,8 @@ export default function Accounts() {
     const hasAddress = addressLine1 || addressLine2 || cityStateZip || country;
 
     return (
-      <Stack spacing={0.5} sx={{ mt: 0.5 }} component='span'>
+      <Stack spacing={0.5} sx={{ mt: 0.5 }}>
         <Box
-          component='span'
           sx={{
             display: "flex",
             alignItems: "center",
@@ -188,7 +187,6 @@ export default function Accounts() {
         </Box>
         {hasAddress && (
           <Box
-            component='span'
             sx={{
               fontSize: "0.875rem",
               color: "text.secondary",
@@ -204,7 +202,6 @@ export default function Accounts() {
           </Box>
         )}
         <Box
-          component='span'
           sx={{
             fontSize: "0.75rem",
             color: "text.secondary",

@@ -100,6 +100,11 @@ export default function EntityList<
               primary={getDisplayName(item)}
               secondary={renderSecondary ? renderSecondary(item) : undefined}
               sx={{ flex: 1, mb: { xs: 1, sm: 0 } }}
+              slotProps={{
+  secondary: {
+    component: 'div'
+  }
+}}
             />
             <Box
               sx={{
