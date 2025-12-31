@@ -1,17 +1,21 @@
 import { Box, FormControl, InputLabel, Select, MenuItem, ToggleButtonGroup, ToggleButton } from '@mui/material';
 import { ArrowUpward, ArrowDownward } from '@mui/icons-material';
 import type { SelectChangeEvent } from '@mui/material';
-import type { ContractSortField, SortOrder } from '../hooks/useContractSort';
+import type { SimplerSortField, SortOrder } from '../hooks/useSortSimpler';
 
-interface ContractSortControlsProps {
-  sortField: ContractSortField;
+interface SortControlsSimplerProps {
+  sortField: SimplerSortField;
   sortOrder: SortOrder;
-  onSortChange: (field: ContractSortField) => void;
+  onSortChange: (field: SimplerSortField) => void;
 }
 
-export default function ContractSortControls({ sortField, sortOrder, onSortChange }: ContractSortControlsProps) {
+export default function SortControlsSimpler({ 
+  sortField, 
+  sortOrder, 
+  onSortChange,
+}: SortControlsSimplerProps) {
   const handleFieldChange = (event: SelectChangeEvent) => {
-    onSortChange(event.target.value as ContractSortField);
+    onSortChange(event.target.value as SimplerSortField);
   };
 
   const handleOrderToggle = () => {
@@ -21,9 +25,6 @@ export default function ContractSortControls({ sortField, sortOrder, onSortChang
   const getFieldLabel = () => {
     if (sortField === 'id') return 'ID';
     if (sortField === 'name') return 'Name';
-    if (sortField === 'status') return 'Status';
-    if (sortField === 'termLength') return 'Term Length';
-    if (sortField === 'lastModifiedDate') return 'Last Modified';
     return '';
   };
 
@@ -36,11 +37,8 @@ export default function ContractSortControls({ sortField, sortOrder, onSortChang
           label="Sort by"
           onChange={handleFieldChange}
         >
-          <MenuItem value="lastModifiedDate">Last Modified</MenuItem>
-          <MenuItem value="name">Name</MenuItem>
-          <MenuItem value="status">Status</MenuItem>
-          <MenuItem value="termLength">Term Length</MenuItem>
           <MenuItem value="id">ID</MenuItem>
+          <MenuItem value="name">Name</MenuItem>
         </Select>
       </FormControl>
 

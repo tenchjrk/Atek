@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import type { Contract } from '../types';
 
-export type ContractSortField = 'id' | 'name' | 'status' | 'lastModifiedDate';
+export type ContractSortField = 'id' | 'name' | 'status' | 'termLength' | 'lastModifiedDate';
 export type SortOrder = 'asc' | 'desc';
 
 export function useContractSort(contracts: Contract[]) {
@@ -22,6 +22,9 @@ export function useContractSort(contracts: Contract[]) {
         case 'status':
           comparison = (a.contractStatus?.name || '').localeCompare(b.contractStatus?.name || '');
           break;
+        case 'termLength':
+          comparison = a.termLengthMonths - b.termLengthMonths;
+          break;
         case 'lastModifiedDate':
           comparison = new Date(a.lastModifiedDate).getTime() - new Date(b.lastModifiedDate).getTime();
           break;
@@ -38,7 +41,7 @@ export function useContractSort(contracts: Contract[]) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
-      setSortOrder(field === 'id' || field === 'lastModifiedDate' ? 'desc' : 'asc');
+      setSortOrder(field === 'id' || field === 'lastModifiedDate' || field === 'termLength' ? 'desc' : 'asc');
     }
   };
 

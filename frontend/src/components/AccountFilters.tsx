@@ -72,11 +72,11 @@ export default function AccountFilters({
         {/* Filter fields */}
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
           <FormControl fullWidth size="small">
-            <InputLabel>Filter by Account Type</InputLabel>
+            <InputLabel>Account Type</InputLabel>
             <Select
               multiple
               value={accountTypeFilter}
-              label="Filter by Account Type"
+              label="Account Type"
               onChange={(e) => handleAccountTypeChange(e.target.value as number[])}
               renderValue={() => getFilterLabel(accountTypeFilter.length, accountTypes.length)}
             >
@@ -95,28 +95,28 @@ export default function AccountFilters({
 
           <TextField
             fullWidth
-            label="Filter by City"
+            label="City"
             value={cityFilter}
             onChange={(e) => onCityFilterChange(e.target.value)}
             size="small"
           />
           <TextField
             fullWidth
-            label="Filter by State"
+            label="State"
             value={stateFilter}
             onChange={(e) => onStateFilterChange(e.target.value)}
             size="small"
           />
           <TextField
             fullWidth
-            label="Filter by Postal Code"
+            label="Postal Code"
             value={postalCodeFilter}
             onChange={(e) => onPostalCodeFilterChange(e.target.value)}
             size="small"
           />
           <TextField
             fullWidth
-            label="Filter by Country"
+            label="Country"
             value={countryFilter}
             onChange={(e) => onCountryFilterChange(e.target.value)}
             size="small"

@@ -14,6 +14,7 @@ export function useItemFilters(items: Item[]) {
       const search = searchTerm.toLowerCase();
       const matchesSearch =
         searchTerm === "" ||
+        item.id.toString().includes(searchTerm) ||
         item.name.toLowerCase().includes(search) ||
         item.shortName?.toLowerCase().includes(search) ||
         item.description?.toLowerCase().includes(search);
@@ -61,6 +62,7 @@ export function useItemFilters(items: Item[]) {
   ]);
 
   const activeFilterCount = [
+    searchTerm ? 1 : 0,
     vendorFilter.length > 0 ? 1 : 0,
     segmentFilter.length > 0 ? 1 : 0,
     categoryFilter.length > 0 ? 1 : 0,
@@ -69,6 +71,7 @@ export function useItemFilters(items: Item[]) {
   ].reduce((a, b) => a + b, 0);
 
   const clearFilters = () => {
+    setSearchTerm("");
     setVendorFilter([]);
     setSegmentFilter([]);
     setCategoryFilter([]);

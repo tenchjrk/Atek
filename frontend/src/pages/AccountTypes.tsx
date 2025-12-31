@@ -7,13 +7,13 @@ import {
 import { useNavigate } from "react-router-dom";
 import { accountTypeApi } from "../services/api";
 import { useCrud } from "../hooks/useCrud";
-import { useSortSimple } from "../hooks/useSortSimple";
+import { useSortSimpler } from "../hooks/useSortSimpler";
 import type { AccountType } from "../types";
 import PageHeader from "../components/PageHeader";
 import EntityList from "../components/EntityList";
 import AccountTypeCreateDialog from "../components/AccountTypeCreateDialog";
 import AccountTypeEditDialog from "../components/AccountTypeEditDialog";
-import SortControlsSimple from "../components/SortControlsSimple";
+import SortControlsSimpler from "../components/SortControlsSimpler";
 import ConfirmDialog from "../components/ConfirmDialog";
 
 export default function AccountTypes() {
@@ -28,7 +28,7 @@ export default function AccountTypes() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Apply sorting
-  const { sortedItems, sortField, sortOrder, handleSortChange } = useSortSimple(items);
+  const { sortedItems, sortField, sortOrder, handleSortChange } = useSortSimpler(items);
 
   const handleCreate = async (name: string) => {
     return await createItem({ name });
@@ -99,12 +99,10 @@ export default function AccountTypes() {
         </Button>
       </Box>
 
-      <SortControlsSimple
+      <SortControlsSimpler
         sortField={sortField}
         sortOrder={sortOrder}
         onSortChange={handleSortChange}
-        showNameField={true}
-        showTypeField={false}
       />
 
       <EntityList

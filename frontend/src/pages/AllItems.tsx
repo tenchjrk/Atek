@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Box, Chip, Autocomplete, TextField, Button, } from '@mui/material';
+import { Box, Chip, Button } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -32,7 +32,6 @@ export default function AllItems() {
   const [unitOfMeasures, setUnitOfMeasures] = useState<UnitOfMeasure[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedItems, setSelectedItems] = useState<Item[]>([]);
   const [quickAddDialogOpen, setQuickAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -40,6 +39,8 @@ export default function AllItems() {
   const [deletingItemId, setDeletingItemId] = useState<number | null>(null);
 
   const {
+    searchTerm,
+    setSearchTerm,
     vendorFilter,
     setVendorFilter,
     segmentFilter,
@@ -55,16 +56,8 @@ export default function AllItems() {
     clearFilters,
   } = useItemFilters(items);
 
-  // Filter by selected items OR search term
-  const searchFilteredItems = filteredItems.filter(item => {
-    if (selectedItems.length > 0) {
-      return selectedItems.some(selected => selected.id === item.id);
-    }
-    return true;
-  });
-
   // Apply sorting to filtered items
-  const { sortedItems, sortField, sortOrder, handleSortChange } = useSort(searchFilteredItems);
+  const { sortedItems, sortField, sortOrder, handleSortChange } = useSort(filteredItems);
 
   const fetchData = async () => {
     try {
@@ -210,12 +203,7 @@ export default function AllItems() {
     );
   };
 
-  const totalActiveFilters = activeFilterCount + (selectedItems.length > 0 ? 1 : 0);
-
-  const handleClearAllFilters = () => {
-    clearFilters();
-    setSelectedItems([]);
-  };
+  const totalActiveFilters = activeFilterCount + (searchTerm ? 1 : 0);
 
   return (
     <Box>
@@ -250,52 +238,9 @@ export default function AllItems() {
         </Box>
       </Box>
 
-      <Box sx={{ mb: 2 }}>
-        <Autocomplete
-          multiple
-          options={items}
-          value={selectedItems}
-          onChange={(_, newValue) => setSelectedItems(newValue)}
-          getOptionLabel={(option) => option.name}
-          filterOptions={(options, { inputValue }) => {
-            const searchLower = inputValue.toLowerCase();
-            return options.filter(option => 
-              option.name.toLowerCase().includes(searchLower) ||
-              option.shortName?.toLowerCase().includes(searchLower) ||
-              option.description?.toLowerCase().includes(searchLower)
-            );
-          }}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              placeholder={selectedItems.length === 0 ? 'Search items by name, short name, or description...' : ''}
-            />
-          )}
-          renderTags={(value, getTagProps) =>
-            value.map((option, index) => (
-              <Chip
-                label={option.name}
-                {...getTagProps({ index })}
-                size="small"
-              />
-            ))
-          }
-          renderOption={(props, option) => (
-            <li {...props}>
-              <Box>
-                <Box sx={{ fontWeight: 500 }}>{option.name}</Box>
-                {option.shortName && (
-                  <Box sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>
-                    {option.shortName}
-                  </Box>
-                )}
-              </Box>
-            </li>
-          )}
-        />
-      </Box>
-
       <ItemFilters
+        searchQuery={searchTerm}
+        onSearchChange={setSearchTerm}
         vendorFilter={vendorFilter}
         onVendorFilterChange={setVendorFilter}
         segmentFilter={segmentFilter}
@@ -311,8 +256,8 @@ export default function AllItems() {
         categories={categories}
         itemTypes={itemTypes}
         unitOfMeasures={unitOfMeasures}
-        onClearFilters={handleClearAllFilters}
-        activeFilterCount={totalActiveFilters}
+        onClearFilters={clearFilters}
+        activeFilterCount={activeFilterCount}
       />
 
       <SortControls

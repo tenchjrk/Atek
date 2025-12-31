@@ -7,13 +7,13 @@ import {
 import { useNavigate } from "react-router-dom";
 import { contractStatusApi } from "../services/api";
 import { useCrud } from "../hooks/useCrud";
-import { useSortSimple } from "../hooks/useSortSimple";
+import { useSortSimpler } from "../hooks/useSortSimpler";
 import type { ContractStatus } from "../types";
 import PageHeader from "../components/PageHeader";
 import EntityList from "../components/EntityList";
 import ContractStatusCreateDialog from "../components/ContractStatusCreateDialog";
 import ContractStatusEditDialog from "../components/ContractStatusEditDialog";
-import SortControlsSimple from "../components/SortControlsSimple";
+import SortControlsSimpler from "../components/SortControlsSimpler";
 import ConfirmDialog from "../components/ConfirmDialog";
 
 export default function ContractStatuses() {
@@ -28,7 +28,7 @@ export default function ContractStatuses() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Apply sorting
-  const { sortedItems, sortField, sortOrder, handleSortChange } = useSortSimple(items);
+  const { sortedItems, sortField, sortOrder, handleSortChange } = useSortSimpler(items);
 
   const handleCreate = async (name: string) => {
     return await createItem({ name });
@@ -99,12 +99,10 @@ export default function ContractStatuses() {
         </Button>
       </Box>
 
-      <SortControlsSimple
+      <SortControlsSimpler
         sortField={sortField}
         sortOrder={sortOrder}
         onSortChange={handleSortChange}
-        showNameField={true}
-        showTypeField={false}
       />
 
       <EntityList

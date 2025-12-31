@@ -1,14 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Box, Button, Chip, Stack } from "@mui/material";
 import { Add as AddIcon } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { contractApi, accountApi, contractStatusApi } from "../services/api";
 import { useCrud } from "../hooks/useCrud";
 import { useContractSort } from "../hooks/useContractSort";
+import { useContractFilters } from "../hooks/useContractFilters";
 import type { Contract, Account, ContractStatus } from "../types";
 import PageHeader from "../components/PageHeader";
 import EntityList from "../components/EntityList";
 import ContractSortControls from "../components/ContractSortControls";
+import ContractFilters from "../components/ContractFilters";
 import ContractCreateDialog from "../components/ContractCreateDialog";
 import ContractEditDialog from "../components/ContractEditDialog";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -26,8 +28,42 @@ export default function Contracts() {
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
   const [deletingContractId, setDeletingContractId] = useState<number | null>(null);
 
-  // Apply sorting
-  const { sortedItems, sortField, sortOrder, handleSortChange } = useContractSort(items);
+  // Apply filtering
+  const { 
+    filteredContracts, 
+    searchQuery, 
+    selectedStatusIds, 
+    selectedAccountIds,
+    handleSearchChange, 
+    handleStatusChange, 
+    handleAccountChange,
+    clearFilters 
+  } = useContractFilters(items);
+
+  // Apply sorting to filtered results
+  const { sortedItems, sortField, sortOrder, handleSortChange } = useContractSort(filteredContracts);
+
+  // Get available statuses for the filter
+  const availableStatuses = useMemo(() => {
+    const statusMap = new Map<number, ContractStatus>();
+    items.forEach(contract => {
+      if (contract.contractStatus) {
+        statusMap.set(contract.contractStatus.id, contract.contractStatus);
+      }
+    });
+    return Array.from(statusMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [items]);
+
+  // Get available accounts for the filter
+  const availableAccounts = useMemo(() => {
+    const accountMap = new Map<number, Account>();
+    items.forEach(contract => {
+      if (contract.account) {
+        accountMap.set(contract.account.id, contract.account);
+      }
+    });
+    return Array.from(accountMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [items]);
 
   // Fetch accounts and contract statuses
   useEffect(() => {
@@ -200,6 +236,18 @@ export default function Contracts() {
         </Box>
       </Box>
 
+      <ContractFilters
+        searchQuery={searchQuery}
+        selectedStatusIds={selectedStatusIds}
+        selectedAccountIds={selectedAccountIds}
+        availableStatuses={availableStatuses}
+        availableAccounts={availableAccounts}
+        onSearchChange={handleSearchChange}
+        onStatusChange={handleStatusChange}
+        onAccountChange={handleAccountChange}
+        onClearFilters={clearFilters}
+      />
+
       <ContractSortControls
         sortField={sortField}
         sortOrder={sortOrder}
@@ -247,4 +295,4 @@ export default function Contracts() {
       />
     </Box>
   );
-}
+} 
