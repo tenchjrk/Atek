@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Atek.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251231165616_AddContractType")]
+    [Migration("20251231180154_AddContractType")]
     partial class AddContractType
     {
         /// <inheritdoc />

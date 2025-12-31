@@ -55,9 +55,9 @@ export const itemApi = {
 };
 
 export const contractStatusApi = createCrudApi<ContractStatus>('contractStatus');
-export const contractTypeApi = createCrudApi<ContractType>('contractTypes');
+export const contractTypeApi = createCrudApi<ContractType>('contractType');
 
 export const contractApi = {
-  ...createCrudApi<Contract>('contracts'),
+  ...createCrudApi<Contract>('contract'),
   getByAccountId: (accountId: number) => api.get<Contract[]>(`/contracts/account/${accountId}`),
 };
