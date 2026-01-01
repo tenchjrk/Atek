@@ -19,6 +19,7 @@ import AllItems from './pages/AllItems';
 import ContractStatuses from './pages/ContractStatuses';
 import ContractTypes from './pages/ContractTypes';
 import Contracts from './pages/Contracts';
+import ContractItems from './pages/ContractItems';
 
 const theme = createTheme({
   palette: {
@@ -40,6 +41,7 @@ function App() {
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Home />} />
             <Route path="contracts" element={<Contracts />} />
+            <Route path="contracts/:contractId/items" element={<ContractItems />} />
             <Route path="accounts" element={<Accounts />} />
             <Route path="accounts/:accountId/addresses" element={<AccountAddresses />} />
             <Route path="vendors" element={<Vendors />} />

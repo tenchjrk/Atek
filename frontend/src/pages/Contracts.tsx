@@ -360,6 +360,15 @@ export default function Contracts() {
         emptyMessage='No contracts yet. Create your first contract above.'
         renderSecondary={renderContractSecondary}
         getItemName={(item) => item.name}
+        customActions={(contract) => (
+          <Button
+            size='small'
+            variant='outlined'
+            onClick={() => navigate(`/contracts/${contract.id}/items`)}
+          >
+            Manage Items
+          </Button>
+        )}
       />
 
       <ContractCreateDialog
