@@ -57,6 +57,28 @@ export default function CategoryAccordion({
 }: CategoryAccordionProps) {
   const [expanded, setExpanded] = useState(false);
   const [hideDeselected, setHideDeselected] = useState(false);
+  const [showWarning, setShowWarning] = useState<Record<number, boolean>>({});
+
+  // Get margin color based on value
+  const getMarginColor = (margin: number) => {
+    if (margin >= 80) return 'success.main'; // Green
+    if (margin >= 70) return 'warning.main'; // Yellow
+    return 'error.main'; // Red
+  };
+
+  // Toggle all items of a specific type in this category
+  const toggleItemType = (itemTypeId: number) => {
+    const itemsOfType = items.filter(item => item.itemTypeId === itemTypeId);
+    const allOfTypeSelected = itemsOfType.every(item => categoryState.items[item.id]?.selected);
+
+    // Toggle all items of this type
+    itemsOfType.forEach(item => {
+      const currentlySelected = categoryState.items[item.id]?.selected;
+      if (currentlySelected === allOfTypeSelected) {
+        onToggleItem(item.id);
+      }
+    });
+  };
 
   // Filter items based on search and selection
   const filteredItems = items.filter(item => {
@@ -139,12 +161,24 @@ export default function CategoryAccordion({
   return (
     <Accordion
       expanded={expanded}
-      onChange={() => setExpanded(!expanded)}
+      onChange={() => {}}
       sx={{ ml: 4 }}
     >
       <AccordionSummary
-        expandIcon={<ExpandMoreIcon />}
-        sx={{ '& .MuiAccordionSummary-content': { alignItems: 'center', gap: 2, flexWrap: 'wrap' } }}
+        expandIcon={<ExpandMoreIcon sx={{ fontSize: 32 }} />}
+        onClick={(e) => {
+          const target = e.target as HTMLElement;
+          if (target.closest('.MuiAccordionSummary-expandIconWrapper')) {
+            setExpanded(!expanded);
+          }
+        }}
+        sx={{ 
+          '& .MuiAccordionSummary-content': { alignItems: 'center', gap: 2, flexWrap: 'wrap' },
+          '& .MuiAccordionSummary-expandIconWrapper': { 
+            cursor: 'pointer',
+          },
+          cursor: 'default',
+        }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 300 }}>
           <Checkbox
@@ -165,7 +199,7 @@ export default function CategoryAccordion({
               <Typography 
                 variant="caption"
                 sx={{ 
-                  color: totalMargin >= 0 ? 'success.main' : 'error.main',
+                  color: getMarginColor(totalMargin),
                   fontWeight: 'medium'
                 }}
               >
@@ -180,21 +214,38 @@ export default function CategoryAccordion({
           {itemTypes.map(itemType => {
             const typeName = itemType.shortName || itemType.name;
             const typeMargin = calculateTotalMarginByType(itemType.id);
-            const hasSelectedItems = items.some(item => 
-              item.itemTypeId === itemType.id && categoryState.items[item.id]?.selected
-            );
+            
+            const itemsOfType = items.filter(item => item.itemTypeId === itemType.id);
+            const selectedOfType = itemsOfType.filter(item => categoryState.items[item.id]?.selected).length;
+            
+            const hasItems = itemsOfType.length > 0;
+            const allOfTypeSelected = hasItems && selectedOfType === itemsOfType.length;
+            const someOfTypeSelected = selectedOfType > 0 && selectedOfType < itemsOfType.length;
 
             return (
               <Box key={itemType.id} sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant="caption" fontWeight="medium" sx={{ minWidth: 80 }}>
+                  {hasItems && (
+                    <Checkbox
+                      size="small"
+                      checked={allOfTypeSelected}
+                      indeterminate={someOfTypeSelected}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        toggleItemType(itemType.id);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      sx={{ p: 0 }}
+                    />
+                  )}
+                  <Typography variant="caption" fontWeight="medium" sx={{ minWidth: 60 }}>
                     {typeName}
                   </Typography>
-                  {hasSelectedItems && (
+                  {selectedOfType > 0 && (
                     <Typography 
                       variant="caption"
                       sx={{ 
-                        color: typeMargin >= 0 ? 'success.main' : 'error.main',
+                        color: getMarginColor(typeMargin),
                         fontWeight: 'medium',
                         minWidth: 60
                       }}
@@ -217,6 +268,13 @@ export default function CategoryAccordion({
                         categoryState.pricingByType[itemType.id]?.rebatePercentage || ''
                       );
                     }}
+                    onFocus={(e) => {
+                      e.stopPropagation();
+                      setShowWarning({ ...showWarning, [itemType.id]: true });
+                    }}
+                    onBlur={() => {
+                      setShowWarning({ ...showWarning, [itemType.id]: false });
+                    }}
                     onClick={(e) => e.stopPropagation()}
                     inputProps={{ min: 0, max: 100, step: 0.01 }}
                     sx={{ width: 80 }}
@@ -234,11 +292,30 @@ export default function CategoryAccordion({
                         e.target.value
                       );
                     }}
+                    onFocus={(e) => {
+                      e.stopPropagation();
+                      setShowWarning({ ...showWarning, [itemType.id]: true });
+                    }}
+                    onBlur={() => {
+                      setShowWarning({ ...showWarning, [itemType.id]: false });
+                    }}
                     onClick={(e) => e.stopPropagation()}
                     inputProps={{ min: 0, max: 100, step: 0.01 }}
                     sx={{ width: 80 }}
                   />
                 </Box>
+                {showWarning[itemType.id] && (
+                  <Typography 
+                    variant="caption" 
+                    sx={{ 
+                      color: 'warning.main',
+                      fontStyle: 'italic',
+                      fontSize: '0.7rem'
+                    }}
+                  >
+                    ⚠️ This will overwrite all related items
+                  </Typography>
+                )}
               </Box>
             );
           })}

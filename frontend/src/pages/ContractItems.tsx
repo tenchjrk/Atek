@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
-import { Box, Button, Chip, Alert } from "@mui/material";
+import { Box, Button, Chip, Alert, CircularProgress, Typography } from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
   Save as SaveIcon,
+  Check as CheckIcon,
+  Error as ErrorIcon,
+  Close as CloseIcon,
 } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -36,6 +39,9 @@ export default function ContractItems() {
   const [itemTypes, setItemTypes] = useState<ItemType[]>([]);
   const [existingContractItems, setExistingContractItems] = useState<ContractItem[]>([]);
   const [saving, setSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [showSavedIndicator, setShowSavedIndicator] = useState(false);
+  const [resetTrigger, setResetTrigger] = useState(0);
 
   // Fetch contract details and related data
   useEffect(() => {
@@ -94,7 +100,7 @@ export default function ContractItems() {
     fetchData();
   }, [contractId]);
 
-  // Use the bulk edit hook
+  // Use the bulk edit hook - resetTrigger forces reinitialization
   const {
     state,
     hasChanges,
@@ -111,11 +117,20 @@ export default function ContractItems() {
     itemCategories,
     items,
     existingContractItems,
-    itemTypes
+    itemTypes,
+    resetTrigger
   );
+
+  // Hide saved indicator when changes are made
+  useEffect(() => {
+    if (hasChanges) {
+      setShowSavedIndicator(false);
+    }
+  }, [hasChanges]);
 
   const handleSave = async () => {
     setSaving(true);
+    setSaveStatus('idle');
     try {
       const { toCreate, toUpdate, toDelete } = getChanges();
 
@@ -144,13 +159,70 @@ export default function ContractItems() {
       );
       setExistingContractItems(contractItemsResponse.data);
 
-      alert("Changes saved successfully!");
+      setSaveStatus('success');
+      setShowSavedIndicator(true);
+      
+      // Reset success status after 3 seconds
+      setTimeout(() => {
+        setSaveStatus('idle');
+      }, 3000);
     } catch (err) {
       console.error("Error saving changes:", err);
-      alert("Error saving changes. Please try again.");
+      setSaveStatus('error');
+      
+      // Reset error status after 5 seconds
+      setTimeout(() => {
+        setSaveStatus('idle');
+      }, 5000);
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleDiscardChanges = () => {
+    // Increment resetTrigger to force hook reinitialization
+    setResetTrigger(prev => prev + 1);
+  };
+
+  // Determine button content based on state
+  const getButtonContent = () => {
+    if (saving) {
+      return (
+        <>
+          <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+          Saving...
+        </>
+      );
+    }
+    if (saveStatus === 'success') {
+      return (
+        <>
+          <CheckIcon sx={{ mr: 1 }} />
+          Saved
+        </>
+      );
+    }
+    if (saveStatus === 'error') {
+      return (
+        <>
+          <ErrorIcon sx={{ mr: 1 }} />
+          Error Saving
+        </>
+      );
+    }
+    return (
+      <>
+        <SaveIcon sx={{ mr: 1 }} />
+        Save All Changes
+      </>
+    );
+  };
+
+  // Determine button color
+  const getButtonColor = () => {
+    if (saveStatus === 'success') return 'success';
+    if (saveStatus === 'error') return 'error';
+    return 'primary';
   };
 
   if (contractLoading) {
@@ -192,8 +264,8 @@ export default function ContractItems() {
             Back to Contracts
           </Button>
           <PageHeader
-            title={`Contract Items: ${contract.name}`}
-            subtitle={`Select items and set pricing for this contract`}
+            title={`Item Pricing for Contract ${contract.id}: ${contract.name}`}
+            subtitle={contract.description || undefined}
           />
           <Box sx={{ mt: 1 }}>
             <Chip
@@ -209,18 +281,46 @@ export default function ContractItems() {
             <Chip
               label={contract.contractStatus?.name || "Unknown Status"}
               color="primary"
+              sx={{ mr: 1 }}
             />
+            {contract.termLengthMonths && (
+              <Chip
+                label={`${contract.termLengthMonths} ${contract.termLengthMonths === 1 ? 'Month' : 'Months'}`}
+                variant="outlined"
+              />
+            )}
           </Box>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<SaveIcon />}
-          onClick={handleSave}
-          disabled={!hasChanges || saving}
-          sx={{ mt: 1 }}
-        >
-          {saving ? "Saving..." : "Save All Changes"}
-        </Button>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
+          {showSavedIndicator && !hasChanges && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <CheckIcon sx={{ color: 'success.main' }} />
+              <Typography variant="body2" sx={{ color: 'success.main', fontWeight: 'medium' }}>
+                Saved
+              </Typography>
+            </Box>
+          )}
+          {hasChanges && (
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<CloseIcon />}
+              onClick={handleDiscardChanges}
+              sx={{ minWidth: 160 }}
+            >
+              Discard Changes
+            </Button>
+          )}
+          <Button
+            variant="contained"
+            color={getButtonColor()}
+            onClick={handleSave}
+            disabled={!hasChanges || saving}
+            sx={{ minWidth: 180 }}
+          >
+            {getButtonContent()}
+          </Button>
+        </Box>
       </Box>
 
       <Box sx={{ mb: 2 }}>
@@ -289,14 +389,34 @@ export default function ContractItems() {
         )}
       </Box>
 
-      <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
+      <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: 'center', gap: 2, mt: 3 }}>
+        {showSavedIndicator && !hasChanges && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <CheckIcon sx={{ color: 'success.main' }} />
+            <Typography variant="body2" sx={{ color: 'success.main', fontWeight: 'medium' }}>
+              Saved
+            </Typography>
+          </Box>
+        )}
+        {hasChanges && (
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<CloseIcon />}
+            onClick={handleDiscardChanges}
+            sx={{ minWidth: 160 }}
+          >
+            Discard Changes
+          </Button>
+        )}
         <Button
           variant="contained"
-          startIcon={<SaveIcon />}
+          color={getButtonColor()}
           onClick={handleSave}
           disabled={!hasChanges || saving}
+          sx={{ minWidth: 180 }}
         >
-          {saving ? "Saving..." : "Save All Changes"}
+          {getButtonContent()}
         </Button>
       </Box>
     </Box>

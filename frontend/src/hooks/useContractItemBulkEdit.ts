@@ -129,8 +129,8 @@ function reducer(state: BulkEditState, action: Action): BulkEditState {
         // Get items in this category
         const categoryItems = items.filter(i => i.itemCategoryId === Number(categoryId));
         
-        Object.entries(category.items).forEach(([itemIdStr, item]: [string, ItemEditState]) => {
-          const itemId = Number(itemIdStr);
+        Object.entries(category.items).forEach(([, item]: [string, ItemEditState]) => {
+          const itemId = Number(Object.keys(category.items).find(key => category.items[Number(key)] === item));
           const itemData = categoryItems.find(i => i.id === itemId);
           
           // Only propagate to items of matching type
@@ -243,14 +243,15 @@ export function useContractItemBulkEdit(
   categories: ItemCategory[],
   items: Item[],
   existingContractItems: ContractItem[],
-  itemTypes: ItemType[]
+  itemTypes: ItemType[],
+  resetTrigger: number = 0
 ) {
   const [state, dispatch] = useReducer(
     reducer,
     { segments: {}, hasChanges: false }
   );
 
-  // Initialize when data is available
+  // Initialize when data is available OR when resetTrigger changes
   useEffect(() => {
     if (segments.length > 0 && itemTypes.length > 0) {
       dispatch({ 
@@ -258,7 +259,7 @@ export function useContractItemBulkEdit(
         payload: { segments, categories, items, existingContractItems, itemTypes } 
       });
     }
-  }, [segments, categories, items, existingContractItems, itemTypes]);
+  }, [segments, categories, items, existingContractItems, itemTypes, resetTrigger]);
 
   const setSegmentPricing = useCallback((segmentId: number, itemTypeId: number, discount: string, rebate: string) => {
     dispatch({ type: 'SET_SEGMENT_PRICING', payload: { segmentId, itemTypeId, discount, rebate, items } });

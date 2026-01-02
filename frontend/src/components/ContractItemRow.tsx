@@ -34,6 +34,21 @@ export default function ContractItemRow({
   const itemTypeName = item.itemType?.shortName || item.itemType?.name || '';
   const uomName = item.unitOfMeasure?.shortName || item.unitOfMeasure?.name || '';
 
+  // Format currency with commas
+  const formatCurrency = (value: number) => {
+    return value.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
+  // Get margin color based on value
+  const getMarginColor = (margin: number) => {
+    if (margin >= 80) return 'success.main'; // Green
+    if (margin >= 70) return 'warning.main'; // Yellow
+    return 'error.main'; // Red
+  };
+
   return (
     <Box
       sx={{
@@ -75,7 +90,7 @@ export default function ContractItemRow({
         </Box>
 
         <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>
-          List: ${listPrice.toFixed(2)}
+          List: ${formatCurrency(listPrice)}
         </Typography>
         
         <TextField
@@ -96,7 +111,7 @@ export default function ContractItemRow({
         />
 
         <Typography variant="body2" color="text.secondary" sx={{ minWidth: 100 }}>
-          → ${priceAfterDiscount.toFixed(2)}
+          → ${formatCurrency(priceAfterDiscount)}
         </Typography>
         
         <TextField
@@ -117,14 +132,14 @@ export default function ContractItemRow({
         />
 
         <Typography variant="body2" color="text.secondary" sx={{ minWidth: 100 }}>
-          → ${netPriceAfterRebate.toFixed(2)}
+          → ${formatCurrency(netPriceAfterRebate)}
         </Typography>
 
         <Typography 
           variant="body2" 
           sx={{ 
             minWidth: 100,
-            color: netMargin >= 0 ? 'success.main' : 'error.main',
+            color: getMarginColor(netMargin),
             fontWeight: 'medium'
           }}
         >

@@ -64,6 +64,14 @@ export default function SegmentAccordion({
   onCategorySearchChange,
 }: SegmentAccordionProps) {
   const [expanded, setExpanded] = useState(false);
+  const [showWarning, setShowWarning] = useState<Record<number, boolean>>({});
+
+  // Get margin color based on value
+  const getMarginColor = (margin: number) => {
+    if (margin >= 80) return 'success.main'; // Green
+    if (margin >= 70) return 'warning.main'; // Yellow
+    return 'error.main'; // Red
+  };
 
   // Calculate checkbox state (checked/indeterminate)
   const allItems: Array<{ id: number; typeId: number }> = [];
@@ -81,6 +89,29 @@ export default function SegmentAccordion({
 
   const isAllSelected = selectedCount === allItems.length && allItems.length > 0;
   const isIndeterminate = selectedCount > 0 && selectedCount < allItems.length;
+
+  // Toggle all items of a specific type in this segment
+  const toggleItemType = (itemTypeId: number) => {
+    const itemsOfType = allItems.filter(item => item.typeId === itemTypeId);
+    const allOfTypeSelected = itemsOfType.every(item => {
+      const foundItem = items.find(i => i.id === item.id);
+      if (!foundItem) return false;
+      const categoryId = foundItem.itemCategoryId;
+      return segmentState.categories[categoryId]?.items[item.id]?.selected;
+    });
+
+    // Toggle all items of this type
+    itemsOfType.forEach(item => {
+      const foundItem = items.find(i => i.id === item.id);
+      if (!foundItem) return;
+      const categoryId = foundItem.itemCategoryId;
+      const currentlySelected = segmentState.categories[categoryId]?.items[item.id]?.selected;
+      
+      if (currentlySelected === allOfTypeSelected) {
+        onToggleItem(categoryId, item.id);
+      }
+    });
+  };
 
   // Calculate total margin for selected items in segment by type
   const calculateTotalMarginByType = (itemTypeId: number) => {
@@ -145,11 +176,23 @@ export default function SegmentAccordion({
   return (
     <Accordion
       expanded={expanded}
-      onChange={() => setExpanded(!expanded)}
+      onChange={() => {}}
     >
       <AccordionSummary
-        expandIcon={<ExpandMoreIcon />}
-        sx={{ '& .MuiAccordionSummary-content': { alignItems: 'center', gap: 2, flexWrap: 'wrap' } }}
+        expandIcon={<ExpandMoreIcon sx={{ fontSize: 32 }} />}
+        onClick={(e) => {
+          const target = e.target as HTMLElement;
+          if (target.closest('.MuiAccordionSummary-expandIconWrapper')) {
+            setExpanded(!expanded);
+          }
+        }}
+        sx={{ 
+          '& .MuiAccordionSummary-content': { alignItems: 'center', gap: 2, flexWrap: 'wrap' },
+          '& .MuiAccordionSummary-expandIconWrapper': { 
+            cursor: 'pointer',
+          },
+          cursor: 'default',
+        }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 300 }}>
           <Checkbox
@@ -170,7 +213,7 @@ export default function SegmentAccordion({
               <Typography 
                 variant="caption"
                 sx={{ 
-                  color: totalMargin >= 0 ? 'success.main' : 'error.main',
+                  color: getMarginColor(totalMargin),
                   fontWeight: 'medium'
                 }}
               >
@@ -185,24 +228,43 @@ export default function SegmentAccordion({
           {itemTypes.map(itemType => {
             const typeName = itemType.shortName || itemType.name;
             const typeMargin = calculateTotalMarginByType(itemType.id);
-            const hasSelectedItems = allItems.some(item => {
+            
+            const itemsOfType = allItems.filter(item => item.typeId === itemType.id);
+            const selectedOfType = itemsOfType.filter(item => {
               const foundItem = items.find(i => i.id === item.id);
-              if (!foundItem || foundItem.itemTypeId !== itemType.id) return false;
+              if (!foundItem) return false;
               const categoryId = foundItem.itemCategoryId;
               return segmentState.categories[categoryId]?.items[item.id]?.selected;
-            });
+            }).length;
+            
+            const hasItems = itemsOfType.length > 0;
+            const allOfTypeSelected = hasItems && selectedOfType === itemsOfType.length;
+            const someOfTypeSelected = selectedOfType > 0 && selectedOfType < itemsOfType.length;
 
             return (
               <Box key={itemType.id} sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant="caption" fontWeight="medium" sx={{ minWidth: 80 }}>
+                  {hasItems && (
+                    <Checkbox
+                      size="small"
+                      checked={allOfTypeSelected}
+                      indeterminate={someOfTypeSelected}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        toggleItemType(itemType.id);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      sx={{ p: 0 }}
+                    />
+                  )}
+                  <Typography variant="caption" fontWeight="medium" sx={{ minWidth: 60 }}>
                     {typeName}
                   </Typography>
-                  {hasSelectedItems && (
+                  {selectedOfType > 0 && (
                     <Typography 
                       variant="caption"
                       sx={{ 
-                        color: typeMargin >= 0 ? 'success.main' : 'error.main',
+                        color: getMarginColor(typeMargin),
                         fontWeight: 'medium',
                         minWidth: 60
                       }}
@@ -225,6 +287,13 @@ export default function SegmentAccordion({
                         segmentState.pricingByType[itemType.id]?.rebatePercentage || ''
                       );
                     }}
+                    onFocus={(e) => {
+                      e.stopPropagation();
+                      setShowWarning({ ...showWarning, [itemType.id]: true });
+                    }}
+                    onBlur={() => {
+                      setShowWarning({ ...showWarning, [itemType.id]: false });
+                    }}
                     onClick={(e) => e.stopPropagation()}
                     inputProps={{ min: 0, max: 100, step: 0.01 }}
                     sx={{ width: 80 }}
@@ -242,11 +311,30 @@ export default function SegmentAccordion({
                         e.target.value
                       );
                     }}
+                    onFocus={(e) => {
+                      e.stopPropagation();
+                      setShowWarning({ ...showWarning, [itemType.id]: true });
+                    }}
+                    onBlur={() => {
+                      setShowWarning({ ...showWarning, [itemType.id]: false });
+                    }}
                     onClick={(e) => e.stopPropagation()}
                     inputProps={{ min: 0, max: 100, step: 0.01 }}
                     sx={{ width: 80 }}
                   />
                 </Box>
+                {showWarning[itemType.id] && (
+                  <Typography 
+                    variant="caption" 
+                    sx={{ 
+                      color: 'warning.main',
+                      fontStyle: 'italic',
+                      fontSize: '0.7rem'
+                    }}
+                  >
+                    ⚠️ This will overwrite all related items
+                  </Typography>
+                )}
               </Box>
             );
           })}
