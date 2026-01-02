@@ -166,16 +166,12 @@ modelBuilder.Entity<Contract>(entity =>
 modelBuilder.Entity<ContractItem>(entity =>
 {
     entity.HasKey(e => e.Id);
-    entity.Property(e => e.PricingLevel).IsRequired().HasMaxLength(50);
     entity.Property(e => e.CreatedDate).IsRequired();
     entity.Property(e => e.LastModifiedDate).IsRequired();
     
     // Pricing fields with precision
     entity.Property(e => e.DiscountPercentage).HasPrecision(5, 4);
-    entity.Property(e => e.FlatDiscountPrice).HasPrecision(18, 2);
     entity.Property(e => e.RebatePercentage).HasPrecision(5, 4);
-    entity.Property(e => e.NetRebatePrice).HasPrecision(18, 2);
-    entity.Property(e => e.CommitmentDollars).HasPrecision(18, 2);
 
     entity.HasOne(e => e.Contract)
         .WithMany()
@@ -185,20 +181,7 @@ modelBuilder.Entity<ContractItem>(entity =>
     entity.HasOne(e => e.Item)
         .WithMany()
         .HasForeignKey(e => e.ItemId)
-        .OnDelete(DeleteBehavior.Restrict)
-        .IsRequired(false);
-
-    entity.HasOne(e => e.ItemCategory)
-        .WithMany()
-        .HasForeignKey(e => e.ItemCategoryId)
-        .OnDelete(DeleteBehavior.Restrict)
-        .IsRequired(false);
-
-    entity.HasOne(e => e.VendorSegment)
-        .WithMany()
-        .HasForeignKey(e => e.VendorSegmentId)
-        .OnDelete(DeleteBehavior.Restrict)
-        .IsRequired(false);
+        .OnDelete(DeleteBehavior.Restrict);
 });
     }
 }

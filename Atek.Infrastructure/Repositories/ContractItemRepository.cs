@@ -19,8 +19,6 @@ public class ContractItemRepository : IContractItemRepository
         return await _context.ContractItems
             .Include(ci => ci.Contract)
             .Include(ci => ci.Item)
-            .Include(ci => ci.ItemCategory)
-            .Include(ci => ci.VendorSegment)
             .AsNoTracking()
             .ToListAsync();
     }
@@ -31,8 +29,6 @@ public class ContractItemRepository : IContractItemRepository
             .Where(ci => ci.ContractId == contractId)
             .Include(ci => ci.Contract)
             .Include(ci => ci.Item)
-            .Include(ci => ci.ItemCategory)
-            .Include(ci => ci.VendorSegment)
             .AsNoTracking()
             .ToListAsync();
     }
@@ -42,8 +38,6 @@ public class ContractItemRepository : IContractItemRepository
         return await _context.ContractItems
             .Include(ci => ci.Contract)
             .Include(ci => ci.Item)
-            .Include(ci => ci.ItemCategory)
-            .Include(ci => ci.VendorSegment)
             .AsNoTracking()
             .FirstOrDefaultAsync(ci => ci.Id == id);
     }
@@ -59,8 +53,6 @@ public class ContractItemRepository : IContractItemRepository
         var created = await _context.ContractItems
             .Include(ci => ci.Contract)
             .Include(ci => ci.Item)
-            .Include(ci => ci.ItemCategory)
-            .Include(ci => ci.VendorSegment)
             .AsNoTracking()
             .FirstOrDefaultAsync(ci => ci.Id == contractItem.Id);
         
@@ -73,16 +65,9 @@ public class ContractItemRepository : IContractItemRepository
         if (existing != null)
         {
             existing.ContractId = contractItem.ContractId;
-            existing.PricingLevel = contractItem.PricingLevel;
             existing.ItemId = contractItem.ItemId;
-            existing.ItemCategoryId = contractItem.ItemCategoryId;
-            existing.VendorSegmentId = contractItem.VendorSegmentId;
             existing.DiscountPercentage = contractItem.DiscountPercentage;
-            existing.FlatDiscountPrice = contractItem.FlatDiscountPrice;
             existing.RebatePercentage = contractItem.RebatePercentage;
-            existing.NetRebatePrice = contractItem.NetRebatePrice;
-            existing.CommitmentQuantity = contractItem.CommitmentQuantity;
-            existing.CommitmentDollars = contractItem.CommitmentDollars;
             existing.LastModifiedDate = DateTime.UtcNow;
             
             await _context.SaveChangesAsync();
@@ -91,8 +76,6 @@ public class ContractItemRepository : IContractItemRepository
         var updated = await _context.ContractItems
             .Include(ci => ci.Contract)
             .Include(ci => ci.Item)
-            .Include(ci => ci.ItemCategory)
-            .Include(ci => ci.VendorSegment)
             .AsNoTracking()
             .FirstOrDefaultAsync(ci => ci.Id == contractItem.Id);
         
