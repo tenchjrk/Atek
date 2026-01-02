@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import type { ContractItem, VendorSegment, ItemCategory, Item } from '../types';
+import { useReducer, useCallback, useEffect } from 'react';
+import type { ContractItem, VendorSegment, ItemCategory, Item, ItemType } from '../types';
 
 interface ItemEditState {
   selected: boolean;
@@ -10,32 +10,56 @@ interface ItemEditState {
   isInherited: boolean;
 }
 
-interface CategoryEditState {
-  selected: boolean;
+interface TypePricing {
   discountPercentage: string;
   rebatePercentage: string;
+}
+
+interface CategoryEditState {
+  selected: boolean;
+  pricingByType: Record<number, TypePricing>; // itemTypeId -> pricing
   itemSearch: string;
   items: Record<number, ItemEditState>;
 }
 
 interface SegmentEditState {
   selected: boolean;
-  discountPercentage: string;
-  rebatePercentage: string;
+  pricingByType: Record<number, TypePricing>; // itemTypeId -> pricing
   categories: Record<number, CategoryEditState>;
 }
 
 interface BulkEditState {
   segments: Record<number, SegmentEditState>;
+  hasChanges: boolean;
 }
+
+type Action =
+  | { type: 'INITIALIZE'; payload: { segments: VendorSegment[]; categories: ItemCategory[]; items: Item[]; existingContractItems: ContractItem[]; itemTypes: ItemType[] } }
+  | { type: 'SET_SEGMENT_PRICING'; payload: { segmentId: number; itemTypeId: number; discount: string; rebate: string; items: Item[] } }
+  | { type: 'SET_CATEGORY_PRICING'; payload: { segmentId: number; categoryId: number; itemTypeId: number; discount: string; rebate: string; items: Item[] } }
+  | { type: 'SET_ITEM_PRICING'; payload: { segmentId: number; categoryId: number; itemId: number; discount: string; rebate: string; item: Item } }
+  | { type: 'TOGGLE_ITEM'; payload: { segmentId: number; categoryId: number; itemId: number } }
+  | { type: 'TOGGLE_CATEGORY'; payload: { segmentId: number; categoryId: number } }
+  | { type: 'TOGGLE_SEGMENT'; payload: { segmentId: number } }
+  | { type: 'SET_CATEGORY_SEARCH'; payload: { segmentId: number; categoryId: number; search: string } };
 
 function createInitialState(
   segments: VendorSegment[],
   categories: ItemCategory[],
   items: Item[],
-  existingContractItems: ContractItem[]
+  existingContractItems: ContractItem[],
+  itemTypes: ItemType[]
 ): BulkEditState {
-  const initialState: BulkEditState = { segments: {} };
+  const state: BulkEditState = { segments: {}, hasChanges: false };
+
+  // Create empty pricing for all item types
+  const createEmptyPricingByType = (): Record<number, TypePricing> => {
+    const pricing: Record<number, TypePricing> = {};
+    itemTypes.forEach(type => {
+      pricing[type.id] = { discountPercentage: '', rebatePercentage: '' };
+    });
+    return pricing;
+  };
 
   segments.forEach(segment => {
     const segmentCategories = categories.filter(c => c.vendorSegmentId === segment.id);
@@ -59,106 +83,99 @@ function createInitialState(
 
       categoryStates[category.id] = {
         selected: false,
-        discountPercentage: '',
-        rebatePercentage: '',
+        pricingByType: createEmptyPricingByType(),
         itemSearch: '',
         items: itemStates,
       };
     });
 
-    initialState.segments[segment.id] = {
+    state.segments[segment.id] = {
       selected: false,
-      discountPercentage: '',
-      rebatePercentage: '',
+      pricingByType: createEmptyPricingByType(),
       categories: categoryStates,
     };
   });
 
-  return initialState;
+  return state;
 }
 
-export function useContractItemBulkEdit(
-  segments: VendorSegment[],
-  categories: ItemCategory[],
-  items: Item[],
-  existingContractItems: ContractItem[]
-) {
-  // Create a stable key from the data to track when it changes
-  const dataKey = `${segments.length}-${categories.length}-${items.length}-${existingContractItems.length}`;
-  
-  const [state, setState] = useState<BulkEditState>(() => 
-    createInitialState(segments, categories, items, existingContractItems)
-  );
-  const [lastDataKey, setLastDataKey] = useState(dataKey);
-  const [hasChanges, setHasChanges] = useState(false);
+function reducer(state: BulkEditState, action: Action): BulkEditState {
+  const newState = JSON.parse(JSON.stringify(state)) as BulkEditState;
+  newState.hasChanges = true;
 
-  // Reset state when data changes
-  if (dataKey !== lastDataKey) {
-    const newState = createInitialState(segments, categories, items, existingContractItems);
-    setState(newState);
-    setLastDataKey(dataKey);
-    setHasChanges(false);
-  }
+  switch (action.type) {
+    case 'INITIALIZE':
+      return createInitialState(
+        action.payload.segments,
+        action.payload.categories,
+        action.payload.items,
+        action.payload.existingContractItems,
+        action.payload.itemTypes
+      );
 
-  // Set segment-level discount/rebate (propagates down)
-  const setSegmentPricing = useCallback((segmentId: number, discount: string, rebate: string) => {
-    setState(prev => {
-      const newState = JSON.parse(JSON.stringify(prev)) as BulkEditState;
+    case 'SET_SEGMENT_PRICING': {
+      const { segmentId, itemTypeId, discount, rebate, items } = action.payload;
       const segment = newState.segments[segmentId];
       
-      segment.discountPercentage = discount;
-      segment.rebatePercentage = rebate;
+      // Set segment-level pricing for this type
+      segment.pricingByType[itemTypeId].discountPercentage = discount;
+      segment.pricingByType[itemTypeId].rebatePercentage = rebate;
 
-      // Propagate to all categories and items
-      Object.values(segment.categories).forEach((category: CategoryEditState) => {
-        category.discountPercentage = discount;
-        category.rebatePercentage = rebate;
+      // Propagate to all categories and items of this type
+      Object.entries(segment.categories).forEach(([categoryId, category]: [string, CategoryEditState]) => {
+        category.pricingByType[itemTypeId].discountPercentage = discount;
+        category.pricingByType[itemTypeId].rebatePercentage = rebate;
         
-        Object.values(category.items).forEach((item: ItemEditState) => {
-          if (!item.isDirty) {
+        // Get items in this category
+        const categoryItems = items.filter(i => i.itemCategoryId === Number(categoryId));
+        
+        Object.entries(category.items).forEach(([itemIdStr, item]: [string, ItemEditState]) => {
+          const itemId = Number(itemIdStr);
+          const itemData = categoryItems.find(i => i.id === itemId);
+          
+          // Only propagate to items of matching type
+          if (itemData && itemData.itemTypeId === itemTypeId && !item.isDirty) {
             item.discountPercentage = discount;
             item.rebatePercentage = rebate;
             item.isInherited = true;
           }
         });
       });
-
       return newState;
-    });
-    setHasChanges(true);
-  }, []);
+    }
 
-  // Set category-level discount/rebate (propagates down)
-  const setCategoryPricing = useCallback((segmentId: number, categoryId: number, discount: string, rebate: string) => {
-    setState(prev => {
-      const newState = JSON.parse(JSON.stringify(prev)) as BulkEditState;
+    case 'SET_CATEGORY_PRICING': {
+      const { segmentId, categoryId, itemTypeId, discount, rebate, items } = action.payload;
       const category = newState.segments[segmentId].categories[categoryId];
       
-      category.discountPercentage = discount;
-      category.rebatePercentage = rebate;
+      // Set category-level pricing for this type
+      category.pricingByType[itemTypeId].discountPercentage = discount;
+      category.pricingByType[itemTypeId].rebatePercentage = rebate;
 
-      // Clear segment pricing since category is overriding
-      newState.segments[segmentId].discountPercentage = '';
-      newState.segments[segmentId].rebatePercentage = '';
+      // Clear segment pricing for this type
+      newState.segments[segmentId].pricingByType[itemTypeId].discountPercentage = '';
+      newState.segments[segmentId].pricingByType[itemTypeId].rebatePercentage = '';
 
-      // Propagate to all items in category
-      Object.values(category.items).forEach((item: ItemEditState) => {
-        if (!item.isDirty) {
+      // Get items in this category
+      const categoryItems = items.filter(i => i.itemCategoryId === categoryId);
+
+      // Propagate to all items of this type in category
+      Object.entries(category.items).forEach(([itemIdStr, item]: [string, ItemEditState]) => {
+        const itemId = Number(itemIdStr);
+        const itemData = categoryItems.find(i => i.id === itemId);
+        
+        // Only propagate to items of matching type
+        if (itemData && itemData.itemTypeId === itemTypeId && !item.isDirty) {
           item.discountPercentage = discount;
           item.rebatePercentage = rebate;
           item.isInherited = true;
         }
       });
-
       return newState;
-    });
-    setHasChanges(true);
-  }, []);
+    }
 
-  // Set item-level discount/rebate (clears parent values)
-  const setItemPricing = useCallback((segmentId: number, categoryId: number, itemId: number, discount: string, rebate: string) => {
-    setState(prev => {
-      const newState = JSON.parse(JSON.stringify(prev)) as BulkEditState;
+    case 'SET_ITEM_PRICING': {
+      const { segmentId, categoryId, itemId, discount, rebate, item: itemData } = action.payload;
       const item = newState.segments[segmentId].categories[categoryId].items[itemId];
       
       item.discountPercentage = discount;
@@ -166,48 +183,36 @@ export function useContractItemBulkEdit(
       item.isDirty = true;
       item.isInherited = false;
 
-      // Clear parent pricing
-      newState.segments[segmentId].discountPercentage = '';
-      newState.segments[segmentId].rebatePercentage = '';
-      newState.segments[segmentId].categories[categoryId].discountPercentage = '';
-      newState.segments[segmentId].categories[categoryId].rebatePercentage = '';
-
+      // Clear the pricing for this item's type at segment/category level
+      const itemTypeId = itemData.itemTypeId;
+      newState.segments[segmentId].pricingByType[itemTypeId].discountPercentage = '';
+      newState.segments[segmentId].pricingByType[itemTypeId].rebatePercentage = '';
+      newState.segments[segmentId].categories[categoryId].pricingByType[itemTypeId].discountPercentage = '';
+      newState.segments[segmentId].categories[categoryId].pricingByType[itemTypeId].rebatePercentage = '';
+      
       return newState;
-    });
-    setHasChanges(true);
-  }, []);
+    }
 
-  // Toggle item selection
-  const toggleItem = useCallback((segmentId: number, categoryId: number, itemId: number) => {
-    setState(prev => {
-      const newState = JSON.parse(JSON.stringify(prev)) as BulkEditState;
+    case 'TOGGLE_ITEM': {
+      const { segmentId, categoryId, itemId } = action.payload;
       const item = newState.segments[segmentId].categories[categoryId].items[itemId];
       item.selected = !item.selected;
       return newState;
-    });
-    setHasChanges(true);
-  }, []);
+    }
 
-  // Select all items in category
-  const toggleCategory = useCallback((segmentId: number, categoryId: number) => {
-    setState(prev => {
-      const newState = JSON.parse(JSON.stringify(prev)) as BulkEditState;
+    case 'TOGGLE_CATEGORY': {
+      const { segmentId, categoryId } = action.payload;
       const category = newState.segments[segmentId].categories[categoryId];
       const allSelected = Object.values(category.items).every((item: ItemEditState) => item.selected);
       
       Object.values(category.items).forEach((item: ItemEditState) => {
         item.selected = !allSelected;
       });
-
       return newState;
-    });
-    setHasChanges(true);
-  }, []);
+    }
 
-  // Select all items in segment
-  const toggleSegment = useCallback((segmentId: number) => {
-    setState(prev => {
-      const newState = JSON.parse(JSON.stringify(prev)) as BulkEditState;
+    case 'TOGGLE_SEGMENT': {
+      const { segmentId } = action.payload;
       const segment = newState.segments[segmentId];
       const allSelected = Object.values(segment.categories).every((category: CategoryEditState) =>
         Object.values(category.items).every((item: ItemEditState) => item.selected)
@@ -218,22 +223,73 @@ export function useContractItemBulkEdit(
           item.selected = !allSelected;
         });
       });
-
       return newState;
-    });
-    setHasChanges(true);
-  }, []);
+    }
 
-  // Set category search
-  const setCategorySearch = useCallback((segmentId: number, categoryId: number, search: string) => {
-    setState(prev => {
-      const newState = JSON.parse(JSON.stringify(prev)) as BulkEditState;
+    case 'SET_CATEGORY_SEARCH': {
+      const { segmentId, categoryId, search } = action.payload;
       newState.segments[segmentId].categories[categoryId].itemSearch = search;
+      newState.hasChanges = false;
       return newState;
-    });
+    }
+
+    default:
+      return state;
+  }
+}
+
+export function useContractItemBulkEdit(
+  segments: VendorSegment[],
+  categories: ItemCategory[],
+  items: Item[],
+  existingContractItems: ContractItem[],
+  itemTypes: ItemType[]
+) {
+  const [state, dispatch] = useReducer(
+    reducer,
+    { segments: {}, hasChanges: false }
+  );
+
+  // Initialize when data is available
+  useEffect(() => {
+    if (segments.length > 0 && itemTypes.length > 0) {
+      dispatch({ 
+        type: 'INITIALIZE', 
+        payload: { segments, categories, items, existingContractItems, itemTypes } 
+      });
+    }
+  }, [segments, categories, items, existingContractItems, itemTypes]);
+
+  const setSegmentPricing = useCallback((segmentId: number, itemTypeId: number, discount: string, rebate: string) => {
+    dispatch({ type: 'SET_SEGMENT_PRICING', payload: { segmentId, itemTypeId, discount, rebate, items } });
+  }, [items]);
+
+  const setCategoryPricing = useCallback((segmentId: number, categoryId: number, itemTypeId: number, discount: string, rebate: string) => {
+    dispatch({ type: 'SET_CATEGORY_PRICING', payload: { segmentId, categoryId, itemTypeId, discount, rebate, items } });
+  }, [items]);
+
+  const setItemPricing = useCallback((segmentId: number, categoryId: number, itemId: number, discount: string, rebate: string) => {
+    const item = items.find(i => i.id === itemId);
+    if (!item) return;
+    dispatch({ type: 'SET_ITEM_PRICING', payload: { segmentId, categoryId, itemId, discount, rebate, item } });
+  }, [items]);
+
+  const toggleItem = useCallback((segmentId: number, categoryId: number, itemId: number) => {
+    dispatch({ type: 'TOGGLE_ITEM', payload: { segmentId, categoryId, itemId } });
   }, []);
 
-  // Get changes to save
+  const toggleCategory = useCallback((segmentId: number, categoryId: number) => {
+    dispatch({ type: 'TOGGLE_CATEGORY', payload: { segmentId, categoryId } });
+  }, []);
+
+  const toggleSegment = useCallback((segmentId: number) => {
+    dispatch({ type: 'TOGGLE_SEGMENT', payload: { segmentId } });
+  }, []);
+
+  const setCategorySearch = useCallback((segmentId: number, categoryId: number, search: string) => {
+    dispatch({ type: 'SET_CATEGORY_SEARCH', payload: { segmentId, categoryId, search } });
+  }, []);
+
   const getChanges = useCallback(() => {
     const toCreate: Array<{ itemId: number; discountPercentage: number | null; rebatePercentage: number | null }> = [];
     const toUpdate: Array<{ id: number; itemId: number; discountPercentage: number | null; rebatePercentage: number | null }> = [];
@@ -245,14 +301,12 @@ export function useContractItemBulkEdit(
           const numItemId = Number(itemId);
           
           if (item.selected && !item.existingContractItemId) {
-            // New item to add
             toCreate.push({
               itemId: numItemId,
               discountPercentage: item.discountPercentage ? parseFloat(item.discountPercentage) : null,
               rebatePercentage: item.rebatePercentage ? parseFloat(item.rebatePercentage) : null,
             });
           } else if (item.selected && item.existingContractItemId && item.isDirty) {
-            // Existing item to update
             toUpdate.push({
               id: item.existingContractItemId,
               itemId: numItemId,
@@ -260,7 +314,6 @@ export function useContractItemBulkEdit(
               rebatePercentage: item.rebatePercentage ? parseFloat(item.rebatePercentage) : null,
             });
           } else if (!item.selected && item.existingContractItemId) {
-            // Existing item to delete
             toDelete.push(item.existingContractItemId);
           }
         });
@@ -272,7 +325,7 @@ export function useContractItemBulkEdit(
 
   return {
     state,
-    hasChanges,
+    hasChanges: state.hasChanges,
     setSegmentPricing,
     setCategoryPricing,
     setItemPricing,

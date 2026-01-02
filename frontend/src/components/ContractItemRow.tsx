@@ -22,12 +22,24 @@ export default function ContractItemRow({
   onDiscountChange,
   onRebateChange,
 }: ContractItemRowProps) {
+  // Calculate prices
+  const listPrice = item.listPrice || 0;
+  const cost = item.cost || 0;
+  const discountPercent = discountPercentage ? parseFloat(discountPercentage) / 100 : 0;
+  const priceAfterDiscount = listPrice * (1 - discountPercent);
+  const rebatePercent = rebatePercentage ? parseFloat(rebatePercentage) / 100 : 0;
+  const netPriceAfterRebate = priceAfterDiscount * (1 - rebatePercent);
+  const netMargin = netPriceAfterRebate > 0 ? ((netPriceAfterRebate - cost) / netPriceAfterRebate) * 100 : 0;
+
+  const itemTypeName = item.itemType?.shortName || item.itemType?.name || '';
+  const uomName = item.unitOfMeasure?.shortName || item.unitOfMeasure?.name || '';
+
   return (
     <Box
       sx={{
         display: 'flex',
         alignItems: 'center',
-        py: 1,
+        py: 1.5,
         px: 2,
         borderBottom: 1,
         borderColor: 'divider',
@@ -43,12 +55,27 @@ export default function ContractItemRow({
       />
       
       <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
-        <Typography sx={{ minWidth: 200 }}>
-          {item.name}
-        </Typography>
-        
-        <Typography variant="body2" color="text.secondary" sx={{ minWidth: 100 }}>
-          List: ${item.listPrice?.toFixed(2) || '0.00'}
+        <Box sx={{ minWidth: 280 }}>
+          <Typography variant="body1" fontWeight="medium">
+            {item.id}: {item.name}
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
+            {itemTypeName && (
+              <Typography variant="caption" color="text.secondary">
+                Type: {itemTypeName}
+              </Typography>
+            )}
+            
+            {uomName && (
+              <Typography variant="caption" color="text.secondary">
+                UOM: {uomName} ({item.eachesPerUnitOfMeasure} ea)
+              </Typography>
+            )}
+          </Box>
+        </Box>
+
+        <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>
+          List: ${listPrice.toFixed(2)}
         </Typography>
         
         <TextField
@@ -67,6 +94,10 @@ export default function ContractItemRow({
             }
           }}
         />
+
+        <Typography variant="body2" color="text.secondary" sx={{ minWidth: 100 }}>
+          → ${priceAfterDiscount.toFixed(2)}
+        </Typography>
         
         <TextField
           label="Rebate %"
@@ -84,6 +115,21 @@ export default function ContractItemRow({
             }
           }}
         />
+
+        <Typography variant="body2" color="text.secondary" sx={{ minWidth: 100 }}>
+          → ${netPriceAfterRebate.toFixed(2)}
+        </Typography>
+
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            minWidth: 100,
+            color: netMargin >= 0 ? 'success.main' : 'error.main',
+            fontWeight: 'medium'
+          }}
+        >
+          {netMargin.toFixed(1)}% margin
+        </Typography>
       </Box>
     </Box>
   );

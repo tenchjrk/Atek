@@ -11,6 +11,7 @@ import {
   itemApi,
   itemCategoryApi,
   vendorSegmentApi,
+  itemTypeApi,
 } from "../services/api";
 import type {
   Contract,
@@ -18,6 +19,7 @@ import type {
   ItemCategory,
   VendorSegment,
   ContractItem,
+  ItemType,
 } from "../types";
 import { useContractItemBulkEdit } from "../hooks/useContractItemBulkEdit";
 import PageHeader from "../components/PageHeader";
@@ -31,6 +33,7 @@ export default function ContractItems() {
   const [items, setItems] = useState<Item[]>([]);
   const [itemCategories, setItemCategories] = useState<ItemCategory[]>([]);
   const [vendorSegments, setVendorSegments] = useState<VendorSegment[]>([]);
+  const [itemTypes, setItemTypes] = useState<ItemType[]>([]);
   const [existingContractItems, setExistingContractItems] = useState<ContractItem[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -44,12 +47,14 @@ export default function ContractItems() {
           itemsResponse,
           categoriesResponse,
           segmentsResponse,
+          itemTypesResponse,
         ] = await Promise.all([
           contractApi.getById(Number(contractId)),
           contractItemApi.getByContractId(Number(contractId)),
           itemApi.getAll(),
           itemCategoryApi.getAll(),
           vendorSegmentApi.getAll(),
+          itemTypeApi.getAll(),
         ]);
 
         const contractData = contractResponse.data;
@@ -79,6 +84,7 @@ export default function ContractItems() {
             (seg) => seg.vendorId === contractData.vendorId
           )
         );
+        setItemTypes(itemTypesResponse.data);
       } catch (err) {
         console.error("Error loading data:", err);
       } finally {
@@ -104,7 +110,8 @@ export default function ContractItems() {
     vendorSegments,
     itemCategories,
     items,
-    existingContractItems
+    existingContractItems,
+    itemTypes
   );
 
   const handleSave = async () => {
@@ -152,7 +159,7 @@ export default function ContractItems() {
 
   if (!contract) {
     return (
-      <Alert severity='error'>
+      <Alert severity="error">
         Contract not found.{" "}
         <Button onClick={() => navigate("/contracts")}>
           Back to Contracts
@@ -191,22 +198,22 @@ export default function ContractItems() {
           <Box sx={{ mt: 1 }}>
             <Chip
               label={contract.vendor?.name || "Unknown Vendor"}
-              color='secondary'
+              color="secondary"
               sx={{ mr: 1 }}
             />
             <Chip
               label={contract.account?.name || "Unknown Account"}
-              color='info'
+              color="info"
               sx={{ mr: 1 }}
             />
             <Chip
               label={contract.contractStatus?.name || "Unknown Status"}
-              color='primary'
+              color="primary"
             />
           </Box>
         </Box>
         <Button
-          variant='contained'
+          variant="contained"
           startIcon={<SaveIcon />}
           onClick={handleSave}
           disabled={!hasChanges || saving}
@@ -218,7 +225,7 @@ export default function ContractItems() {
 
       <Box sx={{ mb: 2 }}>
         {vendorSegments.length === 0 ? (
-          <Alert severity='info'>
+          <Alert severity="info">
             No segments found for this vendor. Please add segments, categories,
             and items to this vendor first.
           </Alert>
@@ -238,40 +245,17 @@ export default function ContractItems() {
                 segment={segment}
                 categories={segmentCategories}
                 items={items}
+                itemTypes={itemTypes}
                 segmentState={segmentState}
                 onToggleSegment={() => toggleSegment(segment.id)}
-                onSegmentDiscountChange={(value) =>
-                  setSegmentPricing(
-                    segment.id,
-                    value,
-                    segmentState.rebatePercentage
-                  )
-                }
-                onSegmentRebateChange={(value) =>
-                  setSegmentPricing(
-                    segment.id,
-                    segmentState.discountPercentage,
-                    value
-                  )
+                onSegmentPricingChange={(itemTypeId, discount, rebate) =>
+                  setSegmentPricing(segment.id, itemTypeId, discount, rebate)
                 }
                 onToggleCategory={(categoryId) =>
                   toggleCategory(segment.id, categoryId)
                 }
-                onCategoryDiscountChange={(categoryId, value) =>
-                  setCategoryPricing(
-                    segment.id,
-                    categoryId,
-                    value,
-                    segmentState.categories[categoryId].rebatePercentage
-                  )
-                }
-                onCategoryRebateChange={(categoryId, value) =>
-                  setCategoryPricing(
-                    segment.id,
-                    categoryId,
-                    segmentState.categories[categoryId].discountPercentage,
-                    value
-                  )
+                onCategoryPricingChange={(categoryId, itemTypeId, discount, rebate) =>
+                  setCategoryPricing(segment.id, categoryId, itemTypeId, discount, rebate)
                 }
                 onToggleItem={(categoryId, itemId) =>
                   toggleItem(segment.id, categoryId, itemId)
@@ -307,7 +291,7 @@ export default function ContractItems() {
 
       <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 3 }}>
         <Button
-          variant='contained'
+          variant="contained"
           startIcon={<SaveIcon />}
           onClick={handleSave}
           disabled={!hasChanges || saving}
