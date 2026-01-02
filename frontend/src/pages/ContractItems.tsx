@@ -6,6 +6,9 @@ import {
   Check as CheckIcon,
   Error as ErrorIcon,
   Close as CloseIcon,
+  Send as SendIcon,
+  ThumbUp as ThumbUpIcon,
+  ThumbDown as ThumbDownIcon,
 } from "@mui/icons-material";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -42,6 +45,7 @@ export default function ContractItems() {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [showSavedIndicator, setShowSavedIndicator] = useState(false);
   const [resetTrigger, setResetTrigger] = useState(0);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   // Fetch contract details and related data
   useEffect(() => {
@@ -153,6 +157,17 @@ export default function ContractItems() {
 
       await Promise.all(promises);
 
+      // If contract is "Margin Approved" (3), change back to "Draft" (1)
+      if (contract?.contractStatusId === 3) {
+        await contractApi.update(contract.id, {
+          ...contract,
+          contractStatusId: 1,
+        });
+        // Refresh contract data
+        const contractResponse = await contractApi.getById(Number(contractId));
+        setContract(contractResponse.data);
+      }
+
       // Refresh contract items
       const contractItemsResponse = await contractItemApi.getByContractId(
         Number(contractId)
@@ -184,6 +199,93 @@ export default function ContractItems() {
     setResetTrigger(prev => prev + 1);
   };
 
+  const handleStatusChange = async (newStatusId: number) => {
+    if (!contract) return;
+    
+    setUpdatingStatus(true);
+    try {
+      await contractApi.update(contract.id, {
+        ...contract,
+        contractStatusId: newStatusId,
+      });
+
+      // Refresh contract data
+      const contractResponse = await contractApi.getById(Number(contractId));
+      setContract(contractResponse.data);
+    } catch (err) {
+      console.error("Error updating contract status:", err);
+      alert("Error updating contract status. Please try again.");
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  const handleSendForApproval = () => {
+    handleStatusChange(2); // Margin Approval
+  };
+
+  const handleApprove = () => {
+    handleStatusChange(3); // Margin Approved
+  };
+
+  const handleReject = () => {
+    handleStatusChange(4); // Pricing Needs Edited
+  };
+
+  // Determine which workflow buttons to show based on status
+  const getWorkflowButtons = () => {
+    if (!contract || updatingStatus) return null;
+
+    const statusId = contract.contractStatusId;
+
+    // Draft (1) or Pricing Needs Edited (4) - Show "Send for Approval"
+    if (statusId === 1 || statusId === 4) {
+      return (
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={updatingStatus ? <CircularProgress size={20} color="inherit" /> : <SendIcon />}
+          onClick={handleSendForApproval}
+          disabled={updatingStatus || hasChanges}
+          sx={{ minWidth: 180 }}
+        >
+          {updatingStatus ? "Sending..." : "Send for Approval"}
+        </Button>
+      );
+    }
+
+    // Margin Approval (2) - Show "Approve" and "Reject"
+    if (statusId === 2) {
+      return (
+        <>
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={updatingStatus ? <CircularProgress size={20} color="inherit" /> : <ThumbDownIcon />}
+            onClick={handleReject}
+            disabled={updatingStatus}
+            sx={{ minWidth: 140 }}
+          >
+            {updatingStatus ? "Rejecting..." : "Reject"}
+          </Button>
+          <Button
+            variant="contained"
+            color="success"
+            startIcon={updatingStatus ? <CircularProgress size={20} color="inherit" /> : <ThumbUpIcon />}
+            onClick={handleApprove}
+            disabled={updatingStatus}
+            sx={{ minWidth: 140 }}
+          >
+            {updatingStatus ? "Approving..." : "Approve"}
+          </Button>
+        </>
+      );
+    }
+
+    // For statuses 3, 5, 6, 7 - No workflow buttons
+    return null;
+  };
+
   // Determine button content based on state
   const getButtonContent = () => {
     if (saving) {
@@ -213,7 +315,7 @@ export default function ContractItems() {
     return (
       <>
         <SaveIcon sx={{ mr: 1 }} />
-        Save All Changes
+        Save Changes
       </>
     );
   };
@@ -320,6 +422,7 @@ export default function ContractItems() {
           >
             {getButtonContent()}
           </Button>
+          {getWorkflowButtons()}
         </Box>
       </Box>
 
@@ -418,6 +521,7 @@ export default function ContractItems() {
         >
           {getButtonContent()}
         </Button>
+        {getWorkflowButtons()}
       </Box>
     </Box>
   );
