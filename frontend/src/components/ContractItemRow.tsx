@@ -1,4 +1,5 @@
-import { Checkbox, TextField, Box, Typography } from '@mui/material';
+import { Checkbox, TextField, Box, Typography, Tooltip, IconButton } from '@mui/material';
+import { Info as InfoIcon } from '@mui/icons-material';
 import type { Item } from '../types';
 
 interface ContractItemRowProps {
@@ -38,6 +39,9 @@ export default function ContractItemRow({
   const listPrice = item.listPrice || 0;
   const cost = item.cost || 0;
   
+  // Calculate normal margin (list price vs cost)
+  const normalMargin = listPrice > 0 ? ((listPrice - cost) / listPrice) * 100 : 0;
+  
   // Step 1: Apply discount
   const discountPercent = discountPercentage ? parseFloat(discountPercentage) / 100 : 0;
   const priceAfterDiscount = listPrice * (1 - discountPercent);
@@ -50,21 +54,34 @@ export default function ContractItemRow({
   const conditionalRebatePercent = conditionalRebate ? parseFloat(conditionalRebate) / 100 : 0;
   const priceAfterConditionalRebate = priceAfterRebate * (1 - conditionalRebatePercent);
   
-  // Step 4: Apply growth rebate (for display only, not in margin)
+  // Step 4: Apply growth rebate (for display only, not in contract margin)
   const growthRebatePercent = growthRebate ? parseFloat(growthRebate) / 100 : 0;
   const priceAfterGrowthRebate = priceAfterConditionalRebate * (1 - growthRebatePercent);
   
-  // Quantity and commitment in dollars
-  const qty = quantityCommitment ? parseFloat(quantityCommitment) : 0;
-  const commitmentDollars = priceAfterDiscount * qty;
+  // Monthly quantity and commitment in dollars
+  const monthlyQty = quantityCommitment ? parseFloat(quantityCommitment) : 0;
+  const commitmentDollars = priceAfterDiscount * monthlyQty;
   
-  // Net revenue based on commitment, rebate, and conditional rebate
-  const netRevenue = priceAfterConditionalRebate * qty;
+  // Calculate eaches (monthly qty * eaches per UOM)
+  const eachesPerUom = item.eachesPerUnitOfMeasure || 1;
+  const totalEaches = monthlyQty * eachesPerUom;
   
-  // Net margin calculation (does NOT include growth rebate)
-  const netMargin = priceAfterConditionalRebate > 0 
+  // Net monthly revenue based on commitment, rebate, and conditional rebate
+  const netMonthlyRevenue = priceAfterConditionalRebate * monthlyQty;
+  
+  // Contract margin calculation (does NOT include growth rebate)
+  const contractMargin = priceAfterConditionalRebate > 0 
     ? ((priceAfterConditionalRebate - cost) / priceAfterConditionalRebate) * 100 
     : 0;
+  
+  // Growth margin calculation (INCLUDES growth rebate)
+  const growthMargin = priceAfterGrowthRebate > 0
+    ? ((priceAfterGrowthRebate - cost) / priceAfterGrowthRebate) * 100
+    : 0;
+  
+  // Margin differences
+  const contractMarginDifference = contractMargin - normalMargin;
+  const growthMarginDifference = growthMargin - normalMargin;
 
   const itemTypeName = item.itemType?.shortName || item.itemType?.name || '';
   const uomName = item.unitOfMeasure?.shortName || item.unitOfMeasure?.name || '';
@@ -77,11 +94,19 @@ export default function ContractItemRow({
     });
   };
 
+  // Format number with commas
+  const formatNumber = (value: number) => {
+    return value.toLocaleString('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    });
+  };
+
   // Get margin color based on value
   const getMarginColor = (margin: number) => {
-    if (margin >= 80) return 'success.main'; // Green
-    if (margin >= 70) return 'warning.main'; // Yellow
-    return 'error.main'; // Red
+    if (margin >= 80) return 'success.main';
+    if (margin >= 70) return 'warning.main';
+    return 'error.main';
   };
 
   return (
@@ -104,168 +129,273 @@ export default function ContractItemRow({
         sx={{ mr: 2 }}
       />
       
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-        {/* First row - ID/Name/Type/UOM, List Price, Discount, Price After Discount, Annual Usage, $ Commitment, Rebate % */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+      {!selected ? (
+        /* DESELECTED STATE */
+        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
           <Box sx={{ minWidth: 280 }}>
-            <Typography variant="body1" fontWeight="medium">
-              {item.id}: {item.name}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Typography variant="body1" fontWeight="medium">
+                {item.id}: {item.name}
+              </Typography>
+              {item.description && (
+                <Tooltip title={item.description} arrow>
+                  <IconButton size="small" sx={{ p: 0.25 }}>
+                    <InfoIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Box>
             <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
               {itemTypeName && (
                 <Typography variant="caption" color="text.secondary">
                   Type: {itemTypeName}
                 </Typography>
               )}
-              
               {uomName && (
                 <Typography variant="caption" color="text.secondary">
                   UOM: {uomName} ({item.eachesPerUnitOfMeasure} ea)
                 </Typography>
               )}
             </Box>
-          </Box>
-
-          <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>
-            List: ${formatCurrency(listPrice)}
-          </Typography>
-          
-          <TextField
-            label="Discount %"
-            type="number"
-            size="small"
-            value={discountPercentage}
-            onChange={(e) => onDiscountChange(e.target.value)}
-            disabled={!selected}
-            inputProps={{ min: 0, max: 100, step: 0.01 }}
-            sx={{ 
-              width: 120,
-              '& input': {
-                fontStyle: isInherited ? 'italic' : 'normal',
-                color: isInherited ? 'text.secondary' : 'text.primary',
-              }
-            }}
-          />
-
-          <Typography variant="body2" color="text.secondary" sx={{ minWidth: 100 }}>
-            → ${formatCurrency(priceAfterDiscount)}
-          </Typography>
-
-          <TextField
-            label="Annual Usage"
-            type="number"
-            size="small"
-            value={quantityCommitment}
-            onChange={(e) => onQuantityCommitmentChange(e.target.value)}
-            disabled={!selected}
-            inputProps={{ min: 0, step: 1 }}
-            sx={{ 
-              width: 140,
-              '& input': {
-                fontStyle: isInherited ? 'italic' : 'normal',
-                color: isInherited ? 'text.secondary' : 'text.primary',
-              }
-            }}
-          />
-
-          {qty > 0 && (
-            <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>
-              = ${formatCurrency(commitmentDollars)}
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+              List: ${formatCurrency(listPrice)}
             </Typography>
-          )}
-
-          <TextField
-            label="Rebate %"
-            type="number"
-            size="small"
-            value={rebatePercentage}
-            onChange={(e) => onRebateChange(e.target.value)}
-            disabled={!selected}
-            inputProps={{ min: 0, max: 100, step: 0.01 }}
-            sx={{ 
-              width: 120,
-              '& input': {
-                fontStyle: isInherited ? 'italic' : 'normal',
-                color: isInherited ? 'text.secondary' : 'text.primary',
-              }
-            }}
-          />
-
-          <Typography variant="body2" color="text.secondary" sx={{ minWidth: 100 }}>
-            → ${formatCurrency(priceAfterRebate)}
-          </Typography>
-        </Box>
-
-        {/* Second row - Description, Conditional Rebate %, Net Revenue $, Growth Rebate %, Margin */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 0 }}>
-          <Box sx={{ minWidth: 280 }}>
+          </Box>
+          
+          <Box sx={{ flex: 1 }}>
             {item.description && (
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="body2" color="text.secondary">
                 {item.description}
               </Typography>
             )}
           </Box>
-
-          <TextField
-            label="Conditional Reb %"
-            type="number"
-            size="small"
-            value={conditionalRebate}
-            onChange={(e) => onConditionalRebateChange(e.target.value)}
-            disabled={!selected}
-            inputProps={{ min: 0, max: 100, step: 0.01 }}
-            sx={{ 
-              width: 140,
-              '& input': {
-                fontStyle: isInherited ? 'italic' : 'normal',
-                color: isInherited ? 'text.secondary' : 'text.primary',
-              }
-            }}
-          />
-
-          <Typography variant="body2" color="text.secondary" sx={{ minWidth: 100 }}>
-            → ${formatCurrency(priceAfterConditionalRebate)}
-          </Typography>
-
-          {qty > 0 && (
-            <Typography variant="body2" fontWeight="medium" sx={{ minWidth: 140 }}>
-              Net: ${formatCurrency(netRevenue)}
-            </Typography>
-          )}
-
-          <TextField
-            label="Growth Reb %"
-            type="number"
-            size="small"
-            value={growthRebate}
-            onChange={(e) => onGrowthRebateChange(e.target.value)}
-            disabled={!selected}
-            inputProps={{ min: 0, max: 100, step: 0.01 }}
-            sx={{ 
-              width: 120,
-              '& input': {
-                fontStyle: isInherited ? 'italic' : 'normal',
-                color: isInherited ? 'text.secondary' : 'text.primary',
-              }
-            }}
-          />
-
-          <Typography variant="body2" color="text.secondary" sx={{ minWidth: 100 }}>
-            → ${formatCurrency(priceAfterGrowthRebate)}
-          </Typography>
-
-          <Typography 
-            variant="body2" 
-            sx={{ 
-              minWidth: 100,
-              color: getMarginColor(netMargin),
-              fontWeight: 'medium'
-            }}
-          >
-            {netMargin.toFixed(1)}% margin
-          </Typography>
         </Box>
-      </Box>
+      ) : (
+        /* SELECTED STATE */
+        <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 280 }}>
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Typography variant="body1" fontWeight="medium">
+                  {item.id}: {item.name}
+                </Typography>
+                {item.description && (
+                  <Tooltip title={item.description} arrow>
+                    <IconButton size="small" sx={{ p: 0.25 }}>
+                      <InfoIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </Box>
+            </Box>
+
+            <Box>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                {itemTypeName && (
+                  <Typography variant="caption" color="text.secondary">
+                    Type: {itemTypeName}
+                  </Typography>
+                )}
+                {uomName && (
+                  <Typography variant="caption" color="text.secondary">
+                    UOM: {uomName} ({item.eachesPerUnitOfMeasure} ea)
+                  </Typography>
+                )}
+              </Box>
+              <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
+                <Typography variant="caption" color="text.secondary">
+                  List: ${formatCurrency(listPrice)}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Cost: ${formatCurrency(cost)}
+                </Typography>
+              </Box>
+            </Box>
+
+            <Box>
+              <Typography variant="caption" color="text.secondary">
+                Normal Margin: {normalMargin.toFixed(1)}%
+              </Typography>
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: getMarginColor(contractMargin),
+                  fontWeight: 'medium',
+                  display: 'block'
+                }}
+              >
+                Contract Margin: {contractMargin.toFixed(1)}% ({contractMarginDifference >= 0 ? '+' : ''}{contractMarginDifference.toFixed(1)}%)
+              </Typography>
+            </Box>
+
+            <Box>
+              <Typography variant="caption" fontWeight="medium">
+                Net Monthly: ${formatCurrency(netMonthlyRevenue)}
+              </Typography>
+            </Box>
+          </Box>
+
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <TextField
+                  label="Discount %"
+                  type="number"
+                  size="small"
+                  value={discountPercentage}
+                  onChange={(e) => onDiscountChange(e.target.value)}
+                  disabled={!selected}
+                  inputProps={{ min: 0, max: 100, step: 0.01 }}
+                  sx={{ 
+                    width: 120,
+                    '& input': {
+                      fontStyle: isInherited ? 'italic' : 'normal',
+                      color: isInherited ? 'text.secondary' : 'text.primary',
+                    }
+                  }}
+                />
+                <Tooltip title="Standard pricing discount" arrow>
+                  <IconButton size="small" sx={{ p: 0.25 }}>
+                    <InfoIcon sx={{ fontSize: 16, color: 'action.active' }} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+
+              <Typography variant="body2" color="text.secondary" sx={{ minWidth: 100 }}>
+                → ${formatCurrency(priceAfterDiscount)}
+              </Typography>
+
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <TextField
+                  label="Monthly Usage"
+                  type="number"
+                  size="small"
+                  value={quantityCommitment}
+                  onChange={(e) => onQuantityCommitmentChange(e.target.value)}
+                  disabled={!selected}
+                  inputProps={{ min: 0, step: 1 }}
+                  sx={{ 
+                    width: 140,
+                    '& input': {
+                      fontStyle: isInherited ? 'italic' : 'normal',
+                      color: isInherited ? 'text.secondary' : 'text.primary',
+                    }
+                  }}
+                />
+                <Tooltip title="Expected monthly quantity usage" arrow>
+                  <IconButton size="small" sx={{ p: 0.25 }}>
+                    <InfoIcon sx={{ fontSize: 16, color: 'action.active' }} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+
+              <Typography variant="body2" color="text.secondary" sx={{ minWidth: 160 }}>
+                = ${formatCurrency(commitmentDollars)} ({formatNumber(totalEaches)} ea)
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <TextField
+                  label="Rebate %"
+                  type="number"
+                  size="small"
+                  value={rebatePercentage}
+                  onChange={(e) => onRebateChange(e.target.value)}
+                  disabled={!selected}
+                  inputProps={{ min: 0, max: 100, step: 0.01 }}
+                  sx={{ 
+                    width: 120,
+                    '& input': {
+                      fontStyle: isInherited ? 'italic' : 'normal',
+                      color: isInherited ? 'text.secondary' : 'text.primary',
+                    }
+                  }}
+                />
+                <Tooltip title="Regular rebate" arrow>
+                  <IconButton size="small" sx={{ p: 0.25 }}>
+                    <InfoIcon sx={{ fontSize: 16, color: 'action.active' }} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+
+              <Typography variant="body2" color="text.secondary" sx={{ minWidth: 100 }}>
+                → ${formatCurrency(priceAfterRebate)}
+              </Typography>
+
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <TextField
+                  label="Conditional Reb %"
+                  type="number"
+                  size="small"
+                  value={conditionalRebate}
+                  onChange={(e) => onConditionalRebateChange(e.target.value)}
+                  disabled={!selected}
+                  inputProps={{ min: 0, max: 100, step: 0.01 }}
+                  sx={{ 
+                    width: 140,
+                    '& input': {
+                      fontStyle: isInherited ? 'italic' : 'normal',
+                      color: isInherited ? 'text.secondary' : 'text.primary',
+                    }
+                  }}
+                />
+                <Tooltip title="Conditional rebate" arrow>
+                  <IconButton size="small" sx={{ p: 0.25 }}>
+                    <InfoIcon sx={{ fontSize: 16, color: 'action.active' }} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+
+              <Typography variant="body2" color="text.secondary" sx={{ minWidth: 100 }}>
+                → ${formatCurrency(priceAfterConditionalRebate)}
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <TextField
+                  label="Growth Reb %"
+                  type="number"
+                  size="small"
+                  value={growthRebate}
+                  onChange={(e) => onGrowthRebateChange(e.target.value)}
+                  disabled={!selected}
+                  inputProps={{ min: 0, max: 100, step: 0.01 }}
+                  sx={{ 
+                    width: 120,
+                    '& input': {
+                      fontStyle: isInherited ? 'italic' : 'normal',
+                      color: isInherited ? 'text.secondary' : 'text.primary',
+                    }
+                  }}
+                />
+                <Tooltip title="Growth rebate" arrow>
+                  <IconButton size="small" sx={{ p: 0.25 }}>
+                    <InfoIcon sx={{ fontSize: 16, color: 'action.active' }} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+
+              <Typography variant="body2" color="text.secondary" sx={{ minWidth: 100 }}>
+                → ${formatCurrency(priceAfterGrowthRebate)}
+              </Typography>
+
+              <Box sx={{ minWidth: 140 }}>
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    color: getMarginColor(growthMargin),
+                    fontWeight: 'medium'
+                  }}
+                >
+                  Growth Margin: {growthMargin.toFixed(1)}% ({growthMarginDifference >= 0 ? '+' : ''}{growthMarginDifference.toFixed(1)}%)
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 }
