@@ -15,6 +15,9 @@ import type { VendorSegment, ItemCategory, Item, ItemType } from '../types';
 interface TypePricing {
   discountPercentage: string;
   rebatePercentage: string;
+  conditionalRebate: string;
+  growthRebate: string;
+  quantityCommitment: string;
 }
 
 interface SegmentAccordionProps {
@@ -33,18 +36,24 @@ interface SegmentAccordionProps {
         selected: boolean;
         discountPercentage: string;
         rebatePercentage: string;
+        conditionalRebate: string;
+        growthRebate: string;
+        quantityCommitment: string;
         isDirty: boolean;
         isInherited: boolean;
       }>;
     }>;
   };
   onToggleSegment: () => void;
-  onSegmentPricingChange: (itemTypeId: number, discount: string, rebate: string) => void;
+  onSegmentPricingChange: (itemTypeId: number, discount: string, rebate: string, conditionalRebate: string, growthRebate: string, quantityCommitment: string) => void;
   onToggleCategory: (categoryId: number) => void;
-  onCategoryPricingChange: (categoryId: number, itemTypeId: number, discount: string, rebate: string) => void;
+  onCategoryPricingChange: (categoryId: number, itemTypeId: number, discount: string, rebate: string, conditionalRebate: string, growthRebate: string, quantityCommitment: string) => void;
   onToggleItem: (categoryId: number, itemId: number) => void;
   onItemDiscountChange: (categoryId: number, itemId: number, value: string) => void;
   onItemRebateChange: (categoryId: number, itemId: number, value: string) => void;
+  onItemConditionalRebateChange: (categoryId: number, itemId: number, value: string) => void;
+  onItemGrowthRebateChange: (categoryId: number, itemId: number, value: string) => void;
+  onItemQuantityCommitmentChange: (categoryId: number, itemId: number, value: string) => void;
   onCategorySearchChange: (categoryId: number, value: string) => void;
 }
 
@@ -61,6 +70,9 @@ export default function SegmentAccordion({
   onToggleItem,
   onItemDiscountChange,
   onItemRebateChange,
+  onItemConditionalRebateChange,
+  onItemGrowthRebateChange,
+  onItemQuantityCommitmentChange,
   onCategorySearchChange,
 }: SegmentAccordionProps) {
   const [expanded, setExpanded] = useState(false);
@@ -113,10 +125,10 @@ export default function SegmentAccordion({
     });
   };
 
-  // Calculate total margin for selected items in segment by type
+  // Calculate total margin for selected items in segment by type (weighted by quantity commitment)
   const calculateTotalMarginByType = (itemTypeId: number) => {
     let totalCost = 0;
-    let totalNetPrice = 0;
+    let totalRevenue = 0;
 
     categories.forEach(category => {
       const categoryItems = items.filter(i => i.itemCategoryId === category.id && i.itemTypeId === itemTypeId);
@@ -127,25 +139,33 @@ export default function SegmentAccordion({
         if (itemState?.selected) {
           const listPrice = item.listPrice || 0;
           const cost = item.cost || 0;
+          const quantity = itemState.quantityCommitment ? parseFloat(itemState.quantityCommitment) : 1;
+          
+          // Calculate net price per unit
           const discountPercent = itemState.discountPercentage ? parseFloat(itemState.discountPercentage) / 100 : 0;
           const priceAfterDiscount = listPrice * (1 - discountPercent);
+          
           const rebatePercent = itemState.rebatePercentage ? parseFloat(itemState.rebatePercentage) / 100 : 0;
-          const netPrice = priceAfterDiscount * (1 - rebatePercent);
+          const priceAfterRebate = priceAfterDiscount * (1 - rebatePercent);
+          
+          const conditionalRebatePercent = itemState.conditionalRebate ? parseFloat(itemState.conditionalRebate) / 100 : 0;
+          const netPricePerUnit = priceAfterRebate * (1 - conditionalRebatePercent);
 
-          totalCost += cost;
-          totalNetPrice += netPrice;
+          // Weight by quantity
+          totalCost += cost * quantity;
+          totalRevenue += netPricePerUnit * quantity;
         }
       });
     });
 
-    if (totalNetPrice === 0) return 0;
-    return ((totalNetPrice - totalCost) / totalNetPrice) * 100;
+    if (totalRevenue === 0) return 0;
+    return ((totalRevenue - totalCost) / totalRevenue) * 100;
   };
 
-  // Calculate total margin across all types
+  // Calculate total margin across all types (weighted by quantity commitment)
   const calculateTotalMargin = () => {
     let totalCost = 0;
-    let totalNetPrice = 0;
+    let totalRevenue = 0;
 
     categories.forEach(category => {
       const categoryItems = items.filter(i => i.itemCategoryId === category.id);
@@ -156,19 +176,27 @@ export default function SegmentAccordion({
         if (itemState?.selected) {
           const listPrice = item.listPrice || 0;
           const cost = item.cost || 0;
+          const quantity = itemState.quantityCommitment ? parseFloat(itemState.quantityCommitment) : 1;
+          
+          // Calculate net price per unit
           const discountPercent = itemState.discountPercentage ? parseFloat(itemState.discountPercentage) / 100 : 0;
           const priceAfterDiscount = listPrice * (1 - discountPercent);
+          
           const rebatePercent = itemState.rebatePercentage ? parseFloat(itemState.rebatePercentage) / 100 : 0;
-          const netPrice = priceAfterDiscount * (1 - rebatePercent);
+          const priceAfterRebate = priceAfterDiscount * (1 - rebatePercent);
+          
+          const conditionalRebatePercent = itemState.conditionalRebate ? parseFloat(itemState.conditionalRebate) / 100 : 0;
+          const netPricePerUnit = priceAfterRebate * (1 - conditionalRebatePercent);
 
-          totalCost += cost;
-          totalNetPrice += netPrice;
+          // Weight by quantity
+          totalCost += cost * quantity;
+          totalRevenue += netPricePerUnit * quantity;
         }
       });
     });
 
-    if (totalNetPrice === 0) return 0;
-    return ((totalNetPrice - totalCost) / totalNetPrice) * 100;
+    if (totalRevenue === 0) return 0;
+    return ((totalRevenue - totalCost) / totalRevenue) * 100;
   };
 
   const totalMargin = calculateTotalMargin();
@@ -223,7 +251,7 @@ export default function SegmentAccordion({
           </Box>
         </Box>
 
-        {/* Pricing inputs for each item type */}
+        {/* Pricing inputs for each item type - NO Quantity Commitment */}
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', flex: 1 }}>
           {itemTypes.map(itemType => {
             const typeName = itemType.shortName || itemType.name;
@@ -273,6 +301,8 @@ export default function SegmentAccordion({
                     </Typography>
                   )}
                 </Box>
+                
+                {/* Row 1: Discount and Rebate */}
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   <TextField
                     label="Disc %"
@@ -284,7 +314,10 @@ export default function SegmentAccordion({
                       onSegmentPricingChange(
                         itemType.id,
                         e.target.value,
-                        segmentState.pricingByType[itemType.id]?.rebatePercentage || ''
+                        segmentState.pricingByType[itemType.id]?.rebatePercentage || '',
+                        segmentState.pricingByType[itemType.id]?.conditionalRebate || '',
+                        segmentState.pricingByType[itemType.id]?.growthRebate || '',
+                        segmentState.pricingByType[itemType.id]?.quantityCommitment || ''
                       );
                     }}
                     onFocus={(e) => {
@@ -308,7 +341,10 @@ export default function SegmentAccordion({
                       onSegmentPricingChange(
                         itemType.id,
                         segmentState.pricingByType[itemType.id]?.discountPercentage || '',
-                        e.target.value
+                        e.target.value,
+                        segmentState.pricingByType[itemType.id]?.conditionalRebate || '',
+                        segmentState.pricingByType[itemType.id]?.growthRebate || '',
+                        segmentState.pricingByType[itemType.id]?.quantityCommitment || ''
                       );
                     }}
                     onFocus={(e) => {
@@ -323,6 +359,65 @@ export default function SegmentAccordion({
                     sx={{ width: 80 }}
                   />
                 </Box>
+                
+                {/* Row 2: Conditional Rebate and Growth Rebate */}
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <TextField
+                    label="Cond %"
+                    type="number"
+                    size="small"
+                    value={segmentState.pricingByType[itemType.id]?.conditionalRebate || ''}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      onSegmentPricingChange(
+                        itemType.id,
+                        segmentState.pricingByType[itemType.id]?.discountPercentage || '',
+                        segmentState.pricingByType[itemType.id]?.rebatePercentage || '',
+                        e.target.value,
+                        segmentState.pricingByType[itemType.id]?.growthRebate || '',
+                        segmentState.pricingByType[itemType.id]?.quantityCommitment || ''
+                      );
+                    }}
+                    onFocus={(e) => {
+                      e.stopPropagation();
+                      setShowWarning({ ...showWarning, [itemType.id]: true });
+                    }}
+                    onBlur={() => {
+                      setShowWarning({ ...showWarning, [itemType.id]: false });
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    inputProps={{ min: 0, max: 100, step: 0.01 }}
+                    sx={{ width: 80 }}
+                  />
+                  <TextField
+                    label="Grwth %"
+                    type="number"
+                    size="small"
+                    value={segmentState.pricingByType[itemType.id]?.growthRebate || ''}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      onSegmentPricingChange(
+                        itemType.id,
+                        segmentState.pricingByType[itemType.id]?.discountPercentage || '',
+                        segmentState.pricingByType[itemType.id]?.rebatePercentage || '',
+                        segmentState.pricingByType[itemType.id]?.conditionalRebate || '',
+                        e.target.value,
+                        segmentState.pricingByType[itemType.id]?.quantityCommitment || ''
+                      );
+                    }}
+                    onFocus={(e) => {
+                      e.stopPropagation();
+                      setShowWarning({ ...showWarning, [itemType.id]: true });
+                    }}
+                    onBlur={() => {
+                      setShowWarning({ ...showWarning, [itemType.id]: false });
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    inputProps={{ min: 0, max: 100, step: 0.01 }}
+                    sx={{ width: 80 }}
+                  />
+                </Box>
+                
                 {showWarning[itemType.id] && (
                   <Typography 
                     variant="caption" 
@@ -353,12 +448,15 @@ export default function SegmentAccordion({
               categoryState={segmentState.categories[category.id]}
               segmentId={segment.id}
               onToggleCategory={() => onToggleCategory(category.id)}
-              onCategoryPricingChange={(itemTypeId, discount, rebate) => 
-                onCategoryPricingChange(category.id, itemTypeId, discount, rebate)
+              onCategoryPricingChange={(itemTypeId, discount, rebate, conditionalRebate, growthRebate, quantityCommitment) => 
+                onCategoryPricingChange(category.id, itemTypeId, discount, rebate, conditionalRebate, growthRebate, quantityCommitment)
               }
               onToggleItem={(itemId) => onToggleItem(category.id, itemId)}
               onItemDiscountChange={(itemId, value) => onItemDiscountChange(category.id, itemId, value)}
               onItemRebateChange={(itemId, value) => onItemRebateChange(category.id, itemId, value)}
+              onItemConditionalRebateChange={(itemId, value) => onItemConditionalRebateChange(category.id, itemId, value)}
+              onItemGrowthRebateChange={(itemId, value) => onItemGrowthRebateChange(category.id, itemId, value)}
+              onItemQuantityCommitmentChange={(itemId, value) => onItemQuantityCommitmentChange(category.id, itemId, value)}
               onSearchChange={(value) => onCategorySearchChange(category.id, value)}
             />
           );

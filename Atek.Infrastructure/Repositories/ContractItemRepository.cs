@@ -68,6 +68,9 @@ public class ContractItemRepository : IContractItemRepository
             existing.ItemId = contractItem.ItemId;
             existing.DiscountPercentage = contractItem.DiscountPercentage;
             existing.RebatePercentage = contractItem.RebatePercentage;
+            existing.ConditionalRebate = contractItem.ConditionalRebate;
+            existing.GrowthRebate = contractItem.GrowthRebate;
+            existing.QuantityCommitment = contractItem.QuantityCommitment;
             existing.LastModifiedDate = DateTime.UtcNow;
             
             await _context.SaveChangesAsync();

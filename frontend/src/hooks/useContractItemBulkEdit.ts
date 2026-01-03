@@ -5,6 +5,9 @@ interface ItemEditState {
   selected: boolean;
   discountPercentage: string;
   rebatePercentage: string;
+  conditionalRebate: string;
+  growthRebate: string;
+  quantityCommitment: string;
   isDirty: boolean;
   existingContractItemId?: number;
   isInherited: boolean;
@@ -13,18 +16,21 @@ interface ItemEditState {
 interface TypePricing {
   discountPercentage: string;
   rebatePercentage: string;
+  conditionalRebate: string;
+  growthRebate: string;
+  quantityCommitment: string;
 }
 
 interface CategoryEditState {
   selected: boolean;
-  pricingByType: Record<number, TypePricing>; // itemTypeId -> pricing
+  pricingByType: Record<number, TypePricing>;
   itemSearch: string;
   items: Record<number, ItemEditState>;
 }
 
 interface SegmentEditState {
   selected: boolean;
-  pricingByType: Record<number, TypePricing>; // itemTypeId -> pricing
+  pricingByType: Record<number, TypePricing>;
   categories: Record<number, CategoryEditState>;
 }
 
@@ -35,9 +41,9 @@ interface BulkEditState {
 
 type Action =
   | { type: 'INITIALIZE'; payload: { segments: VendorSegment[]; categories: ItemCategory[]; items: Item[]; existingContractItems: ContractItem[]; itemTypes: ItemType[] } }
-  | { type: 'SET_SEGMENT_PRICING'; payload: { segmentId: number; itemTypeId: number; discount: string; rebate: string; items: Item[] } }
-  | { type: 'SET_CATEGORY_PRICING'; payload: { segmentId: number; categoryId: number; itemTypeId: number; discount: string; rebate: string; items: Item[] } }
-  | { type: 'SET_ITEM_PRICING'; payload: { segmentId: number; categoryId: number; itemId: number; discount: string; rebate: string; item: Item } }
+  | { type: 'SET_SEGMENT_PRICING'; payload: { segmentId: number; itemTypeId: number; discount: string; rebate: string; conditionalRebate: string; growthRebate: string; quantityCommitment: string; items: Item[] } }
+  | { type: 'SET_CATEGORY_PRICING'; payload: { segmentId: number; categoryId: number; itemTypeId: number; discount: string; rebate: string; conditionalRebate: string; growthRebate: string; quantityCommitment: string; items: Item[] } }
+  | { type: 'SET_ITEM_PRICING'; payload: { segmentId: number; categoryId: number; itemId: number; discount: string; rebate: string; conditionalRebate: string; growthRebate: string; quantityCommitment: string; item: Item } }
   | { type: 'TOGGLE_ITEM'; payload: { segmentId: number; categoryId: number; itemId: number } }
   | { type: 'TOGGLE_CATEGORY'; payload: { segmentId: number; categoryId: number } }
   | { type: 'TOGGLE_SEGMENT'; payload: { segmentId: number } }
@@ -56,7 +62,13 @@ function createInitialState(
   const createEmptyPricingByType = (): Record<number, TypePricing> => {
     const pricing: Record<number, TypePricing> = {};
     itemTypes.forEach(type => {
-      pricing[type.id] = { discountPercentage: '', rebatePercentage: '' };
+      pricing[type.id] = { 
+        discountPercentage: '', 
+        rebatePercentage: '',
+        conditionalRebate: '',
+        growthRebate: '',
+        quantityCommitment: ''
+      };
     });
     return pricing;
   };
@@ -75,6 +87,9 @@ function createInitialState(
           selected: !!existing,
           discountPercentage: existing?.discountPercentage?.toString() || '',
           rebatePercentage: existing?.rebatePercentage?.toString() || '',
+          conditionalRebate: existing?.conditionalRebate?.toString() || '',
+          growthRebate: existing?.growthRebate?.toString() || '',
+          quantityCommitment: existing?.quantityCommitment?.toString() || '',
           isDirty: false,
           existingContractItemId: existing?.id,
           isInherited: false,
@@ -114,17 +129,23 @@ function reducer(state: BulkEditState, action: Action): BulkEditState {
       );
 
     case 'SET_SEGMENT_PRICING': {
-      const { segmentId, itemTypeId, discount, rebate, items } = action.payload;
+      const { segmentId, itemTypeId, discount, rebate, conditionalRebate, growthRebate, quantityCommitment, items } = action.payload;
       const segment = newState.segments[segmentId];
       
       // Set segment-level pricing for this type
       segment.pricingByType[itemTypeId].discountPercentage = discount;
       segment.pricingByType[itemTypeId].rebatePercentage = rebate;
+      segment.pricingByType[itemTypeId].conditionalRebate = conditionalRebate;
+      segment.pricingByType[itemTypeId].growthRebate = growthRebate;
+      segment.pricingByType[itemTypeId].quantityCommitment = quantityCommitment;
 
       // Propagate to all categories and items of this type
       Object.entries(segment.categories).forEach(([categoryId, category]: [string, CategoryEditState]) => {
         category.pricingByType[itemTypeId].discountPercentage = discount;
         category.pricingByType[itemTypeId].rebatePercentage = rebate;
+        category.pricingByType[itemTypeId].conditionalRebate = conditionalRebate;
+        category.pricingByType[itemTypeId].growthRebate = growthRebate;
+        category.pricingByType[itemTypeId].quantityCommitment = quantityCommitment;
         
         // Get items in this category
         const categoryItems = items.filter(i => i.itemCategoryId === Number(categoryId));
@@ -137,6 +158,9 @@ function reducer(state: BulkEditState, action: Action): BulkEditState {
           if (itemData && itemData.itemTypeId === itemTypeId && !item.isDirty) {
             item.discountPercentage = discount;
             item.rebatePercentage = rebate;
+            item.conditionalRebate = conditionalRebate;
+            item.growthRebate = growthRebate;
+            item.quantityCommitment = quantityCommitment;
             item.isInherited = true;
           }
         });
@@ -145,16 +169,22 @@ function reducer(state: BulkEditState, action: Action): BulkEditState {
     }
 
     case 'SET_CATEGORY_PRICING': {
-      const { segmentId, categoryId, itemTypeId, discount, rebate, items } = action.payload;
+      const { segmentId, categoryId, itemTypeId, discount, rebate, conditionalRebate, growthRebate, quantityCommitment, items } = action.payload;
       const category = newState.segments[segmentId].categories[categoryId];
       
       // Set category-level pricing for this type
       category.pricingByType[itemTypeId].discountPercentage = discount;
       category.pricingByType[itemTypeId].rebatePercentage = rebate;
+      category.pricingByType[itemTypeId].conditionalRebate = conditionalRebate;
+      category.pricingByType[itemTypeId].growthRebate = growthRebate;
+      category.pricingByType[itemTypeId].quantityCommitment = quantityCommitment;
 
       // Clear segment pricing for this type
       newState.segments[segmentId].pricingByType[itemTypeId].discountPercentage = '';
       newState.segments[segmentId].pricingByType[itemTypeId].rebatePercentage = '';
+      newState.segments[segmentId].pricingByType[itemTypeId].conditionalRebate = '';
+      newState.segments[segmentId].pricingByType[itemTypeId].growthRebate = '';
+      newState.segments[segmentId].pricingByType[itemTypeId].quantityCommitment = '';
 
       // Get items in this category
       const categoryItems = items.filter(i => i.itemCategoryId === categoryId);
@@ -168,6 +198,9 @@ function reducer(state: BulkEditState, action: Action): BulkEditState {
         if (itemData && itemData.itemTypeId === itemTypeId && !item.isDirty) {
           item.discountPercentage = discount;
           item.rebatePercentage = rebate;
+          item.conditionalRebate = conditionalRebate;
+          item.growthRebate = growthRebate;
+          item.quantityCommitment = quantityCommitment;
           item.isInherited = true;
         }
       });
@@ -175,11 +208,14 @@ function reducer(state: BulkEditState, action: Action): BulkEditState {
     }
 
     case 'SET_ITEM_PRICING': {
-      const { segmentId, categoryId, itemId, discount, rebate, item: itemData } = action.payload;
+      const { segmentId, categoryId, itemId, discount, rebate, conditionalRebate, growthRebate, quantityCommitment, item: itemData } = action.payload;
       const item = newState.segments[segmentId].categories[categoryId].items[itemId];
       
       item.discountPercentage = discount;
       item.rebatePercentage = rebate;
+      item.conditionalRebate = conditionalRebate;
+      item.growthRebate = growthRebate;
+      item.quantityCommitment = quantityCommitment;
       item.isDirty = true;
       item.isInherited = false;
 
@@ -187,8 +223,14 @@ function reducer(state: BulkEditState, action: Action): BulkEditState {
       const itemTypeId = itemData.itemTypeId;
       newState.segments[segmentId].pricingByType[itemTypeId].discountPercentage = '';
       newState.segments[segmentId].pricingByType[itemTypeId].rebatePercentage = '';
+      newState.segments[segmentId].pricingByType[itemTypeId].conditionalRebate = '';
+      newState.segments[segmentId].pricingByType[itemTypeId].growthRebate = '';
+      newState.segments[segmentId].pricingByType[itemTypeId].quantityCommitment = '';
       newState.segments[segmentId].categories[categoryId].pricingByType[itemTypeId].discountPercentage = '';
       newState.segments[segmentId].categories[categoryId].pricingByType[itemTypeId].rebatePercentage = '';
+      newState.segments[segmentId].categories[categoryId].pricingByType[itemTypeId].conditionalRebate = '';
+      newState.segments[segmentId].categories[categoryId].pricingByType[itemTypeId].growthRebate = '';
+      newState.segments[segmentId].categories[categoryId].pricingByType[itemTypeId].quantityCommitment = '';
       
       return newState;
     }
@@ -261,18 +303,18 @@ export function useContractItemBulkEdit(
     }
   }, [segments, categories, items, existingContractItems, itemTypes, resetTrigger]);
 
-  const setSegmentPricing = useCallback((segmentId: number, itemTypeId: number, discount: string, rebate: string) => {
-    dispatch({ type: 'SET_SEGMENT_PRICING', payload: { segmentId, itemTypeId, discount, rebate, items } });
+  const setSegmentPricing = useCallback((segmentId: number, itemTypeId: number, discount: string, rebate: string, conditionalRebate: string, growthRebate: string, quantityCommitment: string) => {
+    dispatch({ type: 'SET_SEGMENT_PRICING', payload: { segmentId, itemTypeId, discount, rebate, conditionalRebate, growthRebate, quantityCommitment, items } });
   }, [items]);
 
-  const setCategoryPricing = useCallback((segmentId: number, categoryId: number, itemTypeId: number, discount: string, rebate: string) => {
-    dispatch({ type: 'SET_CATEGORY_PRICING', payload: { segmentId, categoryId, itemTypeId, discount, rebate, items } });
+  const setCategoryPricing = useCallback((segmentId: number, categoryId: number, itemTypeId: number, discount: string, rebate: string, conditionalRebate: string, growthRebate: string, quantityCommitment: string) => {
+    dispatch({ type: 'SET_CATEGORY_PRICING', payload: { segmentId, categoryId, itemTypeId, discount, rebate, conditionalRebate, growthRebate, quantityCommitment, items } });
   }, [items]);
 
-  const setItemPricing = useCallback((segmentId: number, categoryId: number, itemId: number, discount: string, rebate: string) => {
+  const setItemPricing = useCallback((segmentId: number, categoryId: number, itemId: number, discount: string, rebate: string, conditionalRebate: string, growthRebate: string, quantityCommitment: string) => {
     const item = items.find(i => i.id === itemId);
     if (!item) return;
-    dispatch({ type: 'SET_ITEM_PRICING', payload: { segmentId, categoryId, itemId, discount, rebate, item } });
+    dispatch({ type: 'SET_ITEM_PRICING', payload: { segmentId, categoryId, itemId, discount, rebate, conditionalRebate, growthRebate, quantityCommitment, item } });
   }, [items]);
 
   const toggleItem = useCallback((segmentId: number, categoryId: number, itemId: number) => {
@@ -292,8 +334,23 @@ export function useContractItemBulkEdit(
   }, []);
 
   const getChanges = useCallback(() => {
-    const toCreate: Array<{ itemId: number; discountPercentage: number | null; rebatePercentage: number | null }> = [];
-    const toUpdate: Array<{ id: number; itemId: number; discountPercentage: number | null; rebatePercentage: number | null }> = [];
+    const toCreate: Array<{ 
+      itemId: number; 
+      discountPercentage: number | null; 
+      rebatePercentage: number | null;
+      conditionalRebate: number | null;
+      growthRebate: number | null;
+      quantityCommitment: number | null;
+    }> = [];
+    const toUpdate: Array<{ 
+      id: number; 
+      itemId: number; 
+      discountPercentage: number | null; 
+      rebatePercentage: number | null;
+      conditionalRebate: number | null;
+      growthRebate: number | null;
+      quantityCommitment: number | null;
+    }> = [];
     const toDelete: number[] = [];
 
     Object.values(state.segments).forEach(segment => {
@@ -306,6 +363,9 @@ export function useContractItemBulkEdit(
               itemId: numItemId,
               discountPercentage: item.discountPercentage ? parseFloat(item.discountPercentage) : null,
               rebatePercentage: item.rebatePercentage ? parseFloat(item.rebatePercentage) : null,
+              conditionalRebate: item.conditionalRebate ? parseFloat(item.conditionalRebate) : null,
+              growthRebate: item.growthRebate ? parseFloat(item.growthRebate) : null,
+              quantityCommitment: item.quantityCommitment ? parseInt(item.quantityCommitment) : null,
             });
           } else if (item.selected && item.existingContractItemId && item.isDirty) {
             toUpdate.push({
@@ -313,6 +373,9 @@ export function useContractItemBulkEdit(
               itemId: numItemId,
               discountPercentage: item.discountPercentage ? parseFloat(item.discountPercentage) : null,
               rebatePercentage: item.rebatePercentage ? parseFloat(item.rebatePercentage) : null,
+              conditionalRebate: item.conditionalRebate ? parseFloat(item.conditionalRebate) : null,
+              growthRebate: item.growthRebate ? parseFloat(item.growthRebate) : null,
+              quantityCommitment: item.quantityCommitment ? parseInt(item.quantityCommitment) : null,
             });
           } else if (!item.selected && item.existingContractItemId) {
             toDelete.push(item.existingContractItemId);

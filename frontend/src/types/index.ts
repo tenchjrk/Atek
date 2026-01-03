@@ -174,8 +174,11 @@ export interface ContractItem {
   id: number;
   contractId: number;
   itemId: number;
-  discountPercentage?: number | null;
-  rebatePercentage?: number | null;
+  discountPercentage: number | null;
+  rebatePercentage: number | null;
+  conditionalRebate: number | null;
+  growthRebate: number | null;
+  quantityCommitment: number | null;
   createdDate: string;
   lastModifiedDate: string;
   contract?: Contract | null;

@@ -451,14 +451,14 @@ export default function ContractItems() {
                 itemTypes={itemTypes}
                 segmentState={segmentState}
                 onToggleSegment={() => toggleSegment(segment.id)}
-                onSegmentPricingChange={(itemTypeId, discount, rebate) =>
-                  setSegmentPricing(segment.id, itemTypeId, discount, rebate)
+                onSegmentPricingChange={(itemTypeId, discount, rebate, conditionalRebate, growthRebate, quantityCommitment) =>
+                  setSegmentPricing(segment.id, itemTypeId, discount, rebate, conditionalRebate, growthRebate, quantityCommitment)
                 }
                 onToggleCategory={(categoryId) =>
                   toggleCategory(segment.id, categoryId)
                 }
-                onCategoryPricingChange={(categoryId, itemTypeId, discount, rebate) =>
-                  setCategoryPricing(segment.id, categoryId, itemTypeId, discount, rebate)
+                onCategoryPricingChange={(categoryId, itemTypeId, discount, rebate, conditionalRebate, growthRebate, quantityCommitment) =>
+                  setCategoryPricing(segment.id, categoryId, itemTypeId, discount, rebate, conditionalRebate, growthRebate, quantityCommitment)
                 }
                 onToggleItem={(categoryId, itemId) =>
                   toggleItem(segment.id, categoryId, itemId)
@@ -469,8 +469,10 @@ export default function ContractItems() {
                     categoryId,
                     itemId,
                     value,
-                    segmentState.categories[categoryId].items[itemId]
-                      .rebatePercentage
+                    segmentState.categories[categoryId].items[itemId].rebatePercentage,
+                    segmentState.categories[categoryId].items[itemId].conditionalRebate,
+                    segmentState.categories[categoryId].items[itemId].growthRebate,
+                    segmentState.categories[categoryId].items[itemId].quantityCommitment
                   )
                 }
                 onItemRebateChange={(categoryId, itemId, value) =>
@@ -478,8 +480,46 @@ export default function ContractItems() {
                     segment.id,
                     categoryId,
                     itemId,
-                    segmentState.categories[categoryId].items[itemId]
-                      .discountPercentage,
+                    segmentState.categories[categoryId].items[itemId].discountPercentage,
+                    value,
+                    segmentState.categories[categoryId].items[itemId].conditionalRebate,
+                    segmentState.categories[categoryId].items[itemId].growthRebate,
+                    segmentState.categories[categoryId].items[itemId].quantityCommitment
+                  )
+                }
+                onItemConditionalRebateChange={(categoryId, itemId, value) =>
+                  setItemPricing(
+                    segment.id,
+                    categoryId,
+                    itemId,
+                    segmentState.categories[categoryId].items[itemId].discountPercentage,
+                    segmentState.categories[categoryId].items[itemId].rebatePercentage,
+                    value,
+                    segmentState.categories[categoryId].items[itemId].growthRebate,
+                    segmentState.categories[categoryId].items[itemId].quantityCommitment
+                  )
+                }
+                onItemGrowthRebateChange={(categoryId, itemId, value) =>
+                  setItemPricing(
+                    segment.id,
+                    categoryId,
+                    itemId,
+                    segmentState.categories[categoryId].items[itemId].discountPercentage,
+                    segmentState.categories[categoryId].items[itemId].rebatePercentage,
+                    segmentState.categories[categoryId].items[itemId].conditionalRebate,
+                    value,
+                    segmentState.categories[categoryId].items[itemId].quantityCommitment
+                  )
+                }
+                onItemQuantityCommitmentChange={(categoryId, itemId, value) =>
+                  setItemPricing(
+                    segment.id,
+                    categoryId,
+                    itemId,
+                    segmentState.categories[categoryId].items[itemId].discountPercentage,
+                    segmentState.categories[categoryId].items[itemId].rebatePercentage,
+                    segmentState.categories[categoryId].items[itemId].conditionalRebate,
+                    segmentState.categories[categoryId].items[itemId].growthRebate,
                     value
                   )
                 }
