@@ -160,11 +160,11 @@ export default function CategoryAccordion({
     return ((totalRevenue - totalCost) / totalRevenue) * 100;
   };
 
-  // Calculate total margin, total revenue, and net revenue across all types (weighted by quantity commitment)
+  // Calculate total margin, total monthly revenue, and net monthly revenue (weighted by quantity commitment)
   const calculateTotalStats = () => {
     let totalCost = 0;
-    let annualTotalRevenue = 0;
-    let annualNetRevenue = 0;
+    let monthlyTotalRevenue = 0;
+    let monthlyNetRevenue = 0;
 
     items.forEach(item => {
       const itemState = categoryState.items[item.id];
@@ -183,27 +183,21 @@ export default function CategoryAccordion({
         const conditionalRebatePercent = itemState.conditionalRebate ? parseFloat(itemState.conditionalRebate) / 100 : 0;
         const netPricePerUnit = priceAfterRebate * (1 - conditionalRebatePercent);
 
-        // Annual revenue (after discount, before rebates)
-        annualTotalRevenue += priceAfterDiscount * quantity;
+        // Monthly revenue (after discount, before rebates)
+        monthlyTotalRevenue += priceAfterDiscount * quantity;
         
-        // Annual net revenue (after all rebates except growth)
-        annualNetRevenue += netPricePerUnit * quantity;
+        // Monthly net revenue (after all rebates except growth)
+        monthlyNetRevenue += netPricePerUnit * quantity;
 
         // Weight by quantity
         totalCost += cost * quantity;
       }
     });
 
-    const margin = annualNetRevenue === 0 ? 0 : ((annualNetRevenue - totalCost) / annualNetRevenue) * 100;
-    
-    // Calculate monthly values
-    const monthlyTotalRevenue = annualTotalRevenue / 12;
-    const monthlyNetRevenue = annualNetRevenue / 12;
+    const margin = monthlyNetRevenue === 0 ? 0 : ((monthlyNetRevenue - totalCost) / monthlyNetRevenue) * 100;
 
     return { 
       margin, 
-      annualTotalRevenue, 
-      annualNetRevenue,
       monthlyTotalRevenue,
       monthlyNetRevenue
     };
@@ -211,8 +205,6 @@ export default function CategoryAccordion({
 
   const { 
     margin: totalMargin, 
-    annualTotalRevenue,
-    annualNetRevenue,
     monthlyTotalRevenue,
     monthlyNetRevenue
   } = calculateTotalStats();
@@ -266,16 +258,10 @@ export default function CategoryAccordion({
                   Margin: {totalMargin.toFixed(1)}%
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Monthly Total Rev: ${formatCurrency(monthlyTotalRevenue)}
+                  Monthly Total: ${formatCurrency(monthlyTotalRevenue)}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Monthly Net Rev: ${formatCurrency(monthlyNetRevenue)}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Annual Total Rev: ${formatCurrency(annualTotalRevenue)}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Annual Net Rev: ${formatCurrency(annualNetRevenue)}
+                  Monthly Net: ${formatCurrency(monthlyNetRevenue)}
                 </Typography>
               </Box>
             )}

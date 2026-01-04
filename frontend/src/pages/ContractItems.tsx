@@ -1,5 +1,14 @@
 import { useState, useEffect } from "react";
-import { Box, Button, Chip, Alert, CircularProgress, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Chip,
+  Alert,
+  CircularProgress,
+  Typography,
+  IconButton,
+  Tooltip,
+} from "@mui/material";
 import {
   ArrowBack as ArrowBackIcon,
   Save as SaveIcon,
@@ -40,9 +49,13 @@ export default function ContractItems() {
   const [itemCategories, setItemCategories] = useState<ItemCategory[]>([]);
   const [vendorSegments, setVendorSegments] = useState<VendorSegment[]>([]);
   const [itemTypes, setItemTypes] = useState<ItemType[]>([]);
-  const [existingContractItems, setExistingContractItems] = useState<ContractItem[]>([]);
+  const [existingContractItems, setExistingContractItems] = useState<
+    ContractItem[]
+  >([]);
   const [saving, setSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">(
+    "idle"
+  );
   const [showSavedIndicator, setShowSavedIndicator] = useState(false);
   const [resetTrigger, setResetTrigger] = useState(0);
   const [updatingStatus, setUpdatingStatus] = useState(false);
@@ -132,9 +145,94 @@ export default function ContractItems() {
     }
   }, [hasChanges]);
 
+  // Calculate contract-level totals
+  const calculateContractTotals = () => {
+    let totalCost = 0;
+    let monthlyTotalRevenue = 0;
+    let monthlyNetRevenue = 0;
+
+    Object.values(state.segments).forEach((segmentState) => {
+      Object.values(segmentState.categories).forEach((categoryState) => {
+        Object.entries(categoryState.items).forEach(
+          ([itemIdStr, itemState]) => {
+            if (itemState.selected) {
+              const itemId = Number(itemIdStr);
+              const item = items.find((i) => i.id === itemId);
+              if (!item) return;
+
+              const listPrice = item.listPrice || 0;
+              const cost = item.cost || 0;
+              const quantity = itemState.quantityCommitment
+                ? parseFloat(itemState.quantityCommitment)
+                : 1;
+
+              // Calculate net price per unit
+              const discountPercent = itemState.discountPercentage
+                ? parseFloat(itemState.discountPercentage) / 100
+                : 0;
+              const priceAfterDiscount = listPrice * (1 - discountPercent);
+
+              const rebatePercent = itemState.rebatePercentage
+                ? parseFloat(itemState.rebatePercentage) / 100
+                : 0;
+              const priceAfterRebate = priceAfterDiscount * (1 - rebatePercent);
+
+              const conditionalRebatePercent = itemState.conditionalRebate
+                ? parseFloat(itemState.conditionalRebate) / 100
+                : 0;
+              const netPricePerUnit =
+                priceAfterRebate * (1 - conditionalRebatePercent);
+
+              // Monthly revenue (after discount, before rebates)
+              monthlyTotalRevenue += priceAfterDiscount * quantity;
+
+              // Monthly net revenue (after all rebates except growth)
+              monthlyNetRevenue += netPricePerUnit * quantity;
+
+              // Weight by quantity
+              totalCost += cost * quantity;
+            }
+          }
+        );
+      });
+    });
+
+    const margin =
+      monthlyNetRevenue === 0
+        ? 0
+        : ((monthlyNetRevenue - totalCost) / monthlyNetRevenue) * 100;
+
+    return {
+      margin,
+      monthlyTotalRevenue,
+      monthlyNetRevenue,
+    };
+  };
+
+  const {
+    margin: contractMargin,
+    monthlyTotalRevenue: contractMonthlyTotal,
+    monthlyNetRevenue: contractMonthlyNet,
+  } = calculateContractTotals();
+
+  // Format currency with commas
+  const formatCurrency = (value: number) => {
+    return value.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
+  // Get margin color based on value
+  const getMarginColor = (margin: number) => {
+    if (margin >= 80) return "success.main"; // Green
+    if (margin >= 70) return "warning.main"; // Yellow
+    return "error.main"; // Red
+  };
+
   const handleSave = async () => {
     setSaving(true);
-    setSaveStatus('idle');
+    setSaveStatus("idle");
     try {
       const { toCreate, toUpdate, toDelete } = getChanges();
 
@@ -174,20 +272,20 @@ export default function ContractItems() {
       );
       setExistingContractItems(contractItemsResponse.data);
 
-      setSaveStatus('success');
+      setSaveStatus("success");
       setShowSavedIndicator(true);
-      
+
       // Reset success status after 3 seconds
       setTimeout(() => {
-        setSaveStatus('idle');
+        setSaveStatus("idle");
       }, 3000);
     } catch (err) {
       console.error("Error saving changes:", err);
-      setSaveStatus('error');
-      
+      setSaveStatus("error");
+
       // Reset error status after 5 seconds
       setTimeout(() => {
-        setSaveStatus('idle');
+        setSaveStatus("idle");
       }, 5000);
     } finally {
       setSaving(false);
@@ -196,12 +294,12 @@ export default function ContractItems() {
 
   const handleDiscardChanges = () => {
     // Increment resetTrigger to force hook reinitialization
-    setResetTrigger(prev => prev + 1);
+    setResetTrigger((prev) => prev + 1);
   };
 
   const handleStatusChange = async (newStatusId: number) => {
     if (!contract) return;
-    
+
     setUpdatingStatus(true);
     try {
       await contractApi.update(contract.id, {
@@ -242,9 +340,15 @@ export default function ContractItems() {
     if (statusId === 1 || statusId === 4) {
       return (
         <Button
-          variant="contained"
-          color="primary"
-          startIcon={updatingStatus ? <CircularProgress size={20} color="inherit" /> : <SendIcon />}
+          variant='contained'
+          color='primary'
+          startIcon={
+            updatingStatus ? (
+              <CircularProgress size={20} color='inherit' />
+            ) : (
+              <SendIcon />
+            )
+          }
           onClick={handleSendForApproval}
           disabled={updatingStatus || hasChanges}
           sx={{ minWidth: 180 }}
@@ -259,9 +363,15 @@ export default function ContractItems() {
       return (
         <>
           <Button
-            variant="outlined"
-            color="error"
-            startIcon={updatingStatus ? <CircularProgress size={20} color="inherit" /> : <ThumbDownIcon />}
+            variant='outlined'
+            color='error'
+            startIcon={
+              updatingStatus ? (
+                <CircularProgress size={20} color='inherit' />
+              ) : (
+                <ThumbDownIcon />
+              )
+            }
             onClick={handleReject}
             disabled={updatingStatus}
             sx={{ minWidth: 140 }}
@@ -269,9 +379,15 @@ export default function ContractItems() {
             {updatingStatus ? "Rejecting..." : "Reject"}
           </Button>
           <Button
-            variant="contained"
-            color="success"
-            startIcon={updatingStatus ? <CircularProgress size={20} color="inherit" /> : <ThumbUpIcon />}
+            variant='contained'
+            color='success'
+            startIcon={
+              updatingStatus ? (
+                <CircularProgress size={20} color='inherit' />
+              ) : (
+                <ThumbUpIcon />
+              )
+            }
             onClick={handleApprove}
             disabled={updatingStatus}
             sx={{ minWidth: 140 }}
@@ -291,12 +407,12 @@ export default function ContractItems() {
     if (saving) {
       return (
         <>
-          <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+          <CircularProgress size={20} color='inherit' sx={{ mr: 1 }} />
           Saving...
         </>
       );
     }
-    if (saveStatus === 'success') {
+    if (saveStatus === "success") {
       return (
         <>
           <CheckIcon sx={{ mr: 1 }} />
@@ -304,7 +420,7 @@ export default function ContractItems() {
         </>
       );
     }
-    if (saveStatus === 'error') {
+    if (saveStatus === "error") {
       return (
         <>
           <ErrorIcon sx={{ mr: 1 }} />
@@ -322,9 +438,9 @@ export default function ContractItems() {
 
   // Determine button color
   const getButtonColor = () => {
-    if (saveStatus === 'success') return 'success';
-    if (saveStatus === 'error') return 'error';
-    return 'primary';
+    if (saveStatus === "success") return "success";
+    if (saveStatus === "error") return "error";
+    return "primary";
   };
 
   if (contractLoading) {
@@ -333,7 +449,7 @@ export default function ContractItems() {
 
   if (!contract) {
     return (
-      <Alert severity="error">
+      <Alert severity='error'>
         Contract not found.{" "}
         <Button onClick={() => navigate("/contracts")}>
           Back to Contracts
@@ -372,63 +488,194 @@ export default function ContractItems() {
           <Box sx={{ mt: 1 }}>
             <Chip
               label={contract.vendor?.name || "Unknown Vendor"}
-              color="secondary"
+              color='secondary'
               sx={{ mr: 1 }}
             />
             <Chip
               label={contract.account?.name || "Unknown Account"}
-              color="info"
+              color='info'
               sx={{ mr: 1 }}
             />
             <Chip
               label={contract.contractStatus?.name || "Unknown Status"}
-              color="primary"
+              color='primary'
               sx={{ mr: 1 }}
             />
             {contract.termLengthMonths && (
               <Chip
-                label={`${contract.termLengthMonths} ${contract.termLengthMonths === 1 ? 'Month' : 'Months'}`}
-                variant="outlined"
+                label={`${contract.termLengthMonths} ${
+                  contract.termLengthMonths === 1 ? "Month" : "Months"
+                }`}
+                variant='outlined'
               />
             )}
           </Box>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1 }}>
           {showSavedIndicator && !hasChanges && (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <CheckIcon sx={{ color: 'success.main' }} />
-              <Typography variant="body2" sx={{ color: 'success.main', fontWeight: 'medium' }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <CheckIcon sx={{ color: "success.main" }} />
+              <Typography
+                variant='body2'
+                sx={{ color: "success.main", fontWeight: "medium" }}
+              >
                 Saved
               </Typography>
             </Box>
           )}
           {hasChanges && (
-            <Button
-              variant="outlined"
-              color="error"
-              startIcon={<CloseIcon />}
-              onClick={handleDiscardChanges}
-              sx={{ minWidth: 160 }}
-            >
-              Discard Changes
-            </Button>
+            <Tooltip title='Discard Changes'>
+              <IconButton color='error' onClick={handleDiscardChanges}>
+                <CloseIcon />
+              </IconButton>
+            </Tooltip>
           )}
-          <Button
-            variant="contained"
-            color={getButtonColor()}
-            onClick={handleSave}
-            disabled={!hasChanges || saving}
-            sx={{ minWidth: 180 }}
-          >
-            {getButtonContent()}
-          </Button>
+          <Tooltip title='Save Changes'>
+            <span>
+              <IconButton
+                color={getButtonColor()}
+                onClick={handleSave}
+                disabled={!hasChanges || saving}
+              >
+                {saving ? (
+                  <CircularProgress size={24} />
+                ) : saveStatus === "success" ? (
+                  <CheckIcon />
+                ) : saveStatus === "error" ? (
+                  <ErrorIcon />
+                ) : (
+                  <SaveIcon />
+                )}
+              </IconButton>
+            </span>
+          </Tooltip>
           {getWorkflowButtons()}
         </Box>
       </Box>
 
+      {/* Contract-level totals */}
+      <Box
+        sx={{
+          mb: 3,
+          p: 2,
+          bgcolor: "background.paper",
+          borderRadius: 1,
+          border: 1,
+          borderColor: "divider",
+        }}
+      >
+        <Typography variant='h6' sx={{ mb: 1 }}>
+          Contract Totals
+        </Typography>
+        <Box sx={{ display: "flex", gap: 4 }}>
+          <Box>
+            <Typography variant='caption' color='text.secondary'>
+              Monthly Total
+            </Typography>
+            <Typography variant='body1' fontWeight='medium'>
+              ${formatCurrency(contractMonthlyTotal)}
+            </Typography>
+          </Box>
+          <Box>
+            <Typography variant='caption' color='text.secondary'>
+              Monthly Net
+            </Typography>
+            <Typography variant='body1' fontWeight='medium'>
+              ${formatCurrency(contractMonthlyNet)}
+            </Typography>
+          </Box>
+          <Box>
+            <Typography variant='caption' color='text.secondary'>
+              Contract Margin
+            </Typography>
+            <Typography
+              variant='body1'
+              fontWeight='medium'
+              sx={{ color: getMarginColor(contractMargin) }}
+            >
+              {contractMargin.toFixed(1)}%
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+
+    {/* Item Type Totals */}
+      <Box sx={{ mb: 3, p: 2, bgcolor: 'background.paper', borderRadius: 1, border: 1, borderColor: 'divider' }}>
+        <Typography variant="h6" sx={{ mb: 2 }}>Item Type Totals</Typography>
+        <Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+          {itemTypes.map(itemType => {
+            // Calculate totals for this item type
+            let totalCost = 0;
+            let monthlyTotalRevenue = 0;
+            let monthlyNetRevenue = 0;
+
+            Object.values(state.segments).forEach(segmentState => {
+              Object.values(segmentState.categories).forEach(categoryState => {
+                Object.entries(categoryState.items).forEach(([itemIdStr, itemState]) => {
+                  if (itemState.selected) {
+                    const itemId = Number(itemIdStr);
+                    const item = items.find(i => i.id === itemId);
+                    if (!item || item.itemTypeId !== itemType.id) return;
+
+                    const listPrice = item.listPrice || 0;
+                    const cost = item.cost || 0;
+                    const quantity = itemState.quantityCommitment ? parseFloat(itemState.quantityCommitment) : 1;
+
+                    // Calculate net price per unit
+                    const discountPercent = itemState.discountPercentage ? parseFloat(itemState.discountPercentage) / 100 : 0;
+                    const priceAfterDiscount = listPrice * (1 - discountPercent);
+
+                    const rebatePercent = itemState.rebatePercentage ? parseFloat(itemState.rebatePercentage) / 100 : 0;
+                    const priceAfterRebate = priceAfterDiscount * (1 - rebatePercent);
+
+                    const conditionalRebatePercent = itemState.conditionalRebate ? parseFloat(itemState.conditionalRebate) / 100 : 0;
+                    const netPricePerUnit = priceAfterRebate * (1 - conditionalRebatePercent);
+
+                    // Monthly revenue
+                    monthlyTotalRevenue += priceAfterDiscount * quantity;
+                    monthlyNetRevenue += netPricePerUnit * quantity;
+                    totalCost += cost * quantity;
+                  }
+                });
+              });
+            });
+
+            const margin = monthlyNetRevenue === 0 ? 0 : ((monthlyNetRevenue - totalCost) / monthlyNetRevenue) * 100;
+
+            // Only show item type if it has selected items
+            if (monthlyTotalRevenue === 0) return null;
+
+            return (
+              <Box key={itemType.id}>
+                <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>
+                  {itemType.name}
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 3 }}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">Monthly Total</Typography>
+                    <Typography variant="body2" fontWeight="medium">${formatCurrency(monthlyTotalRevenue)}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">Monthly Net</Typography>
+                    <Typography variant="body2" fontWeight="medium">${formatCurrency(monthlyNetRevenue)}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">Margin</Typography>
+                    <Typography variant="body2" fontWeight="medium" sx={{ color: getMarginColor(margin) }}>
+                      {margin.toFixed(1)}%
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            );
+          })}
+        </Box>
+      </Box>
+
+      <Box sx={{ mb: 2 }}></Box>
       <Box sx={{ mb: 2 }}>
         {vendorSegments.length === 0 ? (
-          <Alert severity="info">
+          <Alert severity='info'>
             No segments found for this vendor. Please add segments, categories,
             and items to this vendor first.
           </Alert>
@@ -451,14 +698,46 @@ export default function ContractItems() {
                 itemTypes={itemTypes}
                 segmentState={segmentState}
                 onToggleSegment={() => toggleSegment(segment.id)}
-                onSegmentPricingChange={(itemTypeId, discount, rebate, conditionalRebate, growthRebate, quantityCommitment) =>
-                  setSegmentPricing(segment.id, itemTypeId, discount, rebate, conditionalRebate, growthRebate, quantityCommitment)
+                onSegmentPricingChange={(
+                  itemTypeId,
+                  discount,
+                  rebate,
+                  conditionalRebate,
+                  growthRebate,
+                  quantityCommitment
+                ) =>
+                  setSegmentPricing(
+                    segment.id,
+                    itemTypeId,
+                    discount,
+                    rebate,
+                    conditionalRebate,
+                    growthRebate,
+                    quantityCommitment
+                  )
                 }
                 onToggleCategory={(categoryId) =>
                   toggleCategory(segment.id, categoryId)
                 }
-                onCategoryPricingChange={(categoryId, itemTypeId, discount, rebate, conditionalRebate, growthRebate, quantityCommitment) =>
-                  setCategoryPricing(segment.id, categoryId, itemTypeId, discount, rebate, conditionalRebate, growthRebate, quantityCommitment)
+                onCategoryPricingChange={(
+                  categoryId,
+                  itemTypeId,
+                  discount,
+                  rebate,
+                  conditionalRebate,
+                  growthRebate,
+                  quantityCommitment
+                ) =>
+                  setCategoryPricing(
+                    segment.id,
+                    categoryId,
+                    itemTypeId,
+                    discount,
+                    rebate,
+                    conditionalRebate,
+                    growthRebate,
+                    quantityCommitment
+                  )
                 }
                 onToggleItem={(categoryId, itemId) =>
                   toggleItem(segment.id, categoryId, itemId)
@@ -469,10 +748,14 @@ export default function ContractItems() {
                     categoryId,
                     itemId,
                     value,
-                    segmentState.categories[categoryId].items[itemId].rebatePercentage,
-                    segmentState.categories[categoryId].items[itemId].conditionalRebate,
-                    segmentState.categories[categoryId].items[itemId].growthRebate,
-                    segmentState.categories[categoryId].items[itemId].quantityCommitment
+                    segmentState.categories[categoryId].items[itemId]
+                      .rebatePercentage,
+                    segmentState.categories[categoryId].items[itemId]
+                      .conditionalRebate,
+                    segmentState.categories[categoryId].items[itemId]
+                      .growthRebate,
+                    segmentState.categories[categoryId].items[itemId]
+                      .quantityCommitment
                   )
                 }
                 onItemRebateChange={(categoryId, itemId, value) =>
@@ -480,11 +763,15 @@ export default function ContractItems() {
                     segment.id,
                     categoryId,
                     itemId,
-                    segmentState.categories[categoryId].items[itemId].discountPercentage,
+                    segmentState.categories[categoryId].items[itemId]
+                      .discountPercentage,
                     value,
-                    segmentState.categories[categoryId].items[itemId].conditionalRebate,
-                    segmentState.categories[categoryId].items[itemId].growthRebate,
-                    segmentState.categories[categoryId].items[itemId].quantityCommitment
+                    segmentState.categories[categoryId].items[itemId]
+                      .conditionalRebate,
+                    segmentState.categories[categoryId].items[itemId]
+                      .growthRebate,
+                    segmentState.categories[categoryId].items[itemId]
+                      .quantityCommitment
                   )
                 }
                 onItemConditionalRebateChange={(categoryId, itemId, value) =>
@@ -492,11 +779,15 @@ export default function ContractItems() {
                     segment.id,
                     categoryId,
                     itemId,
-                    segmentState.categories[categoryId].items[itemId].discountPercentage,
-                    segmentState.categories[categoryId].items[itemId].rebatePercentage,
+                    segmentState.categories[categoryId].items[itemId]
+                      .discountPercentage,
+                    segmentState.categories[categoryId].items[itemId]
+                      .rebatePercentage,
                     value,
-                    segmentState.categories[categoryId].items[itemId].growthRebate,
-                    segmentState.categories[categoryId].items[itemId].quantityCommitment
+                    segmentState.categories[categoryId].items[itemId]
+                      .growthRebate,
+                    segmentState.categories[categoryId].items[itemId]
+                      .quantityCommitment
                   )
                 }
                 onItemGrowthRebateChange={(categoryId, itemId, value) =>
@@ -504,11 +795,15 @@ export default function ContractItems() {
                     segment.id,
                     categoryId,
                     itemId,
-                    segmentState.categories[categoryId].items[itemId].discountPercentage,
-                    segmentState.categories[categoryId].items[itemId].rebatePercentage,
-                    segmentState.categories[categoryId].items[itemId].conditionalRebate,
+                    segmentState.categories[categoryId].items[itemId]
+                      .discountPercentage,
+                    segmentState.categories[categoryId].items[itemId]
+                      .rebatePercentage,
+                    segmentState.categories[categoryId].items[itemId]
+                      .conditionalRebate,
                     value,
-                    segmentState.categories[categoryId].items[itemId].quantityCommitment
+                    segmentState.categories[categoryId].items[itemId]
+                      .quantityCommitment
                   )
                 }
                 onItemQuantityCommitmentChange={(categoryId, itemId, value) =>
@@ -516,10 +811,14 @@ export default function ContractItems() {
                     segment.id,
                     categoryId,
                     itemId,
-                    segmentState.categories[categoryId].items[itemId].discountPercentage,
-                    segmentState.categories[categoryId].items[itemId].rebatePercentage,
-                    segmentState.categories[categoryId].items[itemId].conditionalRebate,
-                    segmentState.categories[categoryId].items[itemId].growthRebate,
+                    segmentState.categories[categoryId].items[itemId]
+                      .discountPercentage,
+                    segmentState.categories[categoryId].items[itemId]
+                      .rebatePercentage,
+                    segmentState.categories[categoryId].items[itemId]
+                      .conditionalRebate,
+                    segmentState.categories[categoryId].items[itemId]
+                      .growthRebate,
                     value
                   )
                 }
@@ -532,19 +831,30 @@ export default function ContractItems() {
         )}
       </Box>
 
-      <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: 'center', gap: 2, mt: 3 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "flex-end",
+          alignItems: "center",
+          gap: 2,
+          mt: 3,
+        }}
+      >
         {showSavedIndicator && !hasChanges && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <CheckIcon sx={{ color: 'success.main' }} />
-            <Typography variant="body2" sx={{ color: 'success.main', fontWeight: 'medium' }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <CheckIcon sx={{ color: "success.main" }} />
+            <Typography
+              variant='body2'
+              sx={{ color: "success.main", fontWeight: "medium" }}
+            >
               Saved
             </Typography>
           </Box>
         )}
         {hasChanges && (
           <Button
-            variant="outlined"
-            color="error"
+            variant='outlined'
+            color='error'
             startIcon={<CloseIcon />}
             onClick={handleDiscardChanges}
             sx={{ minWidth: 160 }}
@@ -553,7 +863,7 @@ export default function ContractItems() {
           </Button>
         )}
         <Button
-          variant="contained"
+          variant='contained'
           color={getButtonColor()}
           onClick={handleSave}
           disabled={!hasChanges || saving}

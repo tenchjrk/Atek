@@ -85,6 +85,14 @@ export default function SegmentAccordion({
     return 'error.main'; // Red
   };
 
+  // Format currency with commas
+  const formatCurrency = (value: number) => {
+    return value.toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
   // Calculate checkbox state (checked/indeterminate)
   const allItems: Array<{ id: number; typeId: number }> = [];
   categories.forEach(category => {
@@ -162,10 +170,11 @@ export default function SegmentAccordion({
     return ((totalRevenue - totalCost) / totalRevenue) * 100;
   };
 
-  // Calculate total margin across all types (weighted by quantity commitment)
-  const calculateTotalMargin = () => {
+  // Calculate total margin, total monthly revenue, and net monthly revenue across all types (weighted by quantity commitment)
+  const calculateTotalStats = () => {
     let totalCost = 0;
-    let totalRevenue = 0;
+    let monthlyTotalRevenue = 0;
+    let monthlyNetRevenue = 0;
 
     categories.forEach(category => {
       const categoryItems = items.filter(i => i.itemCategoryId === category.id);
@@ -188,18 +197,28 @@ export default function SegmentAccordion({
           const conditionalRebatePercent = itemState.conditionalRebate ? parseFloat(itemState.conditionalRebate) / 100 : 0;
           const netPricePerUnit = priceAfterRebate * (1 - conditionalRebatePercent);
 
+          // Monthly revenue (after discount, before rebates)
+          monthlyTotalRevenue += priceAfterDiscount * quantity;
+          
+          // Monthly net revenue (after all rebates except growth)
+          monthlyNetRevenue += netPricePerUnit * quantity;
+
           // Weight by quantity
           totalCost += cost * quantity;
-          totalRevenue += netPricePerUnit * quantity;
         }
       });
     });
 
-    if (totalRevenue === 0) return 0;
-    return ((totalRevenue - totalCost) / totalRevenue) * 100;
+    const margin = monthlyNetRevenue === 0 ? 0 : ((monthlyNetRevenue - totalCost) / monthlyNetRevenue) * 100;
+
+    return { 
+      margin, 
+      monthlyTotalRevenue,
+      monthlyNetRevenue
+    };
   };
 
-  const totalMargin = calculateTotalMargin();
+  const { margin: totalMargin, monthlyTotalRevenue, monthlyNetRevenue } = calculateTotalStats();
 
   return (
     <Accordion
@@ -238,15 +257,23 @@ export default function SegmentAccordion({
               Segment: {segment.name}
             </Typography>
             {selectedCount > 0 && (
-              <Typography 
-                variant="caption"
-                sx={{ 
-                  color: getMarginColor(totalMargin),
-                  fontWeight: 'medium'
-                }}
-              >
-                Margin: {totalMargin.toFixed(1)}%
-              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                <Typography 
+                  variant="caption"
+                  sx={{ 
+                    color: getMarginColor(totalMargin),
+                    fontWeight: 'medium'
+                  }}
+                >
+                  Margin: {totalMargin.toFixed(1)}%
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Monthly Total: ${formatCurrency(monthlyTotalRevenue)}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Monthly Net: ${formatCurrency(monthlyNetRevenue)}
+                </Typography>
+              </Box>
             )}
           </Box>
         </Box>
