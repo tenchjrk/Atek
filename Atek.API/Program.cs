@@ -38,6 +38,10 @@ builder.Services.AddScoped<IContractStatusRepository, ContractStatusRepository>(
 builder.Services.AddScoped<IContractTypeRepository, ContractTypeRepository>();
 builder.Services.AddScoped<IContractRepository, ContractRepository>();
 builder.Services.AddScoped<IContractItemRepository, ContractItemRepository>();
+builder.Services.AddScoped<IContractSegmentRepository, ContractSegmentRepository>();
+builder.Services.AddScoped<IContractCategoryRepository, ContractCategoryRepository>();
+builder.Services.AddScoped<IContractAccountRepository, ContractAccountRepository>();
+builder.Services.AddScoped<ITerritoryAccountRepository, TerritoryAccountRepository>();
 
 // CORS
 builder.Services.AddCors(options =>

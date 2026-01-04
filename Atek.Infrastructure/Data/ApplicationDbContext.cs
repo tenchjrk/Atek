@@ -26,6 +26,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<ContractType> ContractTypes => Set<ContractType>();
     public DbSet<Contract> Contracts => Set<Contract>();
     public DbSet<ContractItem> ContractItems => Set<ContractItem>();
+    public DbSet<ContractSegment> ContractSegments => Set<ContractSegment>();
+    public DbSet<ContractCategory> ContractCategories => Set<ContractCategory>();
+    public DbSet<ContractAccount> ContractAccounts => Set<ContractAccount>();
+    public DbSet<TerritoryAccount> TerritoryAccounts => Set<TerritoryAccount>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -110,7 +114,7 @@ public class ApplicationDbContext : DbContext
             .Property(i => i.Cost)
             .HasPrecision(18, 2);
 
-                // ContractStatus configuration
+        // ContractStatus configuration
         modelBuilder.Entity<ContractStatus>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -119,69 +123,158 @@ public class ApplicationDbContext : DbContext
         });
 
         // ContractType configuration
-modelBuilder.Entity<ContractType>(entity =>
-{
-    entity.HasKey(e => e.Id);
-    entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-    entity.HasIndex(e => e.Name).IsUnique();
-});
+        modelBuilder.Entity<ContractType>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.HasIndex(e => e.Name).IsUnique();
+        });
 
-// Contract configuration
-modelBuilder.Entity<Contract>(entity =>
-{
-    entity.HasKey(e => e.Id);
-    entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
-    entity.Property(e => e.Description).HasMaxLength(1000);
-    entity.Property(e => e.TermLengthMonths).IsRequired();
-    entity.Property(e => e.CreatedDate).IsRequired();
-    entity.Property(e => e.LastModifiedDate).IsRequired();
-    
-    // Lease fields
-    entity.Property(e => e.InterestRate).HasPrecision(5, 4);
-    entity.Property(e => e.APR).HasPrecision(5, 4);
-    entity.Property(e => e.LeaseType).HasMaxLength(50);
+        // Contract configuration
+        modelBuilder.Entity<Contract>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.TermLengthMonths).IsRequired();
+            entity.Property(e => e.CreatedDate).IsRequired();
+            entity.Property(e => e.LastModifiedDate).IsRequired();
+            
+            // Lease fields
+            entity.Property(e => e.InterestRate).HasPrecision(5, 4);
+            entity.Property(e => e.APR).HasPrecision(5, 4);
+            entity.Property(e => e.LeaseType).HasMaxLength(50);
+            
+            // New fields
+            entity.Property(e => e.StatusNotes).HasColumnType("longtext");
 
-    entity.HasOne(e => e.Account)
-        .WithMany()
-        .HasForeignKey(e => e.AccountId)
-        .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.Account)
+                .WithMany()
+                .HasForeignKey(e => e.AccountId)
+                .OnDelete(DeleteBehavior.Restrict);
 
-    entity.HasOne(e => e.Vendor)
-        .WithMany()
-        .HasForeignKey(e => e.VendorId)
-        .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.Vendor)
+                .WithMany()
+                .HasForeignKey(e => e.VendorId)
+                .OnDelete(DeleteBehavior.Restrict);
 
-    entity.HasOne(e => e.ContractStatus)
-        .WithMany()
-        .HasForeignKey(e => e.ContractStatusId)
-        .OnDelete(DeleteBehavior.Restrict);
-    
-    entity.HasOne(e => e.ContractType)
-        .WithMany()
-        .HasForeignKey(e => e.ContractTypeId)
-        .OnDelete(DeleteBehavior.Restrict);
-});
+            entity.HasOne(e => e.ContractStatus)
+                .WithMany()
+                .HasForeignKey(e => e.ContractStatusId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasOne(e => e.ContractType)
+                .WithMany()
+                .HasForeignKey(e => e.ContractTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
 
-// ContractItem configuration
-modelBuilder.Entity<ContractItem>(entity =>
-{
-    entity.HasKey(e => e.Id);
-    entity.Property(e => e.CreatedDate).IsRequired();
-    entity.Property(e => e.LastModifiedDate).IsRequired();
-    
-    // Pricing fields with precision
-    entity.Property(e => e.DiscountPercentage).HasPrecision(5, 4);
-    entity.Property(e => e.RebatePercentage).HasPrecision(5, 4);
+        // ContractItem configuration
+        modelBuilder.Entity<ContractItem>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.CreatedDate).IsRequired();
+            entity.Property(e => e.LastModifiedDate).IsRequired();
+            
+            // Pricing fields with precision
+            entity.Property(e => e.DiscountPercentage).HasPrecision(5, 4);
+            entity.Property(e => e.RebatePercentage).HasPrecision(5, 4);
+            entity.Property(e => e.ConditionalRebate).HasPrecision(5, 4);
+            entity.Property(e => e.GrowthRebate).HasPrecision(5, 4);
 
-    entity.HasOne(e => e.Contract)
-        .WithMany()
-        .HasForeignKey(e => e.ContractId)
-        .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Contract)
+                .WithMany(c => c.ContractItems)
+                .HasForeignKey(e => e.ContractId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-    entity.HasOne(e => e.Item)
-        .WithMany()
-        .HasForeignKey(e => e.ItemId)
-        .OnDelete(DeleteBehavior.Restrict);
-});
+            entity.HasOne(e => e.Item)
+                .WithMany()
+                .HasForeignKey(e => e.ItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ContractSegment configuration
+        modelBuilder.Entity<ContractSegment>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            
+            entity.Property(e => e.DiscountPercentage).HasPrecision(5, 4);
+            entity.Property(e => e.RebatePercentage).HasPrecision(5, 4);
+            entity.Property(e => e.ConditionalRebate).HasPrecision(5, 4);
+            entity.Property(e => e.GrowthRebate).HasPrecision(5, 4);
+
+            entity.HasOne(e => e.Contract)
+                .WithMany(c => c.ContractSegments)
+                .HasForeignKey(e => e.ContractId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.VendorSegment)
+                .WithMany()
+                .HasForeignKey(e => e.VendorSegmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.ItemType)
+                .WithMany()
+                .HasForeignKey(e => e.ItemTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ContractCategory configuration
+        modelBuilder.Entity<ContractCategory>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            
+            entity.Property(e => e.DiscountPercentage).HasPrecision(5, 4);
+            entity.Property(e => e.RebatePercentage).HasPrecision(5, 4);
+            entity.Property(e => e.ConditionalRebate).HasPrecision(5, 4);
+            entity.Property(e => e.GrowthRebate).HasPrecision(5, 4);
+
+            entity.HasOne(e => e.Contract)
+                .WithMany(c => c.ContractCategories)
+                .HasForeignKey(e => e.ContractId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.ItemCategory)
+                .WithMany()
+                .HasForeignKey(e => e.ItemCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.ItemType)
+                .WithMany()
+                .HasForeignKey(e => e.ItemTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ContractAccount configuration
+        modelBuilder.Entity<ContractAccount>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(e => e.Contract)
+                .WithMany(c => c.ContractAccounts)
+                .HasForeignKey(e => e.ContractId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Account)
+                .WithMany()
+                .HasForeignKey(e => e.AccountId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // TerritoryAccount configuration
+        modelBuilder.Entity<TerritoryAccount>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(e => e.VendorTerritory)
+                .WithMany()
+                .HasForeignKey(e => e.VendorTerritoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Account)
+                .WithMany()
+                .HasForeignKey(e => e.AccountId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
     }
 }

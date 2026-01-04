@@ -59,6 +59,8 @@ public class ContractRepository : IContractRepository
         contract.APR = contract.APR;
         contract.LeaseType = contract.LeaseType;
         contract.VendorId = contract.VendorId;
+        contract.Schedule = contract.Schedule;
+        contract.StatusNotes = contract.StatusNotes;
         
         _context.Contracts.Add(contract);
         await _context.SaveChangesAsync();
@@ -89,6 +91,8 @@ public class ContractRepository : IContractRepository
             existing.InterestRate = contract.InterestRate;
             existing.APR = contract.APR;
             existing.LeaseType = contract.LeaseType;
+            existing.Schedule = contract.Schedule;
+            existing.StatusNotes = contract.StatusNotes;
             existing.LastModifiedDate = DateTime.UtcNow;
             
             // Only update dates if execution date is being set
