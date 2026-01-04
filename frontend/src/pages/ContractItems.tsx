@@ -27,6 +27,8 @@ import {
   itemCategoryApi,
   vendorSegmentApi,
   itemTypeApi,
+  contractSegmentApi,
+  contractCategoryApi,
 } from "../services/api";
 import type {
   Contract,
@@ -35,6 +37,8 @@ import type {
   VendorSegment,
   ContractItem,
   ItemType,
+  ContractSegment,
+  ContractCategory,
 } from "../types";
 import { useContractItemBulkEdit } from "../hooks/useContractItemBulkEdit";
 import PageHeader from "../components/PageHeader";
@@ -49,13 +53,11 @@ export default function ContractItems() {
   const [itemCategories, setItemCategories] = useState<ItemCategory[]>([]);
   const [vendorSegments, setVendorSegments] = useState<VendorSegment[]>([]);
   const [itemTypes, setItemTypes] = useState<ItemType[]>([]);
-  const [existingContractItems, setExistingContractItems] = useState<
-    ContractItem[]
-  >([]);
+  const [existingContractItems, setExistingContractItems] = useState<ContractItem[]>([]);
+  const [existingSegmentPricing, setExistingSegmentPricing] = useState<ContractSegment[]>([]);
+  const [existingCategoryPricing, setExistingCategoryPricing] = useState<ContractCategory[]>([]);
   const [saving, setSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">(
-    "idle"
-  );
+  const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
   const [showSavedIndicator, setShowSavedIndicator] = useState(false);
   const [resetTrigger, setResetTrigger] = useState(0);
   const [updatingStatus, setUpdatingStatus] = useState(false);
@@ -67,6 +69,8 @@ export default function ContractItems() {
         const [
           contractResponse,
           contractItemsResponse,
+          contractSegmentsResponse,
+          contractCategoriesResponse,
           itemsResponse,
           categoriesResponse,
           segmentsResponse,
@@ -74,6 +78,8 @@ export default function ContractItems() {
         ] = await Promise.all([
           contractApi.getById(Number(contractId)),
           contractItemApi.getByContractId(Number(contractId)),
+          contractSegmentApi.getByContractId(Number(contractId)),
+          contractCategoryApi.getByContractId(Number(contractId)),
           itemApi.getAll(),
           itemCategoryApi.getAll(),
           vendorSegmentApi.getAll(),
@@ -83,6 +89,8 @@ export default function ContractItems() {
         const contractData = contractResponse.data;
         setContract(contractData);
         setExistingContractItems(contractItemsResponse.data);
+        setExistingSegmentPricing(contractSegmentsResponse.data);
+        setExistingCategoryPricing(contractCategoriesResponse.data);
 
         // Filter items by vendor
         const allItems = itemsResponse.data;
@@ -135,6 +143,8 @@ export default function ContractItems() {
     items,
     existingContractItems,
     itemTypes,
+    existingSegmentPricing,
+    existingCategoryPricing,
     resetTrigger
   );
 
@@ -234,10 +244,12 @@ export default function ContractItems() {
     setSaving(true);
     setSaveStatus("idle");
     try {
-      const { toCreate, toUpdate, toDelete } = getChanges();
+      const { toCreate, toUpdate, toDelete, segmentPricing, categoryPricing } =
+        getChanges();
 
       // Execute all changes
       const promises = [
+        // Contract items
         ...toCreate.map((data) =>
           contractItemApi.create({
             ...data,
@@ -255,6 +267,49 @@ export default function ContractItems() {
 
       await Promise.all(promises);
 
+      // Delete existing segment and category pricing for this contract
+      const [existingSegments, existingCategories] = await Promise.all([
+        contractSegmentApi.getByContractId(Number(contractId)),
+        contractCategoryApi.getByContractId(Number(contractId)),
+      ]);
+
+      await Promise.all([
+        ...existingSegments.data.map((cs) => contractSegmentApi.delete(cs.id)),
+        ...existingCategories.data.map((cc) =>
+          contractCategoryApi.delete(cc.id)
+        ),
+      ]);
+
+      // Create new segment pricing
+      await Promise.all(
+        segmentPricing.map((sp) =>
+          contractSegmentApi.create({
+            contractId: Number(contractId),
+            vendorSegmentId: sp.segmentId,
+            itemTypeId: sp.itemTypeId,
+            discountPercentage: sp.discountPercentage,
+            rebatePercentage: sp.rebatePercentage,
+            conditionalRebate: sp.conditionalRebate,
+            growthRebate: sp.growthRebate,
+          })
+        )
+      );
+
+      // Create new category pricing
+      await Promise.all(
+        categoryPricing.map((cp) =>
+          contractCategoryApi.create({
+            contractId: Number(contractId),
+            itemCategoryId: cp.categoryId,
+            itemTypeId: cp.itemTypeId,
+            discountPercentage: cp.discountPercentage,
+            rebatePercentage: cp.rebatePercentage,
+            conditionalRebate: cp.conditionalRebate,
+            growthRebate: cp.growthRebate,
+          })
+        )
+      );
+
       // If contract is "Margin Approved" (3), change back to "Draft" (1)
       if (contract?.contractStatusId === 3) {
         await contractApi.update(contract.id, {
@@ -266,11 +321,16 @@ export default function ContractItems() {
         setContract(contractResponse.data);
       }
 
-      // Refresh contract items
-      const contractItemsResponse = await contractItemApi.getByContractId(
-        Number(contractId)
-      );
+      // Refresh contract items and pricing
+      const [contractItemsResponse, segmentPricingResponse, categoryPricingResponse] = await Promise.all([
+        contractItemApi.getByContractId(Number(contractId)),
+        contractSegmentApi.getByContractId(Number(contractId)),
+        contractCategoryApi.getByContractId(Number(contractId)),
+      ]);
+      
       setExistingContractItems(contractItemsResponse.data);
+      setExistingSegmentPricing(segmentPricingResponse.data);
+      setExistingCategoryPricing(categoryPricingResponse.data);
 
       setSaveStatus("success");
       setShowSavedIndicator(true);
@@ -599,69 +659,117 @@ export default function ContractItems() {
         </Box>
       </Box>
 
-    {/* Item Type Totals */}
-      <Box sx={{ mb: 3, p: 2, bgcolor: 'background.paper', borderRadius: 1, border: 1, borderColor: 'divider' }}>
-        <Typography variant="h6" sx={{ mb: 2 }}>Item Type Totals</Typography>
-        <Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-          {itemTypes.map(itemType => {
+      {/* Item Type Totals */}
+      <Box
+        sx={{
+          mb: 3,
+          p: 2,
+          bgcolor: "background.paper",
+          borderRadius: 1,
+          border: 1,
+          borderColor: "divider",
+        }}
+      >
+        <Typography variant='h6' sx={{ mb: 2 }}>
+          Item Type Totals
+        </Typography>
+        <Box sx={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+          {itemTypes.map((itemType) => {
             // Calculate totals for this item type
             let totalCost = 0;
             let monthlyTotalRevenue = 0;
             let monthlyNetRevenue = 0;
 
-            Object.values(state.segments).forEach(segmentState => {
-              Object.values(segmentState.categories).forEach(categoryState => {
-                Object.entries(categoryState.items).forEach(([itemIdStr, itemState]) => {
-                  if (itemState.selected) {
-                    const itemId = Number(itemIdStr);
-                    const item = items.find(i => i.id === itemId);
-                    if (!item || item.itemTypeId !== itemType.id) return;
+            Object.values(state.segments).forEach((segmentState) => {
+              Object.values(segmentState.categories).forEach(
+                (categoryState) => {
+                  Object.entries(categoryState.items).forEach(
+                    ([itemIdStr, itemState]) => {
+                      if (itemState.selected) {
+                        const itemId = Number(itemIdStr);
+                        const item = items.find((i) => i.id === itemId);
+                        if (!item || item.itemTypeId !== itemType.id) return;
 
-                    const listPrice = item.listPrice || 0;
-                    const cost = item.cost || 0;
-                    const quantity = itemState.quantityCommitment ? parseFloat(itemState.quantityCommitment) : 1;
+                        const listPrice = item.listPrice || 0;
+                        const cost = item.cost || 0;
+                        const quantity = itemState.quantityCommitment
+                          ? parseFloat(itemState.quantityCommitment)
+                          : 1;
 
-                    // Calculate net price per unit
-                    const discountPercent = itemState.discountPercentage ? parseFloat(itemState.discountPercentage) / 100 : 0;
-                    const priceAfterDiscount = listPrice * (1 - discountPercent);
+                        // Calculate net price per unit
+                        const discountPercent = itemState.discountPercentage
+                          ? parseFloat(itemState.discountPercentage) / 100
+                          : 0;
+                        const priceAfterDiscount =
+                          listPrice * (1 - discountPercent);
 
-                    const rebatePercent = itemState.rebatePercentage ? parseFloat(itemState.rebatePercentage) / 100 : 0;
-                    const priceAfterRebate = priceAfterDiscount * (1 - rebatePercent);
+                        const rebatePercent = itemState.rebatePercentage
+                          ? parseFloat(itemState.rebatePercentage) / 100
+                          : 0;
+                        const priceAfterRebate =
+                          priceAfterDiscount * (1 - rebatePercent);
 
-                    const conditionalRebatePercent = itemState.conditionalRebate ? parseFloat(itemState.conditionalRebate) / 100 : 0;
-                    const netPricePerUnit = priceAfterRebate * (1 - conditionalRebatePercent);
+                        const conditionalRebatePercent =
+                          itemState.conditionalRebate
+                            ? parseFloat(itemState.conditionalRebate) / 100
+                            : 0;
+                        const netPricePerUnit =
+                          priceAfterRebate * (1 - conditionalRebatePercent);
 
-                    // Monthly revenue
-                    monthlyTotalRevenue += priceAfterDiscount * quantity;
-                    monthlyNetRevenue += netPricePerUnit * quantity;
-                    totalCost += cost * quantity;
-                  }
-                });
-              });
+                        // Monthly revenue
+                        monthlyTotalRevenue += priceAfterDiscount * quantity;
+                        monthlyNetRevenue += netPricePerUnit * quantity;
+                        totalCost += cost * quantity;
+                      }
+                    }
+                  );
+                }
+              );
             });
 
-            const margin = monthlyNetRevenue === 0 ? 0 : ((monthlyNetRevenue - totalCost) / monthlyNetRevenue) * 100;
+            const margin =
+              monthlyNetRevenue === 0
+                ? 0
+                : ((monthlyNetRevenue - totalCost) / monthlyNetRevenue) * 100;
 
             // Only show item type if it has selected items
             if (monthlyTotalRevenue === 0) return null;
 
             return (
               <Box key={itemType.id}>
-                <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>
+                <Typography
+                  variant='subtitle2'
+                  fontWeight='bold'
+                  sx={{ mb: 1 }}
+                >
                   {itemType.name}
                 </Typography>
-                <Box sx={{ display: 'flex', gap: 3 }}>
+                <Box sx={{ display: "flex", gap: 3 }}>
                   <Box>
-                    <Typography variant="caption" color="text.secondary">Monthly Total</Typography>
-                    <Typography variant="body2" fontWeight="medium">${formatCurrency(monthlyTotalRevenue)}</Typography>
+                    <Typography variant='caption' color='text.secondary'>
+                      Monthly Total
+                    </Typography>
+                    <Typography variant='body2' fontWeight='medium'>
+                      ${formatCurrency(monthlyTotalRevenue)}
+                    </Typography>
                   </Box>
                   <Box>
-                    <Typography variant="caption" color="text.secondary">Monthly Net</Typography>
-                    <Typography variant="body2" fontWeight="medium">${formatCurrency(monthlyNetRevenue)}</Typography>
+                    <Typography variant='caption' color='text.secondary'>
+                      Monthly Net
+                    </Typography>
+                    <Typography variant='body2' fontWeight='medium'>
+                      ${formatCurrency(monthlyNetRevenue)}
+                    </Typography>
                   </Box>
                   <Box>
-                    <Typography variant="caption" color="text.secondary">Margin</Typography>
-                    <Typography variant="body2" fontWeight="medium" sx={{ color: getMarginColor(margin) }}>
+                    <Typography variant='caption' color='text.secondary'>
+                      Margin
+                    </Typography>
+                    <Typography
+                      variant='body2'
+                      fontWeight='medium'
+                      sx={{ color: getMarginColor(margin) }}
+                    >
                       {margin.toFixed(1)}%
                     </Typography>
                   </Box>
@@ -672,7 +780,6 @@ export default function ContractItems() {
         </Box>
       </Box>
 
-      <Box sx={{ mb: 2 }}></Box>
       <Box sx={{ mb: 2 }}>
         {vendorSegments.length === 0 ? (
           <Alert severity='info'>

@@ -1,5 +1,26 @@
 import axios from 'axios';
-import type { Account, Vendor, AccountType, VendorType, AccountAddress, VendorSegment, VendorRegion, VendorTerritory, ItemCategory, UnitOfMeasure, ItemType, Item, ContractStatus, ContractType, Contract, ContractItem } from '../types';
+import type { 
+  Account, 
+  Vendor, 
+  AccountType, 
+  VendorType, 
+  AccountAddress, 
+  VendorSegment, 
+  VendorRegion, 
+  VendorTerritory, 
+  ItemCategory, 
+  UnitOfMeasure, 
+  ItemType, 
+  Item, 
+  ContractStatus, 
+  ContractType, 
+  Contract, 
+  ContractItem,
+  ContractSegment,
+  ContractCategory,
+  ContractAccount,
+  TerritoryAccount
+} from '../types';
 
 const API_BASE_URL = 'http://localhost:5245/api';
 
@@ -65,4 +86,26 @@ export const contractApi = {
 export const contractItemApi = {
   ...createCrudApi<ContractItem>('contractItem'),
   getByContractId: (contractId: number) => api.get<ContractItem[]>(`/contractItem/contract/${contractId}`),
+};
+
+export const contractSegmentApi = {
+  ...createCrudApi<ContractSegment>('contractSegment'),
+  getByContractId: (contractId: number) => api.get<ContractSegment[]>(`/contractSegment/contract/${contractId}`),
+};
+
+export const contractCategoryApi = {
+  ...createCrudApi<ContractCategory>('contractCategory'),
+  getByContractId: (contractId: number) => api.get<ContractCategory[]>(`/contractCategory/contract/${contractId}`),
+};
+
+export const contractAccountApi = {
+  ...createCrudApi<ContractAccount>('contractAccount'),
+  getByContractId: (contractId: number) => api.get<ContractAccount[]>(`/contractAccount/contract/${contractId}`),
+  getByAccountId: (accountId: number) => api.get<ContractAccount[]>(`/contractAccount/account/${accountId}`),
+};
+
+export const territoryAccountApi = {
+  ...createCrudApi<TerritoryAccount>('territoryAccount'),
+  getByTerritoryId: (territoryId: number) => api.get<TerritoryAccount[]>(`/territoryAccount/territory/${territoryId}`),
+  getByAccountId: (accountId: number) => api.get<TerritoryAccount[]>(`/territoryAccount/account/${accountId}`),
 };

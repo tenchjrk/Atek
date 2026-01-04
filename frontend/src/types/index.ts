@@ -147,6 +147,15 @@ export interface ContractType {
   name: string;
 }
 
+export type ContractSchedule = 1 | 2 | 3 | 4;
+
+export const ContractScheduleLabels: Record<ContractSchedule, string> = {
+  1: 'Monthly',
+  2: 'Annual',
+  3: 'Semi-Annual',
+  4: 'Full-Term',
+};
+
 export interface Contract {
   id: number;
   accountId: number;
@@ -154,7 +163,7 @@ export interface Contract {
   name: string;
   description?: string | null;
   contractStatusId: number;
-  contractTypeId: number;  // Remove the ?
+  contractTypeId: number;
   executionDate?: string | null;
   startDate?: string | null;
   endDate?: string | null;
@@ -162,6 +171,8 @@ export interface Contract {
   interestRate?: number | null;
   apr?: number | null;
   leaseType?: string | null;
+  schedule?: ContractSchedule | null;
+  statusNotes?: string | null;
   createdDate: string;
   lastModifiedDate: string;
   account?: Account | null;
@@ -183,4 +194,48 @@ export interface ContractItem {
   lastModifiedDate: string;
   contract?: Contract | null;
   item?: Item | null;
+}
+
+export interface ContractSegment {
+  id: number;
+  contractId: number;
+  vendorSegmentId: number;
+  itemTypeId: number;
+  discountPercentage: number | null;
+  rebatePercentage: number | null;
+  conditionalRebate: number | null;
+  growthRebate: number | null;
+  contract?: Contract | null;
+  vendorSegment?: VendorSegment | null;
+  itemType?: ItemType | null;
+}
+
+export interface ContractCategory {
+  id: number;
+  contractId: number;
+  itemCategoryId: number;
+  itemTypeId: number;
+  discountPercentage: number | null;
+  rebatePercentage: number | null;
+  conditionalRebate: number | null;
+  growthRebate: number | null;
+  contract?: Contract | null;
+  itemCategory?: ItemCategory | null;
+  itemType?: ItemType | null;
+}
+
+export interface ContractAccount {
+  id: number;
+  contractId: number;
+  accountId: number;
+  contract?: Contract | null;
+  account?: Account | null;
+}
+
+export interface TerritoryAccount {
+  id: number;
+  vendorTerritoryId: number;
+  accountId: number;
+  vendorTerritory?: VendorTerritory | null;
+  account?: Account | null;
 }

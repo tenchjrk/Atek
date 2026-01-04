@@ -5,6 +5,8 @@ import type {
   ItemCategory,
   Item,
   ItemType,
+  ContractSegment,
+  ContractCategory,
 } from "../types";
 
 interface ItemEditState {
@@ -54,6 +56,8 @@ type Action =
         items: Item[];
         existingContractItems: ContractItem[];
         itemTypes: ItemType[];
+        existingSegmentPricing: ContractSegment[];
+        existingCategoryPricing: ContractCategory[];
       };
     }
   | {
@@ -116,7 +120,9 @@ function createInitialState(
   categories: ItemCategory[],
   items: Item[],
   existingContractItems: ContractItem[],
-  itemTypes: ItemType[]
+  itemTypes: ItemType[],
+  existingSegmentPricing: ContractSegment[],
+  existingCategoryPricing: ContractCategory[]
 ): BulkEditState {
   const state: BulkEditState = { segments: {}, hasChanges: false };
 
@@ -141,11 +147,43 @@ function createInitialState(
     );
     const categoryStates: Record<number, CategoryEditState> = {};
 
+    // Create segment pricing by type
+    const segmentPricingByType = createEmptyPricingByType();
+    
+    // Populate from existing segment pricing
+    existingSegmentPricing
+      .filter(sp => sp.vendorSegmentId === segment.id)
+      .forEach(sp => {
+        segmentPricingByType[sp.itemTypeId] = {
+          discountPercentage: sp.discountPercentage?.toString() || '',
+          rebatePercentage: sp.rebatePercentage?.toString() || '',
+          conditionalRebate: sp.conditionalRebate?.toString() || '',
+          growthRebate: sp.growthRebate?.toString() || '',
+          quantityCommitment: ''
+        };
+      });
+
     segmentCategories.forEach((category) => {
       const categoryItems = items.filter(
         (i) => i.itemCategoryId === category.id
       );
       const itemStates: Record<number, ItemEditState> = {};
+
+      // Create category pricing by type
+      const categoryPricingByType = createEmptyPricingByType();
+      
+      // Populate from existing category pricing
+      existingCategoryPricing
+        .filter(cp => cp.itemCategoryId === category.id)
+        .forEach(cp => {
+          categoryPricingByType[cp.itemTypeId] = {
+            discountPercentage: cp.discountPercentage?.toString() || '',
+            rebatePercentage: cp.rebatePercentage?.toString() || '',
+            conditionalRebate: cp.conditionalRebate?.toString() || '',
+            growthRebate: cp.growthRebate?.toString() || '',
+            quantityCommitment: ''
+          };
+        });
 
       categoryItems.forEach((item) => {
         const existing = existingContractItems.find(
@@ -166,7 +204,7 @@ function createInitialState(
 
       categoryStates[category.id] = {
         selected: false,
-        pricingByType: createEmptyPricingByType(),
+        pricingByType: categoryPricingByType,
         itemSearch: "",
         items: itemStates,
       };
@@ -174,7 +212,7 @@ function createInitialState(
 
     state.segments[segment.id] = {
       selected: false,
-      pricingByType: createEmptyPricingByType(),
+      pricingByType: segmentPricingByType,
       categories: categoryStates,
     };
   });
@@ -193,7 +231,9 @@ function reducer(state: BulkEditState, action: Action): BulkEditState {
         action.payload.categories,
         action.payload.items,
         action.payload.existingContractItems,
-        action.payload.itemTypes
+        action.payload.itemTypes,
+        action.payload.existingSegmentPricing,
+        action.payload.existingCategoryPricing
       );
 
     case "SET_SEGMENT_PRICING": {
@@ -469,6 +509,8 @@ export function useContractItemBulkEdit(
   items: Item[],
   existingContractItems: ContractItem[],
   itemTypes: ItemType[],
+  existingSegmentPricing: ContractSegment[],
+  existingCategoryPricing: ContractCategory[],
   resetTrigger: number = 0
 ) {
   const [state, dispatch] = useReducer(reducer, {
@@ -487,6 +529,8 @@ export function useContractItemBulkEdit(
           items,
           existingContractItems,
           itemTypes,
+          existingSegmentPricing,
+          existingCategoryPricing,
         },
       });
     }
@@ -496,6 +540,8 @@ export function useContractItemBulkEdit(
     items,
     existingContractItems,
     itemTypes,
+    existingSegmentPricing,
+    existingCategoryPricing,
     resetTrigger,
   ]);
 
@@ -618,84 +664,107 @@ export function useContractItemBulkEdit(
   );
 
   const getChanges = useCallback(() => {
-    const toCreate: Array<{
-      itemId: number;
-      discountPercentage: number | null;
+    const toCreate: Array<{ 
+      itemId: number; 
+      discountPercentage: number | null; 
       rebatePercentage: number | null;
       conditionalRebate: number | null;
       growthRebate: number | null;
       quantityCommitment: number | null;
     }> = [];
-    const toUpdate: Array<{
-      id: number;
-      itemId: number;
-      discountPercentage: number | null;
+    const toUpdate: Array<{ 
+      id: number; 
+      itemId: number; 
+      discountPercentage: number | null; 
       rebatePercentage: number | null;
       conditionalRebate: number | null;
       growthRebate: number | null;
       quantityCommitment: number | null;
     }> = [];
     const toDelete: number[] = [];
+    
+    // New: Arrays for segment and category pricing
+    const segmentPricing: Array<{
+      segmentId: number;
+      itemTypeId: number;
+      discountPercentage: number | null;
+      rebatePercentage: number | null;
+      conditionalRebate: number | null;
+      growthRebate: number | null;
+    }> = [];
+    
+    const categoryPricing: Array<{
+      categoryId: number;
+      itemTypeId: number;
+      discountPercentage: number | null;
+      rebatePercentage: number | null;
+      conditionalRebate: number | null;
+      growthRebate: number | null;
+    }> = [];
 
-    Object.values(state.segments).forEach((segment) => {
-      Object.values(segment.categories).forEach((category) => {
+    // Process segments and categories
+    Object.entries(state.segments).forEach(([segmentId, segment]) => {
+      // Collect segment-level pricing
+      Object.entries(segment.pricingByType).forEach(([itemTypeId, pricing]) => {
+        if (pricing.discountPercentage || pricing.rebatePercentage || pricing.conditionalRebate || pricing.growthRebate) {
+          segmentPricing.push({
+            segmentId: Number(segmentId),
+            itemTypeId: Number(itemTypeId),
+            discountPercentage: pricing.discountPercentage ? parseFloat(pricing.discountPercentage) : null,
+            rebatePercentage: pricing.rebatePercentage ? parseFloat(pricing.rebatePercentage) : null,
+            conditionalRebate: pricing.conditionalRebate ? parseFloat(pricing.conditionalRebate) : null,
+            growthRebate: pricing.growthRebate ? parseFloat(pricing.growthRebate) : null,
+          });
+        }
+      });
+      
+      // Collect category-level pricing
+      Object.entries(segment.categories).forEach(([categoryId, category]) => {
+        Object.entries(category.pricingByType).forEach(([itemTypeId, pricing]) => {
+          if (pricing.discountPercentage || pricing.rebatePercentage || pricing.conditionalRebate || pricing.growthRebate) {
+            categoryPricing.push({
+              categoryId: Number(categoryId),
+              itemTypeId: Number(itemTypeId),
+              discountPercentage: pricing.discountPercentage ? parseFloat(pricing.discountPercentage) : null,
+              rebatePercentage: pricing.rebatePercentage ? parseFloat(pricing.rebatePercentage) : null,
+              conditionalRebate: pricing.conditionalRebate ? parseFloat(pricing.conditionalRebate) : null,
+              growthRebate: pricing.growthRebate ? parseFloat(pricing.growthRebate) : null,
+            });
+          }
+        });
+        
+        // Process items
         Object.entries(category.items).forEach(([itemId, item]) => {
           const numItemId = Number(itemId);
-
+          
           if (item.selected && !item.existingContractItemId) {
             toCreate.push({
               itemId: numItemId,
-              discountPercentage: item.discountPercentage
-                ? parseFloat(item.discountPercentage)
-                : null,
-              rebatePercentage: item.rebatePercentage
-                ? parseFloat(item.rebatePercentage)
-                : null,
-              conditionalRebate: item.conditionalRebate
-                ? parseFloat(item.conditionalRebate)
-                : null,
-              growthRebate: item.growthRebate
-                ? parseFloat(item.growthRebate)
-                : null,
-              quantityCommitment: item.quantityCommitment
-                ? parseInt(item.quantityCommitment)
-                : null,
+              discountPercentage: item.discountPercentage ? parseFloat(item.discountPercentage) : null,
+              rebatePercentage: item.rebatePercentage ? parseFloat(item.rebatePercentage) : null,
+              conditionalRebate: item.conditionalRebate ? parseFloat(item.conditionalRebate) : null,
+              growthRebate: item.growthRebate ? parseFloat(item.growthRebate) : null,
+              quantityCommitment: item.quantityCommitment ? parseInt(item.quantityCommitment) : null,
             });
           } else if (item.selected && item.existingContractItemId) {
             // Check if values have changed from existing
-            const existing = existingContractItems.find(
-              (ci) => ci.id === item.existingContractItemId
-            );
-            const hasChanged =
-              !existing ||
-              existing.discountPercentage?.toString() !==
-                item.discountPercentage ||
+            const existing = existingContractItems.find(ci => ci.id === item.existingContractItemId);
+            const hasChanged = !existing || 
+              existing.discountPercentage?.toString() !== item.discountPercentage ||
               existing.rebatePercentage?.toString() !== item.rebatePercentage ||
-              existing.conditionalRebate?.toString() !==
-                item.conditionalRebate ||
+              existing.conditionalRebate?.toString() !== item.conditionalRebate ||
               existing.growthRebate?.toString() !== item.growthRebate ||
-              existing.quantityCommitment?.toString() !==
-                item.quantityCommitment;
+              existing.quantityCommitment?.toString() !== item.quantityCommitment;
 
             if (hasChanged) {
               toUpdate.push({
                 id: item.existingContractItemId,
                 itemId: numItemId,
-                discountPercentage: item.discountPercentage
-                  ? parseFloat(item.discountPercentage)
-                  : null,
-                rebatePercentage: item.rebatePercentage
-                  ? parseFloat(item.rebatePercentage)
-                  : null,
-                conditionalRebate: item.conditionalRebate
-                  ? parseFloat(item.conditionalRebate)
-                  : null,
-                growthRebate: item.growthRebate
-                  ? parseFloat(item.growthRebate)
-                  : null,
-                quantityCommitment: item.quantityCommitment
-                  ? parseInt(item.quantityCommitment)
-                  : null,
+                discountPercentage: item.discountPercentage ? parseFloat(item.discountPercentage) : null,
+                rebatePercentage: item.rebatePercentage ? parseFloat(item.rebatePercentage) : null,
+                conditionalRebate: item.conditionalRebate ? parseFloat(item.conditionalRebate) : null,
+                growthRebate: item.growthRebate ? parseFloat(item.growthRebate) : null,
+                quantityCommitment: item.quantityCommitment ? parseInt(item.quantityCommitment) : null,
               });
             }
           } else if (!item.selected && item.existingContractItemId) {
@@ -705,7 +774,7 @@ export function useContractItemBulkEdit(
       });
     });
 
-    return { toCreate, toUpdate, toDelete };
+    return { toCreate, toUpdate, toDelete, segmentPricing, categoryPricing };
   }, [state, existingContractItems]);
 
   return {
